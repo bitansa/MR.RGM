@@ -26,3 +26,15 @@ Generate_Psi = function(Phi, d, a_psi, b_psi){
   return(Psi)
 
 }
+
+
+# Generate eta
+Generate_Eta = function(b, phi, a_eta, b_eta, nu_2){
+
+  # Generate eta based on Inverse Gamma distribution
+  eta = phi / rgamma(1, a_eta + 1/2, b^2/2 + b_eta) + (1 - phi) / rgamma(1, a_eta + 1/2, b^2/(2 * nu_2) + b_eta)
+
+  # Return eta
+  return(eta)
+
+}
