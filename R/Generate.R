@@ -38,3 +38,15 @@ Generate_Eta = function(b, phi, a_eta, b_eta, nu_2){
   return(eta)
 
 }
+
+
+# Generate tau
+Generate_Tau = function(a, gamma, a_tau, b_tau, nu_1){
+
+  # Generate tau based on Inverse Gamma distribution
+  tau = gamma / rgamma(1, a_tau + 1/2, a^2/2 + b_tau) + (1 - gamma) / rgamma(1, a_tau + 1/2, a^2/(2 * nu_1) + b_tau)
+
+  # Return tau
+  return(tau)
+
+}
