@@ -11,3 +11,18 @@ Generate_Rho = function(Gamma, p, a_rho, b_rho){
   return(Rho)
 
 }
+
+
+# Generate psi
+Generate_Psi = function(Phi, d, a_psi, b_psi){
+
+  # Calculate sum of all entries of Phi matrix
+  Phi_sum = sum(Phi)
+
+  # Generate psi from Beta distribution
+  Psi = rbeta(1, Phi_sum + a_psi, d - Phi_sum + b_psi)
+
+  # Return Rho
+  return(Psi)
+
+}
