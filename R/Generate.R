@@ -98,3 +98,24 @@ Generate_Sigma = function(n, z_sum, a_sigma, b_sigma){
   return(sigma)
 
 }
+
+
+
+
+# Generate an entry of B matrix
+Generate_B = function(xz, b_vec, b, x_mat, x_vec, sigma, eta, phi, nu2){
+
+  # Calculate numerator of mean
+  mean = xz - sum(tcrossprod(b_vec, x_mat) * x_vec) / sigma + sum(x_vec^2) * b / sigma
+
+  # Calculate variance
+  variance = phi / (sum(x_vec) / sigma + 1 / eta) + (1 - phi) / (sum(x_vec) / sigma + 1 / (eta * nu2))
+
+  # Generate b
+  b = rnorm(1, mean = mean * variance, variance)
+
+  # Return beta
+  return(b)
+
+}
+
