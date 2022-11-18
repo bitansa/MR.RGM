@@ -50,3 +50,20 @@ Generate_Tau = function(a, gamma, a_tau, b_tau, nu_1){
   return(tau)
 
 }
+
+
+# Generate phi
+Generate_Phi = function(b, psi, eta, nu_2){
+
+  # Calculate C1 and C2
+  C1 = psi / sqrt(eta) * exp(- b^2 / (2 * eta))
+
+  C2 = (1 - psi) / sqrt(nu_2 * eta) * exp(- b^2 / (2 * nu_2 * eta))
+
+  # Generate phi based on bernoulli distribution
+  phi = rbinom(1, 1, C1/(C1+C2))
+
+  # Return phi
+  return(phi)
+
+}
