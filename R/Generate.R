@@ -67,3 +67,21 @@ Generate_Phi = function(b, psi, eta, nu_2){
   return(phi)
 
 }
+
+
+
+# Generate gamma
+Generate_Gamma = function(a, rho, tau, nu_1){
+
+  # Calculate D1 and D2
+  D1 = rho / sqrt(tau) * exp(- a^2 / (2 * tau))
+
+  D2 = (1 - rho) / sqrt(nu_1 * tau) * exp(- a^2 / (2 * nu_1 * tau))
+
+  # Generate gamma based on bernoulli distribution
+  gamma = rbinom(1, 1, D1/(D1+D2))
+
+  # Return gamma
+  return(gamma)
+
+}
