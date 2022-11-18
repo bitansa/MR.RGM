@@ -85,3 +85,16 @@ Generate_Gamma = function(a, rho, tau, nu_1){
   return(gamma)
 
 }
+
+
+
+# Generate sigma
+Generate_Sigma = function(n, z_sum, a_sigma, b_sigma){
+
+  # Generate sigma based on Inverse gamma distribution
+  sigma = 1 / rgamma(1, n/2 + a_sigma, z_sum/2 + b_sigma)
+
+  # Return sigma
+  return(sigma)
+
+}
