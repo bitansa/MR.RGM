@@ -158,3 +158,48 @@ Target_Agamma = function(X, Y, A, a, N, Sigma_Inv, p, B, gamma, tau, rho, nu_1){
 }
 
 
+
+
+
+
+# Generate an entry of A matrix
+Generate_Agamma = function(X, Y, A, i, j, Sigma_Inv, N, p, B, gamma, tau, rho, nu_1, prop_var1){
+
+  # Value to update
+  a = A[i, j]
+
+  # Proposed value
+  a_new = rnorm(1, a, prop_var1)
+
+  # New A matrix with proposed a value
+  A_new = A
+  A_new[i, j] = a_new
+
+  # Calculate r
+  # r = Target_Agamma(X, Y, A_new, a_new, N, Sigma_Inv, p, B, 1-gamma, tau, rho, nu_1)  / Target_Agamma(X, Y, A, a, N, Sigma_Inv, p, B, gamma, tau, rho, nu_1)
+  r = Target_Agamma(X, Y, A_new, a_new, N, Sigma_Inv, p, B, 1-gamma, tau, rho, nu_1) - Target_Agamma(X, Y, A, a, N, Sigma_Inv, p, B, gamma, tau, rho, nu_1)
+
+
+
+  # Generate uniform u
+  u = runif(1, 0, 1)
+
+  if(!is.na(r)){
+
+    # Check whether r is big or not
+    # min(1, r) >= u
+    if(min(0, r) >= log(u)){
+
+      a = a_new
+
+      gamma = 1 - gamma
+
+    }
+
+  }
+
+  return(list(a = a, gamma = gamma))
+
+}
+
+
