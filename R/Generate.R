@@ -203,3 +203,39 @@ Generate_Agamma = function(X, Y, A, i, j, Sigma_Inv, N, p, B, gamma, tau, rho, n
 }
 
 
+
+
+
+# Target function for A
+Target_A = function(X, Y, A, a, N, Sigma_Inv, p, B, gamma, tau, nu_1){
+
+  # Calculate (I_p - A)^{-1} and (I_p - A)^{-1} * B
+  Mult_Mat = diag(p) - A
+
+  Inv_Mat = solve(Mult_Mat)
+  Inv_MatB = Inv_Mat %*% B
+
+  # Calculate mean matrix and variance matrix
+  Mean_mat = tcrossprod(Inv_MatB, X)
+  Var_mat_inv = crossprod(Mult_Mat, Sigma_Inv %*% Mult_Mat)
+
+  # Initiate Sum
+  Sum = 0
+
+  for (i in 1:N) {
+
+    # Calculate difference
+    Diff = Y[i, ] - t(Mean_mat[, i])
+
+    # Calculate Sum
+    Sum = Sum + tcrossprod(Diff %*% Var_mat_inv, Diff)
+
+  }
+
+  Target = (det(Var_mat_inv)^(N/2)) * exp(-1/2 * Sum) * (gamma * exp(-a^2/(2 * tau)) / sqrt(tau) + (1 - gamma) * exp(- a^2/(2 * nu_1 * tau)) / sqrt(nu_1 * tau))
+
+
+  # Return Target
+  return(Target)
+
+}
