@@ -239,3 +239,62 @@ Target_A = function(X, Y, A, a, N, Sigma_Inv, p, B, gamma, tau, nu_1){
   return(Target)
 
 }
+
+
+
+
+
+# Generate an entry of A matrix
+Generate_A = function(X, Y, A, i, j, Sigma_Inv, N, p, B, gamma, tau, nu_1, prop_var1){
+
+  # Value to update
+  a = A[i, j]
+
+  # Proposed value
+  a_new = rnorm(1, a, prop_var1)
+
+  # New A matrix with proposed a value
+  A_new = A
+  A_new[i, j] = a_new
+
+  # Calculate r
+  r = Target_A(X, Y, A_new, a_new, Sigma_Inv, N, p, B, gamma, tau, nu_1)  / Target_A(X, Y, A, a, Sigma_Inv, N, p, B, gamma, tau, nu_1)
+
+  # Generate uniform u
+  u = runif(1, 0, 1)
+
+  if(!is.na(r)){
+
+    # Check whether r is big or not
+    if(min(1, r) >= u){
+
+      a = a_new
+
+    }
+
+  }
+
+  return(a)
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
