@@ -5,7 +5,7 @@ Generate_Rho = function(Gamma, p, a_rho, b_rho){
   Gamma_sum = sum(Gamma)
 
   # Generate Rho from Beta distribution
-  Rho = rbeta(1, Gamma_sum + a_rho, p * (p - 1) - Gamma_sum + b_rho)
+  Rho = stats::rbeta(1, Gamma_sum + a_rho, p * (p - 1) - Gamma_sum + b_rho)
 
   # Return Rho
   return(Rho)
@@ -20,7 +20,7 @@ Generate_Psi = function(Phi, d, a_psi, b_psi){
   Phi_sum = sum(Phi)
 
   # Generate psi from Beta distribution
-  Psi = rbeta(1, Phi_sum + a_psi, d - Phi_sum + b_psi)
+  Psi = stats::rbeta(1, Phi_sum + a_psi, d - Phi_sum + b_psi)
 
   # Return Rho
   return(Psi)
@@ -32,7 +32,7 @@ Generate_Psi = function(Phi, d, a_psi, b_psi){
 Generate_Eta = function(b, phi, a_eta, b_eta, nu_2){
 
   # Generate eta based on Inverse Gamma distribution
-  eta = phi / rgamma(1, a_eta + 1/2, b^2/2 + b_eta) + (1 - phi) / rgamma(1, a_eta + 1/2, b^2/(2 * nu_2) + b_eta)
+  eta = phi / stats::rgamma(1, a_eta + 1/2, b^2/2 + b_eta) + (1 - phi) / stats::rgamma(1, a_eta + 1/2, b^2/(2 * nu_2) + b_eta)
 
   # Return eta
   return(eta)
@@ -44,7 +44,7 @@ Generate_Eta = function(b, phi, a_eta, b_eta, nu_2){
 Generate_Tau = function(a, gamma, a_tau, b_tau, nu_1){
 
   # Generate tau based on Inverse Gamma distribution
-  tau = gamma / rgamma(1, a_tau + 1/2, a^2/2 + b_tau) + (1 - gamma) / rgamma(1, a_tau + 1/2, a^2/(2 * nu_1) + b_tau)
+  tau = gamma / stats::rgamma(1, a_tau + 1/2, a^2/2 + b_tau) + (1 - gamma) / stats::rgamma(1, a_tau + 1/2, a^2/(2 * nu_1) + b_tau)
 
   # Return tau
   return(tau)
@@ -61,7 +61,7 @@ Generate_Phi = function(b, psi, eta, nu_2){
   C2 = (1 - psi) / sqrt(nu_2 * eta) * exp(- b^2 / (2 * nu_2 * eta))
 
   # Generate phi based on bernoulli distribution
-  phi = rbinom(1, 1, C1/(C1+C2))
+  phi = stats::rbinom(1, 1, C1/(C1+C2))
 
   # Return phi
   return(phi)
@@ -79,7 +79,7 @@ Generate_Gamma = function(a, rho, tau, nu_1){
   D2 = (1 - rho) / sqrt(nu_1 * tau) * exp(- a^2 / (2 * nu_1 * tau))
 
   # Generate gamma based on bernoulli distribution
-  gamma = rbinom(1, 1, D1/(D1+D2))
+  gamma = stats::rbinom(1, 1, D1/(D1+D2))
 
   # Return gamma
   return(gamma)
@@ -92,7 +92,7 @@ Generate_Gamma = function(a, rho, tau, nu_1){
 Generate_Sigma = function(n, z_sum, a_sigma, b_sigma){
 
   # Generate sigma based on Inverse gamma distribution
-  sigma = 1 / rgamma(1, n/2 + a_sigma, z_sum/2 + b_sigma)
+  sigma = 1 / stats::rgamma(1, n/2 + a_sigma, z_sum/2 + b_sigma)
 
   # Return sigma
   return(sigma)
@@ -112,7 +112,7 @@ Generate_B = function(xz, b_vec, b, x_mat, x_vec, sigma, eta, phi, nu2){
   variance = phi / (sum(x_vec) / sigma + 1 / eta) + (1 - phi) / (sum(x_vec) / sigma + 1 / (eta * nu2))
 
   # Generate b
-  b = rnorm(1, mean = mean * variance, variance)
+  b = stats::rnorm(1, mean = mean * variance, variance)
 
   # Return beta
   return(b)
@@ -169,7 +169,7 @@ Generate_Agamma = function(X, Y, A, i, j, Sigma_Inv, N, p, B, gamma, tau, rho, n
   a = A[i, j]
 
   # Proposed value
-  a_new = rnorm(1, a, prop_var1)
+  a_new = stats::rnorm(1, a, prop_var1)
 
   # New A matrix with proposed a value
   A_new = A
@@ -182,7 +182,7 @@ Generate_Agamma = function(X, Y, A, i, j, Sigma_Inv, N, p, B, gamma, tau, rho, n
 
 
   # Generate uniform u
-  u = runif(1, 0, 1)
+  u = stats::runif(1, 0, 1)
 
   if(!is.na(r)){
 
@@ -251,7 +251,7 @@ Generate_A = function(X, Y, A, i, j, Sigma_Inv, N, p, B, gamma, tau, nu_1, prop_
   a = A[i, j]
 
   # Proposed value
-  a_new = rnorm(1, a, prop_var1)
+  a_new = stats::rnorm(1, a, prop_var1)
 
   # New A matrix with proposed a value
   A_new = A
@@ -261,7 +261,7 @@ Generate_A = function(X, Y, A, i, j, Sigma_Inv, N, p, B, gamma, tau, nu_1, prop_
   r = Target_A(X, Y, A_new, a_new, Sigma_Inv, N, p, B, gamma, tau, nu_1)  / Target_A(X, Y, A, a, Sigma_Inv, N, p, B, gamma, tau, nu_1)
 
   # Generate uniform u
-  u = runif(1, 0, 1)
+  u = stats::runif(1, 0, 1)
 
   if(!is.na(r)){
 
