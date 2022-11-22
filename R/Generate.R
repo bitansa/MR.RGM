@@ -166,7 +166,18 @@ Generate_Gamma = function(a, rho, tau, nu_1){
 
 
 
-# Generate sigma
+
+
+#' Sigma generating function
+#'
+#' @param n positive integer input
+#' @param z_sum non-negative scalar input
+#' @param a_sigma positive scalar input
+#' @param b_sigma positive scalar input
+#'
+#' @return scalar value generated from inverse gamma distribution, 1 / rgamma(1, n/2 + a_sigma, z_sum/2 + b_sigma)
+#'
+#' @examples
 Generate_Sigma = function(n, z_sum, a_sigma, b_sigma){
 
   # Generate sigma based on Inverse gamma distribution
@@ -183,7 +194,23 @@ Generate_Sigma = function(n, z_sum, a_sigma, b_sigma){
 
 
 
-# Generate an entry of B matrix
+
+
+#' B matrix entries generating function
+#'
+#' @param xz scalar input
+#' @param b_vec vector input
+#' @param b scalar input
+#' @param x_mat matrix input
+#' @param x_vec vector input
+#' @param sigma positive scalar input
+#' @param eta positive scalar input
+#' @param phi scalar input 0 or 1
+#' @param nu2 positive scalar input
+#'
+#' @return scalar value generated from normal distribution
+#'
+#' @examples
 Generate_B = function(xz, b_vec, b, x_mat, x_vec, sigma, eta, phi, nu2){
 
   # Calculate numerator of mean
@@ -199,6 +226,7 @@ Generate_B = function(xz, b_vec, b, x_mat, x_vec, sigma, eta, phi, nu2){
   return(b)
 
 }
+
 
 
 
