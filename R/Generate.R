@@ -53,7 +53,18 @@ Generate_Psi = function(Phi, d, a_psi, b_psi){
 
 
 
-# Generate eta
+
+#' Eta generating function
+#'
+#' @param b scalar input
+#' @param phi scalar input either 0 or 1
+#' @param a_eta positive scalar input
+#' @param b_eta positive scalar input
+#' @param nu_2 positve scalar input
+#'
+#' @return scalar value generated from inverse gamma distribution, phi / rgamma(1, a_eta + 1/2, b^2/2 + b_eta) + (1 - phi) / rgamma(1, a_eta + 1/2, b^2/(2 * nu_2) + b_eta)
+#'
+#' @examples
 Generate_Eta = function(b, phi, a_eta, b_eta, nu_2){
 
   # Generate eta based on Inverse Gamma distribution
@@ -68,7 +79,18 @@ Generate_Eta = function(b, phi, a_eta, b_eta, nu_2){
 
 
 
-# Generate tau
+
+#' Tau generating function
+#'
+#' @param a scalar input
+#' @param gamma scalar input either 0 or 1
+#' @param a_tau positive scalar input
+#' @param b_tau positive scalar input
+#' @param nu_1 positive scalar input
+#'
+#' @return scalar value generated from inverse gamma distribution, gamma / rgamma(1, a_tau + 1/2, a^2/2 + b_tau) + (1 - gamma) / rgamma(1, a_tau + 1/2, a^2/(2 * nu_1) + b_tau)
+#'
+#' @examples
 Generate_Tau = function(a, gamma, a_tau, b_tau, nu_1){
 
   # Generate tau based on Inverse Gamma distribution
