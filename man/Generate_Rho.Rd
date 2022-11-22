@@ -21,6 +21,3 @@ scalar value generated from beta distribution, rbeta(1, sum(Gamma) + a_rho, p * 
 \description{
 Rho generating function
 }
-\examples{
-Generate_Rho(matrix(1:4, 2, 2), 2, 0.1, 0.1)
-}

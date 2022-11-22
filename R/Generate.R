@@ -24,19 +24,33 @@ Generate_Rho = function(Gamma, p, a_rho, b_rho){
 
 
 
-# Generate psi
+
+#' Psi generating function
+#'
+#' @param Phi matrix input
+#' @param d non-negative scalar input
+#' @param a_psi positive scalar input
+#' @param b_psi positive scalar input
+#'
+#' @return scalar value generated from beta distribution, rbeta(1, sum(Phi) + a_psi, d - sum(Phi) + b_psi)
+#'
+#' @examples
 Generate_Psi = function(Phi, d, a_psi, b_psi){
 
   # Calculate sum of all entries of Phi matrix
   Phi_sum = sum(Phi)
 
-  # Generate psi from Beta distribution
+  # Generate Psi from Beta distribution
   Psi = stats::rbeta(1, Phi_sum + a_psi, d - Phi_sum + b_psi)
 
   # Return Rho
   return(Psi)
 
 }
+
+
+
+
 
 
 # Generate eta
@@ -51,6 +65,9 @@ Generate_Eta = function(b, phi, a_eta, b_eta, nu_2){
 }
 
 
+
+
+
 # Generate tau
 Generate_Tau = function(a, gamma, a_tau, b_tau, nu_1){
 
@@ -61,6 +78,9 @@ Generate_Tau = function(a, gamma, a_tau, b_tau, nu_1){
   return(tau)
 
 }
+
+
+
 
 
 # Generate phi
@@ -78,6 +98,9 @@ Generate_Phi = function(b, psi, eta, nu_2){
   return(phi)
 
 }
+
+
+
 
 
 
@@ -99,6 +122,10 @@ Generate_Gamma = function(a, rho, tau, nu_1){
 
 
 
+
+
+
+
 # Generate sigma
 Generate_Sigma = function(n, z_sum, a_sigma, b_sigma){
 
@@ -109,6 +136,9 @@ Generate_Sigma = function(n, z_sum, a_sigma, b_sigma){
   return(sigma)
 
 }
+
+
+
 
 
 
@@ -129,6 +159,7 @@ Generate_B = function(xz, b_vec, b, x_mat, x_vec, sigma, eta, phi, nu2){
   return(b)
 
 }
+
 
 
 
