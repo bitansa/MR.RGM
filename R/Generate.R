@@ -105,7 +105,17 @@ Generate_Tau = function(a, gamma, a_tau, b_tau, nu_1){
 
 
 
-# Generate phi
+
+#' Phi generating function
+#'
+#' @param b scalar input
+#' @param psi scalar input between 0 and 1
+#' @param eta positive scalar input
+#' @param nu_2 positive scalar input
+#'
+#' @return scalar value generated from a bernoulli distribution i.e. 0 or 1
+#'
+#' @examples
 Generate_Phi = function(b, psi, eta, nu_2){
 
   # Calculate C1 and C2
@@ -125,8 +135,16 @@ Generate_Phi = function(b, psi, eta, nu_2){
 
 
 
-
-# Generate gamma
+#' Gamma generating function
+#'
+#' @param a scalar input
+#' @param rho scalar input between 0 and 1
+#' @param tau  positive scalar input
+#' @param nu_1 positive scalar input
+#'
+#' @return scalar value generated from a bernoulli distribution i.e. 0 or 1
+#'
+#' @examples
 Generate_Gamma = function(a, rho, tau, nu_1){
 
   # Calculate D1 and D2
