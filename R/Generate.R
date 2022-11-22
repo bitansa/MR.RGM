@@ -1,4 +1,13 @@
-# Generate rho
+#' Rho generating function
+#'
+#' @param Gamma matrix input
+#' @param p positive scalar input
+#' @param a_rho positive scalar input
+#' @param b_rho positive scalar input
+#'
+#' @return scalar value generated from beta distribution, rbeta(1, sum(Gamma) + a_rho, p * (p - 1) - sum(Gamma) + b_rho)
+#'
+#' @examples
 Generate_Rho = function(Gamma, p, a_rho, b_rho){
 
   # Calculate sum of all entries of Gamma matrix
@@ -11,6 +20,8 @@ Generate_Rho = function(Gamma, p, a_rho, b_rho){
   return(Rho)
 
 }
+
+
 
 
 # Generate psi
