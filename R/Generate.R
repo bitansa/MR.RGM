@@ -233,10 +233,29 @@ Generate_B = function(xz, b_vec, b, x_mat, x_vec, sigma, eta, phi, nu2){
 
 
 
-# Target function for A and gamma
+
+
+#' Target function for a particular A entry and corresponding gamma
+#'
+#' @param X n * K matrix input
+#' @param Y n * p matrix input
+#' @param A p * p matrix input
+#' @param a scalar input
+#' @param N positive scalar input
+#' @param Sigma_Inv p * p matrix input
+#' @param p positive integer input
+#' @param B p * K matrix input
+#' @param gamma scalar input, 0 or 1
+#' @param tau positive scalar input
+#' @param rho scalar input in between 0 and 1
+#' @param nu_1 positive scalar input
+#'
+#' @return scalar target value
+#'
+#' @examples
 Target_Agamma = function(X, Y, A, a, N, Sigma_Inv, p, B, gamma, tau, rho, nu_1){
 
-  # Calculate (I_p - A)^{-1} and (I_p - A)^{-1} * B
+  # Calculate (I_p - A) and (I_p - A)^{-1} * B
   Mult_Mat = diag(p) - A
   Inv_MatB = solve(Mult_Mat) %*% B
 
@@ -258,7 +277,7 @@ Target_Agamma = function(X, Y, A, a, N, Sigma_Inv, p, B, gamma, tau, rho, nu_1){
 
   }
 
-  # Target = ((det(Var_mat_inv)^(N/2)) * exp(-1/2 * Sum) * (gamma * exp(-a^2/(2 * tau)) / sqrt(tau) + (1 - gamma) * exp(- a^2/(2 * nu_1 * tau)) / sqrt(nu_1 * tau))) * (rho ^ gamma * (1-rho) ^ (1-gamma))
+  # Calculate target value
   Target = N/2 * determinant(Var_mat_inv, logarithm = TRUE)$modulus -1/2 * Sum + gamma * (-a^2/(2 * tau) - log(sqrt(tau))) + (1 - gamma) * (-a^2/(2 * nu_1 * tau) - log(sqrt(nu_1 * tau))) + gamma * log(rho) + (1 - gamma) * log(1 - rho)
 
 
@@ -272,7 +291,27 @@ Target_Agamma = function(X, Y, A, a, N, Sigma_Inv, p, B, gamma, tau, rho, nu_1){
 
 
 
-# Generate an entry of A matrix
+
+#' A matrix entries and gamma generating function
+#'
+#' @param X n * K matrix input
+#' @param Y n * p matrix input
+#' @param A p * p matrix input
+#' @param i integer input in between 1 and p
+#' @param j integer input in between 1 and p
+#' @param Sigma_Inv p * p matrix input
+#' @param N positive integer input
+#' @param p positive integer input
+#' @param B p * K matrix input
+#' @param gamma scalar input, 0 or 1
+#' @param tau postive scalar input
+#' @param rho postive scalar input in between 0 and 1
+#' @param nu_1 postive scalar input
+#' @param prop_var1 postive scalar input
+#'
+#' @return scalar a value and scalar gamma value, 0 or 1
+#'
+#' @examples
 Generate_Agamma = function(X, Y, A, i, j, Sigma_Inv, N, p, B, gamma, tau, rho, nu_1, prop_var1){
 
   # Value to update
@@ -286,7 +325,6 @@ Generate_Agamma = function(X, Y, A, i, j, Sigma_Inv, N, p, B, gamma, tau, rho, n
   A_new[i, j] = a_new
 
   # Calculate r
-  # r = Target_Agamma(X, Y, A_new, a_new, N, Sigma_Inv, p, B, 1-gamma, tau, rho, nu_1)  / Target_Agamma(X, Y, A, a, N, Sigma_Inv, p, B, gamma, tau, rho, nu_1)
   r = Target_Agamma(X, Y, A_new, a_new, N, Sigma_Inv, p, B, 1-gamma, tau, rho, nu_1) - Target_Agamma(X, Y, A, a, N, Sigma_Inv, p, B, gamma, tau, rho, nu_1)
 
 
@@ -311,6 +349,7 @@ Generate_Agamma = function(X, Y, A, i, j, Sigma_Inv, N, p, B, gamma, tau, rho, n
   return(list(a = a, gamma = gamma))
 
 }
+
 
 
 
@@ -349,6 +388,7 @@ Target_A = function(X, Y, A, a, N, Sigma_Inv, p, B, gamma, tau, nu_1){
   return(Target)
 
 }
+
 
 
 
