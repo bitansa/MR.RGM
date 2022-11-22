@@ -355,7 +355,24 @@ Generate_Agamma = function(X, Y, A, i, j, Sigma_Inv, N, p, B, gamma, tau, rho, n
 
 
 
-# Target function for A
+
+#' Target function for a particular A entry
+#'
+#' @param X n * K matrix input
+#' @param Y n * p matrix input
+#' @param A p * p matrix input
+#' @param a scalar input
+#' @param N positive integer input
+#' @param Sigma_Inv p * p matrix input
+#' @param p positive integer input
+#' @param B p * K matrix input
+#' @param gamma scalar input, 0 or 1
+#' @param tau postive scalar input
+#' @param nu_1 postive scalar input
+#'
+#' @return scalar target value
+#'
+#' @examples
 Target_A = function(X, Y, A, a, N, Sigma_Inv, p, B, gamma, tau, nu_1){
 
   # Calculate (I_p - A)^{-1} and (I_p - A)^{-1} * B
@@ -394,7 +411,27 @@ Target_A = function(X, Y, A, a, N, Sigma_Inv, p, B, gamma, tau, nu_1){
 
 
 
-# Generate an entry of A matrix
+
+
+#' A matrix entries generating function
+#'
+#' @param X n * K matrix input
+#' @param Y n * p matrix input
+#' @param A p * p matrix input
+#' @param i positive integer input in between 1 and p
+#' @param j positive integer input in between 1 and p
+#' @param Sigma_Inv p * p matrix input
+#' @param N positive integer input
+#' @param p positive integer input
+#' @param B p * K matrix input
+#' @param gamma scalar input, 0 or 1
+#' @param tau postive scalar input
+#' @param nu_1 postive scalar input
+#' @param prop_var1 postive scalar input
+#'
+#' @return scalar a value
+#'
+#' @examples
 Generate_A = function(X, Y, A, i, j, Sigma_Inv, N, p, B, gamma, tau, nu_1, prop_var1){
 
   # Value to update
