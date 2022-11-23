@@ -34,7 +34,7 @@ Generate_Agamma(
 
 \item{Sigma_Inv}{p * p matrix input}
 
-\item{N}{positive integer input}
+\item{N}{positive scalar input}
 
 \item{p}{positive integer input}
 
@@ -42,11 +42,11 @@ Generate_Agamma(
 
 \item{gamma}{scalar input, 0 or 1}
 
-\item{tau}{postive scalar input}
+\item{tau}{positive scalar input}
 
-\item{rho}{postive scalar input in between 0 and 1}
+\item{rho}{scalar input in between 0 and 1}
 
-\item{nu_1}{postive scalar input}
+\item{nu_1}{positive scalar input}
 
 \item{prop_var1}{postive scalar input}
 }

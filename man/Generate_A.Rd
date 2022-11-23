@@ -13,13 +13,13 @@ Generate_A(X, Y, A, i, j, Sigma_Inv, N, p, B, gamma, tau, nu_1, prop_var1)
 
 \item{A}{p * p matrix input}
 
-\item{i}{positive integer input in between 1 and p}
+\item{i}{integer input in between 1 and p}
 
-\item{j}{positive integer input in between 1 and p}
+\item{j}{integer input in between 1 and p}
 
 \item{Sigma_Inv}{p * p matrix input}
 
-\item{N}{positive integer input}
+\item{N}{positive scalar input}
 
 \item{p}{positive integer input}
 
@@ -27,9 +27,9 @@ Generate_A(X, Y, A, i, j, Sigma_Inv, N, p, B, gamma, tau, nu_1, prop_var1)
 
 \item{gamma}{scalar input, 0 or 1}
 
-\item{tau}{postive scalar input}
+\item{tau}{positive scalar input}
 
-\item{nu_1}{postive scalar input}
+\item{nu_1}{positive scalar input}
 
 \item{prop_var1}{postive scalar input}
 }

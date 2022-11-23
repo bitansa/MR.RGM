@@ -15,7 +15,7 @@ Target_A(X, Y, A, a, N, Sigma_Inv, p, B, gamma, tau, nu_1)
 
 \item{a}{scalar input}
 
-\item{N}{positive integer input}
+\item{N}{positive scalar input}
 
 \item{Sigma_Inv}{p * p matrix input}
 
@@ -25,9 +25,9 @@ Target_A(X, Y, A, a, N, Sigma_Inv, p, B, gamma, tau, nu_1)
 
 \item{gamma}{scalar input, 0 or 1}
 
-\item{tau}{postive scalar input}
+\item{tau}{positive scalar input}
 
-\item{nu_1}{postive scalar input}
+\item{nu_1}{positive scalar input}
 }
 \value{
 scalar target value

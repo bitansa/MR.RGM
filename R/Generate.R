@@ -294,19 +294,10 @@ Target_Agamma = function(X, Y, A, a, N, Sigma_Inv, p, B, gamma, tau, rho, nu_1){
 
 #' A matrix entries and gamma generating function
 #'
-#' @param X n * K matrix input
-#' @param Y n * p matrix input
-#' @param A p * p matrix input
+#'
+#' @inheritParams Target_Agamma
 #' @param i integer input in between 1 and p
 #' @param j integer input in between 1 and p
-#' @param Sigma_Inv p * p matrix input
-#' @param N positive integer input
-#' @param p positive integer input
-#' @param B p * K matrix input
-#' @param gamma scalar input, 0 or 1
-#' @param tau postive scalar input
-#' @param rho postive scalar input in between 0 and 1
-#' @param nu_1 postive scalar input
 #' @param prop_var1 postive scalar input
 #'
 #' @return scalar a value and scalar gamma value, 0 or 1
@@ -358,17 +349,7 @@ Generate_Agamma = function(X, Y, A, i, j, Sigma_Inv, N, p, B, gamma, tau, rho, n
 
 #' Target function for a particular A entry
 #'
-#' @param X n * K matrix input
-#' @param Y n * p matrix input
-#' @param A p * p matrix input
-#' @param a scalar input
-#' @param N positive integer input
-#' @param Sigma_Inv p * p matrix input
-#' @param p positive integer input
-#' @param B p * K matrix input
-#' @param gamma scalar input, 0 or 1
-#' @param tau postive scalar input
-#' @param nu_1 postive scalar input
+#' @inheritParams Target_Agamma
 #'
 #' @return scalar target value
 #'
@@ -415,19 +396,7 @@ Target_A = function(X, Y, A, a, N, Sigma_Inv, p, B, gamma, tau, nu_1){
 
 #' A matrix entries generating function
 #'
-#' @param X n * K matrix input
-#' @param Y n * p matrix input
-#' @param A p * p matrix input
-#' @param i positive integer input in between 1 and p
-#' @param j positive integer input in between 1 and p
-#' @param Sigma_Inv p * p matrix input
-#' @param N positive integer input
-#' @param p positive integer input
-#' @param B p * K matrix input
-#' @param gamma scalar input, 0 or 1
-#' @param tau postive scalar input
-#' @param nu_1 postive scalar input
-#' @param prop_var1 postive scalar input
+#' @inheritParams Generate_Agamma
 #'
 #' @return scalar a value
 #'
