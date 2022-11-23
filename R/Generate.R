@@ -220,7 +220,7 @@ Generate_B = function(xz, b_vec, b, x_mat, x_vec, sigma, eta, phi, nu2){
   variance = phi / (sum(x_vec) / sigma + 1 / eta) + (1 - phi) / (sum(x_vec) / sigma + 1 / (eta * nu2))
 
   # Generate b
-  b = stats::rnorm(1, mean = mean * variance, variance)
+  b = stats::rnorm(1, mean = mean * variance, sqrt(variance))
 
   # Return beta
   return(b)
@@ -260,7 +260,7 @@ Target_Agamma = function(X, Y, A, a, N, Sigma_Inv, p, B, gamma, tau, rho, nu_1){
   Inv_MatB = solve(Mult_Mat) %*% B
 
 
-  # Calculate mean matrix and variance matrix
+  # Calculate mean matrix and variance matrix inverse
   Mean_mat = tcrossprod(Inv_MatB, X)
   Var_mat_inv = crossprod(Mult_Mat, Sigma_Inv %*% Mult_Mat)
 
@@ -362,7 +362,7 @@ Target_A = function(X, Y, A, a, N, Sigma_Inv, p, B, gamma, tau, nu_1){
   Inv_Mat = solve(Mult_Mat)
   Inv_MatB = Inv_Mat %*% B
 
-  # Calculate mean matrix and variance matrix
+  # Calculate mean matrix and variance matrix inverse
   Mean_mat = tcrossprod(Inv_MatB, X)
   Var_mat_inv = crossprod(Mult_Mat, Sigma_Inv %*% Mult_Mat)
 
@@ -379,6 +379,7 @@ Target_A = function(X, Y, A, a, N, Sigma_Inv, p, B, gamma, tau, nu_1){
 
   }
 
+  # Calculate target value
   Target = (det(Var_mat_inv)^(N/2)) * exp(-1/2 * Sum) * (gamma * exp(-a^2/(2 * tau)) / sqrt(tau) + (1 - gamma) * exp(- a^2/(2 * nu_1 * tau)) / sqrt(nu_1 * tau))
 
 
@@ -492,7 +493,7 @@ Generate_Bphi = function(X, Y, B, i, j, Sigma_Inv, Mult_Inv_Y, phi, eta, psi, nu
   b = B[i, j]
 
   # Proposed value
-  b_new = rnorm(1, b, prop_var2)
+  b_new = stats::rnorm(1, b, prop_var2)
 
   # New B matrix with proposed b value
   B_new = B
@@ -504,7 +505,7 @@ Generate_Bphi = function(X, Y, B, i, j, Sigma_Inv, Mult_Inv_Y, phi, eta, psi, nu
 
 
   # Generate uniform u
-  u = runif(1, 0, 1)
+  u = stats::runif(1, 0, 1)
 
   if(!is.na(r)){
 
