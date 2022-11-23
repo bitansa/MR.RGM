@@ -445,17 +445,17 @@ Generate_A = function(X, Y, A, i, j, Sigma_Inv, N, p, B, gamma, tau, nu_1, prop_
 #'
 #' @inheritParams Generate_Agamma
 #' @inheritParams Generate_B
-#' @param MultMat_Y p * n matrix input
+#' @param Mult_Inv_Y p * n matrix input
 #' @param psi scalar input in between 0 and 1
 #' @param nu_2 positive scalar input
 #'
 #' @return scalar target value
 #'
 #' @examples
-Target_Bphi = function(X, Y, B, Sigma_Inv, MultMat_Y, b, phi, eta, psi, nu_2){
+Target_Bphi = function(X, Y, B, Sigma_Inv, Mult_Inv_Y, b, phi, eta, psi, nu_2){
 
   # Calculate Z vector
-  Z = MultMat_Y - tcrossprod(B, X)
+  Z = Mult_Inv_Y - tcrossprod(B, X)
 
 
   # Calculate Sum
@@ -469,6 +469,67 @@ Target_Bphi = function(X, Y, B, Sigma_Inv, MultMat_Y, b, phi, eta, psi, nu_2){
   return(Target)
 
 }
+
+
+
+
+
+
+#' B matrix entries and phi generating function
+#'
+#' @inheritParams Target_Bphi
+#'
+#' @param i positive integer input in between 1 and p
+#' @param j positive integer input in between 1 and K
+#' @param prop_var2 positive scalar input
+#'
+#' @return scalar b value and scalar phi value, 0 or 1
+#'
+#' @examples
+Generate_Bphi = function(X, Y, B, i, j, Sigma_Inv, Mult_Inv_Y, phi, eta, psi, nu_2, prop_var2){
+
+  # Value to update
+  b = B[i, j]
+
+  # Proposed value
+  b_new = rnorm(1, b, prop_var2)
+
+  # New B matrix with proposed b value
+  B_new = B
+  B_new[i, j] = b_new
+
+  # Calculate r
+  r = Target_Bphi(X, Y, B_new, Sigma_Inv, Mult_Inv_Y, b_new, 1 - phi, eta, psi, nu_2) - Target_Bphi(X, Y, B, Sigma_Inv, Mult_Inv_Y, b, phi, eta, psi, nu_2)
+
+
+
+  # Generate uniform u
+  u = runif(1, 0, 1)
+
+  if(!is.na(r)){
+
+    # Check whether r is big or not
+    # min(1, r) >= u
+    if(min(0, r) >= log(u)){
+
+      b = b_new
+
+      phi = 1 - phi
+
+    }
+
+  }
+
+  return(list(b = b, phi = phi))
+
+}
+
+
+
+
+
+
+
 
 
 
