@@ -441,6 +441,38 @@ Generate_A = function(X, Y, A, i, j, Sigma_Inv, N, p, B, gamma, tau, nu_1, prop_
 
 
 
+#' Target function for a particular A entry and corresponding gamma
+#'
+#' @inheritParams Generate_Agamma
+#' @inheritParams Generate_B
+#' @param MultMat_Y p * n matrix input
+#' @param psi scalar input in between 0 and 1
+#' @param nu_2 positive scalar input
+#'
+#' @return scalar target value
+#'
+#' @examples
+Target_Bphi = function(X, Y, B, Sigma_Inv, MultMat_Y, b, phi, eta, psi, nu_2){
+
+  # Calculate Z vector
+  Z = MultMat_Y - tcrossprod(B, X)
+
+
+  # Calculate Sum
+  Sum = sum(rowSums(Z^2) * Sigma_Inv)
+
+  # Calculate target value
+  Target =  -1/2 * Sum + phi * (-b^2/(2 * eta)) + (1 - phi) * (-b^2/(2 * nu_2 * eta)) + phi * log(psi) + (1 - phi) * log(1 - psi)
+
+
+  # Return Target
+  return(Target)
+
+}
+
+
+
+
 
 
 
