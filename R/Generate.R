@@ -446,32 +446,30 @@ Generate_A = function(X, Y, A, i, j, Sigma_Inv, N, p, B, gamma, tau, nu_1, prop_
 #'
 #' @inheritParams Generate_Agamma
 #' @inheritParams Generate_B
-#' @param Mult_Inv_Y p * n matrix input
+#' @param MultMat_Y p * n matrix input
 #' @param psi scalar input in between 0 and 1
 #' @param nu_2 positive scalar input
 #'
 #' @return scalar target value
 #'
 #' @examples
-Target_Bphi = function(X, Y, B, Sigma_Inv, Mult_Inv_Y, b, phi, eta, psi, nu_2){
+Target_Bphi = function(X, Y, B, Sigma_Inv, MultMat_Y, b, phi, eta, psi, nu_2){
 
-  # Calculate Z vector
-  Z = Mult_Inv_Y - tcrossprod(B, X)
+  # Calculate Difference vector
+  Diff = Mult_Inv_Y - tcrossprod(B, X)
 
 
   # Calculate Sum
-  Sum = sum(rowSums(Z^2) * Sigma_Inv)
+  Sum = sum(rowSums(Diff^2) * Sigma_Inv)
 
-  # Calculate target value
-  Target =  -1/2 * Sum + phi * (-b^2/(2 * eta)) + (1 - phi) * (-b^2/(2 * nu_2 * eta)) + phi * log(psi) + (1 - phi) * log(1 - psi)
+  # Calculate Target value
+  Target =  -1/2 * Sum - phi * (b^2 / (2 * eta)) - (1 - phi) * (b^2/(2 * nu_2 * eta)) + phi * log(psi) + (1 - phi) * log(1 - psi)
 
 
-  # Return Target
+  # Return Target value
   return(Target)
 
 }
-
-
 
 
 
@@ -487,7 +485,7 @@ Target_Bphi = function(X, Y, B, Sigma_Inv, Mult_Inv_Y, b, phi, eta, psi, nu_2){
 #' @return scalar b value and scalar phi value, 0 or 1
 #'
 #' @examples
-Generate_Bphi = function(X, Y, B, i, j, Sigma_Inv, Mult_Inv_Y, phi, eta, psi, nu_2, prop_var2){
+Generate_Bphi = function(X, Y, B, i, j, Sigma_Inv, MultMat_Y, phi, eta, psi, nu_2, prop_var2){
 
   # Value to update
   b = B[i, j]
@@ -500,27 +498,24 @@ Generate_Bphi = function(X, Y, B, i, j, Sigma_Inv, Mult_Inv_Y, phi, eta, psi, nu
   B_new[i, j] = b_new
 
   # Calculate r
-  r = Target_Bphi(X, Y, B_new, Sigma_Inv, Mult_Inv_Y, b_new, 1 - phi, eta, psi, nu_2) - Target_Bphi(X, Y, B, Sigma_Inv, Mult_Inv_Y, b, phi, eta, psi, nu_2)
+  r = Target_Bphi(X, Y, B_new, Sigma_Inv, MultMat_Y, b_new, 1 - phi, eta, psi, nu_2) - Target_Bphi(X, Y, B, Sigma_Inv, MultMat_Y, b, phi, eta, psi, nu_2)
 
 
 
   # Generate uniform u
   u = stats::runif(1, 0, 1)
 
-  if(!is.na(r)){
+  # Compare r with u
+  if(r > log(u)){
 
-    # Check whether r is big or not
-    # min(1, r) >= u
-    if(min(0, r) >= log(u)){
+    # Update b and phi
+    b = b_new
 
-      b = b_new
-
-      phi = 1 - phi
-
-    }
+    phi = 1 - phi
 
   }
 
+  # Return b and phi
   return(list(b = b, phi = phi))
 
 }
