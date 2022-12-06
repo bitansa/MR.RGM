@@ -326,20 +326,17 @@ Generate_Agamma = function(X, Y, A, i, j, Sigma_Inv, N, p, B, gamma, tau, rho, n
   # Generate uniform u
   u = stats::runif(1, 0, 1)
 
-  if(!is.na(r)){
+  # Compare u and r
+  if(r >= log(u)){
 
-    # Check whether r is big or not
-    # min(1, r) >= u
-    if(min(0, r) >= log(u)){
-
+    # Update a and gamma value
       a = a_new
 
       gamma = 1 - gamma
 
     }
 
-  }
-
+  # Return a and gamma value
   return(list(a = a, gamma = gamma))
 
 }
