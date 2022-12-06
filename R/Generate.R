@@ -259,7 +259,7 @@ Generate_B = function(xz, b_vec, b, x_mat, x_vec, sigma, eta, phi, nu2){
 #' @param A p * p matrix input
 #' @param a scalar input
 #' @param N positive scalar input
-#' @param Sigma_Inv p * p matrix input
+#' @param Sigma_Inv p * 1 vector input
 #' @param p positive integer input
 #' @param B p * K matrix input
 #' @param gamma scalar input, 0 or 1
@@ -272,31 +272,17 @@ Generate_B = function(xz, b_vec, b, x_mat, x_vec, sigma, eta, phi, nu2){
 #' @examples
 Target_Agamma = function(X, Y, A, a, N, Sigma_Inv, p, B, gamma, tau, rho, nu_1){
 
-  # Calculate (I_p - A) and (I_p - A)^{-1} * B
+  # Calculate (I_p - A)
   Mult_Mat = diag(p) - A
-  Inv_MatB = solve(Mult_Mat) %*% B
 
+  # Calculate difference
+  Diff = tcrossprod(Mult_Mat, Y) - tcrossprod(B, X)
 
-  # Calculate mean matrix and variance matrix inverse
-  Mean_mat = tcrossprod(Inv_MatB, X)
-  Var_mat_inv = crossprod(Mult_Mat, Sigma_Inv %*% Mult_Mat)
-
-  # Initiate Sum
-  Sum = 0
-
-  for (i in 1:N) {
-
-    # Calculate difference
-    Diff = Y[i, ] - t(Mean_mat[, i])
-
-    # Calculate Sum
-    Sum = Sum + tcrossprod(Diff %*% Var_mat_inv, Diff)
-
-  }
+  # Calculate Sum term inside exponential in likelihood
+  Sum = sum(Sigma_Inv * rowSums(Diff^2))
 
   # Calculate target value
-  Target = N/2 * determinant(Var_mat_inv, logarithm = TRUE)$modulus -1/2 * Sum + gamma * (-a^2/(2 * tau) - log(sqrt(tau))) + (1 - gamma) * (-a^2/(2 * nu_1 * tau) - log(sqrt(nu_1 * tau))) + gamma * log(rho) + (1 - gamma) * log(1 - rho)
-
+  Target = N * determinant(Mult_Mat, logarithm = TRUE)$modulus - Sum / 2 - gamma * (a^2 / (2 * tau)) - (1 - gamma) *  (a^2 / (2 * nu_1 * tau)) + gamma * log(rho) + (1 - gamma) * log(1 - rho)
 
   # Return Target
   return(Target)
