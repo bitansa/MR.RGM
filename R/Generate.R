@@ -67,11 +67,19 @@ Generate_Psi = function(Phi, d, a_psi, b_psi){
 #' @examples
 Generate_Eta = function(b, phi, a_eta, b_eta, nu_2){
 
-  # Generate eta based on Inverse Gamma distribution
-  eta = phi / stats::rgamma(1, a_eta + 1/2, b^2/2 + b_eta) + (1 - phi) / stats::rgamma(1, a_eta + 1/2, b^2/(2 * nu_2) + b_eta)
+  # Generate Eta based on Inverse Gamma distribution
+  if(phi == 1){
 
-  # Return eta
-  return(eta)
+    Eta = 1 / stats::rgamma(1, a_eta + 1/2, b^2/2 + b_eta)
+
+  } else {
+
+    Eta = 1 / stats::rgamma(1, a_eta + 1/2, b^2/(2 * nu_2) + b_eta)
+
+  }
+
+  # Return Eta
+  return(Eta)
 
 }
 
@@ -93,11 +101,20 @@ Generate_Eta = function(b, phi, a_eta, b_eta, nu_2){
 #' @examples
 Generate_Tau = function(a, gamma, a_tau, b_tau, nu_1){
 
-  # Generate tau based on Inverse Gamma distribution
-  tau = gamma / stats::rgamma(1, a_tau + 1/2, a^2/2 + b_tau) + (1 - gamma) / stats::rgamma(1, a_tau + 1/2, a^2/(2 * nu_1) + b_tau)
 
-  # Return tau
-  return(tau)
+  # Generate Tau based on Inverse Gamma distribution
+  if(gamma == 1){
+
+    Tau = 1 / stats::rgamma(1, a_tau + 1/2, a^2/2 + b_tau)
+
+  } else {
+
+    Tau = 1 / stats::rgamma(1, a_tau + 1/2, a^2/(2 * nu_1) + b_tau)
+
+  }
+
+  # Return Tau
+  return(Tau)
 
 }
 
