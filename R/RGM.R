@@ -266,6 +266,41 @@ RGM = function(X, Y, A0 = NULL, B0 = NULL, D = NULL, a_tau = 0.1, b_tau = 0.1, a
 
     }
 
+    # Calculate (I_p - A) %*% t(Y)
+    MultMat_Y = tcrossprod((diag(p) - A), Y)
+
+
+    # Update Eta based on corresponding b and phi and then Update b and phi based on the corresponding eta
+    for (j in 1:p) {
+
+      for (l in 1:K) {
+
+        # Don't update if the corresponding D entry is 0
+        if(D[j, l] != 0){
+
+          # Update Eta
+          Eta[j, l] = Generate_Eta(B[j, l], Phi[j, l], a_eta = a_eta, b_eta = b_eta, nu_2 = nu_2)
+
+          # Generate both b and phi
+          Out = Generate_Bphi(X, Y, B, j, l, Sigma_Inv = Sigma_Inv,  MultMat_Y , phi = Phi[j, l], eta = Eta[j, l], psi = Psi, nu_2 = nu_2, prop_var2 = Prop_VarB)
+
+          # Update B[j, l] and Phi[j, l]
+          B[j, l] = Out$b
+
+          Phi[j, l] = Out$phi
+
+          # Update B_Update and Phi_Update
+          B_Update[p * (l - 1) + j , i] = Out$b
+
+          Phi_Update[p * (l - 1) + j , i] = Out$phi
+
+
+        }
+
+      }
+
+    }
+
 
 
 
