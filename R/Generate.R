@@ -456,7 +456,7 @@ Generate_A = function(X, Y, A, i, j, Sigma_Inv, N, p, B, gamma, tau, nu_1, prop_
 Target_Bphi = function(X, Y, B, Sigma_Inv, MultMat_Y, b, phi, eta, psi, nu_2){
 
   # Calculate Difference vector
-  Diff = Mult_Inv_Y - tcrossprod(B, X)
+  Diff = MultMat_Y - tcrossprod(B, X)
 
 
   # Calculate Sum

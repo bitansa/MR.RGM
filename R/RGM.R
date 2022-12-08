@@ -216,5 +216,25 @@ RGM = function(X, Y, A0 = NULL, B0 = NULL, D = NULL, a_tau = 0.1, b_tau = 0.1, a
   }
 
 
+  # Initialize A_Update, B_Update, Gamma_update, Phi_Update matrices and Log-likelihood vector
+  A_Update = matrix(0, nrow = p * p, ncol = niter)
+  B_Update = matrix(0, nrow = p * k, ncol = niter)
+  Gamma_Update = matrix(0, nrow = p * p, ncol = niter)
+  Phi_Update = matrix(0, nrow = p * k, ncol = niter)
+  LL = rep(0, niter)
+
+
+  # Run a  loop to update all the parameters
+  for (i in 1:niter) {
+
+    # Update Rho
+    Rho = Generate_Rho(Gamma = Gamma, p, a_rho = a_rho, b_rho = b_rho)
+
+    # Update Psi
+    Psi = Generate_Psi(Phi = Phi, d, a_psi = a_psi, b_psi = b_psi)
+
+  }
+
+
 
 }
