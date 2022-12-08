@@ -322,5 +322,22 @@ RGM = function(X, Y, A0 = NULL, B0 = NULL, D = NULL, a_tau = 0.1, b_tau = 0.1, a
 
   }
 
+  # Calculate Gamma and Phi as the rowmeans of Gamma_Update and Phi_Update
+  Gamma = matrix(rowMeans(Gamma_Update[, 3000:niter]), nrow = p, ncol = p)
+  Phi = matrix(rowMeans(Phi_Update[, 3000:niter]), nrow = p, ncol = k)
+
+  # Calculate A and B as the rowmeans of A_Update and B_Update
+  A = matrix(rowMeans(A_Update[, 3000:niter]), nrow = p, ncol = p)
+  B = matrix(rowMeans(B_Update[, 3000:niter]), nrow = p, ncol = k)
+
+  # Take A[i, j] = A[i, j] if Gamma[i, j] > 1/2 else take 0
+  A = A * (Gamma >= 1/2)
+
+  # Take B[i, j] = B[i, j] if Phi[i, j] > 1/2 else take 0
+  B = B * (Phi >= 1/2)
+
+
+  # Return A, B and log-likelihood
+  return(list(A = A, B = B, LL = LogLikelihood))
 
 }
