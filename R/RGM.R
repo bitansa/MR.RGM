@@ -233,8 +233,46 @@ RGM = function(X, Y, A0 = NULL, B0 = NULL, D = NULL, a_tau = 0.1, b_tau = 0.1, a
     # Update Psi
     Psi = Generate_Psi(Phi = Phi, d, a_psi = a_psi, b_psi = b_psi)
 
-  }
 
+    # Update Tau based on corresponding a and gamma and then Update a and gamma based on the corresponding tau
+    for (j in 1:p) {
+
+      for (l in 1:p) {
+
+        # Don't update the diagonal entries
+        if(l != j){
+
+          # Update Tau
+          Tau[j, l] = Generate_Tau(A[j, l], Gamma[j, l], a_tau = a_tau, b_tau = b_tau, nu_1 = nu_1)
+
+          # Generate both a and gamma
+          Out = Generate_Agamma(X, Y, A, j, l, Sigma_Inv = Sigma_Inv, n, p, B, gamma = Gamma[j, l], tau = Tau[j, l], rho = Rho, nu_1 = nu_1, prop_var1 = Prop_varA)
+
+          # Update A[j, l] and Gamma[j, l]
+          A[j, l] = Out$a
+
+          Gamma[j, l] = Out$gamma
+
+
+          # Update A_Update and Gamma_Update
+          A_Update[p * (l - 1) + j , i] = Out$a
+
+          Gamma_Update[p * (l - 1) + j , i] = Out$gamma
+
+
+        }
+
+      }
+
+    }
+
+
+
+
+
+
+
+  }
 
 
 }
