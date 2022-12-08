@@ -221,7 +221,7 @@ RGM = function(X, Y, A0 = NULL, B0 = NULL, D = NULL, a_tau = 0.1, b_tau = 0.1, a
   B_Update = matrix(0, nrow = p * k, ncol = niter)
   Gamma_Update = matrix(0, nrow = p * p, ncol = niter)
   Phi_Update = matrix(0, nrow = p * k, ncol = niter)
-  LL = rep(0, niter)
+  LogLikelihood = rep(0, niter)
 
 
   # Run a  loop to update all the parameters
@@ -302,9 +302,22 @@ RGM = function(X, Y, A0 = NULL, B0 = NULL, D = NULL, a_tau = 0.1, b_tau = 0.1, a
     }
 
 
+    # Calculate I_p - A
+    Mult_Mat = diag(p) - A
+
+    # Calculate Diff matrix as (I_p - A) %*% t(Y) - B %*% t(X)
+    Diff = tcrossprod(Mult_Mat, Y) - tcrossprod(B, X)
+
+    # Update Sigma_Inv vector
+    for (j in 1:p) {
+
+      Sigma_Inv[j] = 1 / Generate_Sigma(n, sum(Diff[j, ]^2), a_sigma, b_sigma)
+
+    }
 
 
-
+    # Update Log-likelihood
+    LogLikelihood[i] = LL(A, B, X, Y, Sigma_Inv = Sigma_Inv, p, n)
 
 
   }
