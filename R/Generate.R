@@ -528,6 +528,27 @@ Generate_Bphi = function(X, Y, B, i, j, Sigma_Inv, MultMat_Y, phi, eta, psi, nu_
 
 
 
+# Generate log-likelihood
+LL = function(A, B, X, Y, Sigma_Inv, p, N){
+
+  # Calculate I_P - A
+  Mult_Mat = diag(p) - A
+
+  # Calculate difference as (I_p - A) %*% t(Y) - B %*% t(X)
+  Diff = tcrossprod(Mult_Mat, Y) - tcrossprod(B, X)
+
+  # Initiate Sum
+  Sum = sum(Sigma_Inv * rowSums(Diff^2))
+
+  # Calculate log-likelihood
+  LL = N * determinant(Mult_Mat, logarithm = TRUE)$modulus - N / 2 * sum(log(1/Sigma_Inv)) - Sum / 2 - N / 2 * log(2 * pi)
+
+  # Return LL
+  return(LL)
+
+}
+
+
 
 
 

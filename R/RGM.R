@@ -55,7 +55,7 @@ RGM = function(X, Y, A0 = NULL, B0 = NULL, D = NULL, a_tau = 0.1, b_tau = 0.1, a
     }
 
    # Check whether all the entries of D matrix is either 0 or 1
-   if(!is.integer(D) || max(D) > 1 || min(D) < 0){
+   if(!is.numeric(D) || max(D) > 1 || min(D) < 0){
 
      # Print an error message
      stop("All the entries of the indicator matrix should be either 0 or 1")
@@ -87,7 +87,7 @@ RGM = function(X, Y, A0 = NULL, B0 = NULL, D = NULL, a_tau = 0.1, b_tau = 0.1, a
 
 
   # Check whether niter term is large enough or not
-  if(!is.integer(niter) || niter < 10000){
+  if(!is.numeric(niter) || niter < 10000){
 
     # Print an error message
     stop("Number of iterations should be large i.e. at least 10000")
@@ -273,7 +273,7 @@ RGM = function(X, Y, A0 = NULL, B0 = NULL, D = NULL, a_tau = 0.1, b_tau = 0.1, a
     # Update Eta based on corresponding b and phi and then Update b and phi based on the corresponding eta
     for (j in 1:p) {
 
-      for (l in 1:K) {
+      for (l in 1:k) {
 
         # Don't update if the corresponding D entry is 0
         if(D[j, l] != 0){
