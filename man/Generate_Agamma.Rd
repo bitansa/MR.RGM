@@ -32,7 +32,7 @@ Generate_Agamma(
 
 \item{j}{integer input in between 1 and p}
 
-\item{Sigma_Inv}{p * p matrix input}
+\item{Sigma_Inv}{p * 1 vector input}
 
 \item{N}{positive scalar input}
 

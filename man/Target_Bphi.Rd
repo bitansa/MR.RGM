@@ -4,7 +4,7 @@
 \alias{Target_Bphi}
 \title{Target function for a particular A entry and corresponding gamma}
 \usage{
-Target_Bphi(X, Y, B, Sigma_Inv, Mult_Inv_Y, b, phi, eta, psi, nu_2)
+Target_Bphi(X, Y, B, Sigma_Inv, MultMat_Y, b, phi, eta, psi, nu_2)
 }
 \arguments{
 \item{X}{n * K matrix input}
@@ -13,9 +13,9 @@ Target_Bphi(X, Y, B, Sigma_Inv, Mult_Inv_Y, b, phi, eta, psi, nu_2)
 
 \item{B}{p * K matrix input}
 
-\item{Sigma_Inv}{p * p matrix input}
+\item{Sigma_Inv}{p * 1 vector input}
 
-\item{Mult_Inv_Y}{p * n matrix input}
+\item{MultMat_Y}{p * n matrix input}
 
 \item{b}{scalar input}
 

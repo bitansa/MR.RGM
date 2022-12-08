@@ -11,7 +11,7 @@ Generate_Bphi(
   i,
   j,
   Sigma_Inv,
-  Mult_Inv_Y,
+  MultMat_Y,
   phi,
   eta,
   psi,
@@ -30,9 +30,9 @@ Generate_Bphi(
 
 \item{j}{positive integer input in between 1 and K}
 
-\item{Sigma_Inv}{p * p matrix input}
+\item{Sigma_Inv}{p * 1 vector input}
 
-\item{Mult_Inv_Y}{p * n matrix input}
+\item{MultMat_Y}{p * n matrix input}
 
 \item{phi}{scalar input 0 or 1}
 

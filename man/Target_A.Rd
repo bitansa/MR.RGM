@@ -17,7 +17,7 @@ Target_A(X, Y, A, a, N, Sigma_Inv, p, B, gamma, tau, nu_1)
 
 \item{N}{positive scalar input}
 
-\item{Sigma_Inv}{p * p matrix input}
+\item{Sigma_Inv}{p * 1 vector input}
 
 \item{p}{positive integer input}
 
