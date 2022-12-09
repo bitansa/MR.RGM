@@ -11,9 +11,9 @@ Generate_Rho(Gamma, p, a_rho, b_rho)
 
 \item{p}{positive scalar input}
 
-\item{a_rho}{positive scalar input}
+\item{a_rho}{positive scalar input, first parameter of beta distribution}
 
-\item{b_rho}{positive scalar input}
+\item{b_rho}{positive scalar input, second parameter of beta distribution}
 }
 \value{
 scalar value generated from beta distribution, rbeta(1, sum(Gamma) + a_rho, p * (p - 1) - sum(Gamma) + b_rho)

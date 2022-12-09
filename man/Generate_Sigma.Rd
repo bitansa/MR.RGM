@@ -11,9 +11,9 @@ Generate_Sigma(n, z_sum, a_sigma, b_sigma)
 
 \item{z_sum}{non-negative scalar input}
 
-\item{a_sigma}{positive scalar input}
+\item{a_sigma}{positive scalar input, first parameter of inverse gamma distribution}
 
-\item{b_sigma}{positive scalar input}
+\item{b_sigma}{positive scalar input, second parameter of inverse gamma distribution}
 }
 \value{
 scalar value generated from inverse gamma distribution, 1 / rgamma(1, n/2 + a_sigma, z_sum/2 + b_sigma)

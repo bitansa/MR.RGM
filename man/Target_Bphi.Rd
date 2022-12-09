@@ -19,7 +19,7 @@ Target_Bphi(X, Y, B, Sigma_Inv, MultMat_Y, b, phi, eta, psi, nu_2)
 
 \item{b}{scalar input}
 
-\item{phi}{scalar input 0 or 1}
+\item{phi}{scalar input, 0 or 1}
 
 \item{eta}{positive scalar input}
 

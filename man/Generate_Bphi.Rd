@@ -34,7 +34,7 @@ Generate_Bphi(
 
 \item{MultMat_Y}{p * n matrix input}
 
-\item{phi}{scalar input 0 or 1}
+\item{phi}{scalar input, 0 or 1}
 
 \item{eta}{positive scalar input}
 

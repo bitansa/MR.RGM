@@ -11,9 +11,9 @@ Generate_Tau(a, gamma, a_tau, b_tau, nu_1)
 
 \item{gamma}{scalar input either 0 or 1}
 
-\item{a_tau}{positive scalar input}
+\item{a_tau}{positive scalar input, first parameter of inverse gamma distribution}
 
-\item{b_tau}{positive scalar input}
+\item{b_tau}{positive scalar input, second parameter of inverse gamma distribution}
 
 \item{nu_1}{positive scalar input}
 }

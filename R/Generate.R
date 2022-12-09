@@ -2,8 +2,8 @@
 #'
 #' @param Gamma matrix input
 #' @param p positive scalar input
-#' @param a_rho positive scalar input
-#' @param b_rho positive scalar input
+#' @param a_rho positive scalar input, first parameter of beta distribution
+#' @param b_rho positive scalar input, second parameter of beta distribution
 #'
 #' @return scalar value generated from beta distribution, rbeta(1, sum(Gamma) + a_rho, p * (p - 1) - sum(Gamma) + b_rho)
 #'
@@ -29,8 +29,8 @@ Generate_Rho = function(Gamma, p, a_rho, b_rho){
 #'
 #' @param Phi matrix input
 #' @param d non-negative scalar input
-#' @param a_psi positive scalar input
-#' @param b_psi positive scalar input
+#' @param a_psi positive scalar input, first parameter of beta distribution
+#' @param b_psi positive scalar input, second parameter of beta distribution
 #'
 #' @return scalar value generated from beta distribution, rbeta(1, sum(Phi) + a_psi, d - sum(Phi) + b_psi)
 #'
@@ -43,7 +43,7 @@ Generate_Psi = function(Phi, d, a_psi, b_psi){
   # Generate Psi from Beta distribution
   Psi = stats::rbeta(1, Phi_sum + a_psi, d - Phi_sum + b_psi)
 
-  # Return Rho
+  # Return Psi
   return(Psi)
 
 }
@@ -58,9 +58,9 @@ Generate_Psi = function(Phi, d, a_psi, b_psi){
 #'
 #' @param b scalar input
 #' @param phi scalar input either 0 or 1
-#' @param a_eta positive scalar input
-#' @param b_eta positive scalar input
-#' @param nu_2 positve scalar input
+#' @param a_eta positive scalar input, first parameter of inverse gamma distribution
+#' @param b_eta positive scalar input, second parameter of inverse gamma distribution
+#' @param nu_2 positive scalar input generated from inverse gamma distribution
 #'
 #' @return scalar value generated from inverse gamma distribution, phi / rgamma(1, a_eta + 1/2, b^2/2 + b_eta) + (1 - phi) / rgamma(1, a_eta + 1/2, b^2/(2 * nu_2) + b_eta)
 #'
@@ -92,8 +92,8 @@ Generate_Eta = function(b, phi, a_eta, b_eta, nu_2){
 #'
 #' @param a scalar input
 #' @param gamma scalar input either 0 or 1
-#' @param a_tau positive scalar input
-#' @param b_tau positive scalar input
+#' @param a_tau positive scalar input, first parameter of inverse gamma distribution
+#' @param b_tau positive scalar input, second parameter of inverse gamma distribution
 #' @param nu_1 positive scalar input
 #'
 #' @return scalar value generated from inverse gamma distribution, gamma / rgamma(1, a_tau + 1/2, a^2/2 + b_tau) + (1 - gamma) / rgamma(1, a_tau + 1/2, a^2/(2 * nu_1) + b_tau)
@@ -122,75 +122,12 @@ Generate_Tau = function(a, gamma, a_tau, b_tau, nu_1){
 
 
 
-
-#' Phi generating function
-#'
-#' @param b scalar input
-#' @param psi scalar input between 0 and 1
-#' @param eta positive scalar input
-#' @param nu_2 positive scalar input
-#'
-#' @return scalar value generated from a bernoulli distribution i.e. 0 or 1
-#'
-#' @examples
-Generate_Phi = function(b, psi, eta, nu_2){
-
-  # Calculate C1 and C2
-  C1 = psi / sqrt(eta) * exp(- b^2 / (2 * eta))
-
-  C2 = (1 - psi) / sqrt(nu_2 * eta) * exp(- b^2 / (2 * nu_2 * eta))
-
-  # Generate phi based on bernoulli distribution
-  phi = stats::rbinom(1, 1, C1/(C1+C2))
-
-  # Return phi
-  return(phi)
-
-}
-
-
-
-
-
-#' Gamma generating function
-#'
-#' @param a scalar input
-#' @param rho scalar input between 0 and 1
-#' @param tau  positive scalar input
-#' @param nu_1 positive scalar input
-#'
-#' @return scalar value generated from a bernoulli distribution i.e. 0 or 1
-#'
-#' @examples
-Generate_Gamma = function(a, rho, tau, nu_1){
-
-  # Calculate D1 and D2
-  D1 = rho / sqrt(tau) * exp(- a^2 / (2 * tau))
-
-  D2 = (1 - rho) / sqrt(nu_1 * tau) * exp(- a^2 / (2 * nu_1 * tau))
-
-  # Generate gamma based on bernoulli distribution
-  gamma = stats::rbinom(1, 1, D1/(D1+D2))
-
-  # Return gamma
-  return(gamma)
-
-}
-
-
-
-
-
-
-
-
-
 #' Sigma generating function
 #'
 #' @param n positive integer input
 #' @param z_sum non-negative scalar input
-#' @param a_sigma positive scalar input
-#' @param b_sigma positive scalar input
+#' @param a_sigma positive scalar input, first parameter of inverse gamma distribution
+#' @param b_sigma positive scalar input, second parameter of inverse gamma distribution
 #'
 #' @return scalar value generated from inverse gamma distribution, 1 / rgamma(1, n/2 + a_sigma, z_sum/2 + b_sigma)
 #'
@@ -202,45 +139,6 @@ Generate_Sigma = function(n, z_sum, a_sigma, b_sigma){
 
   # Return sigma
   return(sigma)
-
-}
-
-
-
-
-
-
-
-
-
-#' B matrix entries generating function
-#'
-#' @param xz scalar input
-#' @param b_vec vector input
-#' @param b scalar input
-#' @param x_mat matrix input
-#' @param x_vec vector input
-#' @param sigma positive scalar input
-#' @param eta positive scalar input
-#' @param phi scalar input 0 or 1
-#' @param nu2 positive scalar input
-#'
-#' @return scalar value generated from normal distribution
-#'
-#' @examples
-Generate_B = function(xz, b_vec, b, x_mat, x_vec, sigma, eta, phi, nu2){
-
-  # Calculate numerator of mean
-  mean = xz - sum(tcrossprod(b_vec, x_mat) * x_vec) / sigma + sum(x_vec^2) * b / sigma
-
-  # Calculate variance
-  variance = phi / (sum(x_vec) / sigma + 1 / eta) + (1 - phi) / (sum(x_vec) / sigma + 1 / (eta * nu2))
-
-  # Generate b
-  b = stats::rnorm(1, mean = mean * variance, sqrt(variance))
-
-  # Return beta
-  return(b)
 
 }
 
@@ -267,7 +165,7 @@ Generate_B = function(xz, b_vec, b, x_mat, x_vec, sigma, eta, phi, nu2){
 #' @param rho scalar input in between 0 and 1
 #' @param nu_1 positive scalar input
 #'
-#' @return scalar target value
+#' @return scalar target value corresponding to a particular a and gamma value
 #'
 #' @examples
 Target_Agamma = function(X, Y, A, a, N, Sigma_Inv, p, B, gamma, tau, rho, nu_1){
@@ -345,108 +243,13 @@ Generate_Agamma = function(X, Y, A, i, j, Sigma_Inv, N, p, B, gamma, tau, rho, n
 
 
 
-
-
-#' Target function for a particular A entry
-#'
-#' @inheritParams Target_Agamma
-#'
-#' @return scalar target value
-#'
-#' @examples
-Target_A = function(X, Y, A, a, N, Sigma_Inv, p, B, gamma, tau, nu_1){
-
-  # Calculate (I_p - A)^{-1} and (I_p - A)^{-1} * B
-  Mult_Mat = diag(p) - A
-
-  Inv_Mat = solve(Mult_Mat)
-  Inv_MatB = Inv_Mat %*% B
-
-  # Calculate mean matrix and variance matrix inverse
-  Mean_mat = tcrossprod(Inv_MatB, X)
-  Var_mat_inv = crossprod(Mult_Mat, Sigma_Inv %*% Mult_Mat)
-
-  # Initiate Sum
-  Sum = 0
-
-  for (i in 1:N) {
-
-    # Calculate difference
-    Diff = Y[i, ] - t(Mean_mat[, i])
-
-    # Calculate Sum
-    Sum = Sum + tcrossprod(Diff %*% Var_mat_inv, Diff)
-
-  }
-
-  # Calculate target value
-  Target = (det(Var_mat_inv)^(N/2)) * exp(-1/2 * Sum) * (gamma * exp(-a^2/(2 * tau)) / sqrt(tau) + (1 - gamma) * exp(- a^2/(2 * nu_1 * tau)) / sqrt(nu_1 * tau))
-
-
-  # Return Target
-  return(Target)
-
-}
-
-
-
-
-
-
-
-
-#' A matrix entries generating function
-#'
-#' @inheritParams Generate_Agamma
-#'
-#' @return scalar a value
-#'
-#' @examples
-Generate_A = function(X, Y, A, i, j, Sigma_Inv, N, p, B, gamma, tau, nu_1, prop_var1){
-
-  # Value to update
-  a = A[i, j]
-
-  # Proposed value
-  a_new = stats::rnorm(1, a, prop_var1)
-
-  # New A matrix with proposed a value
-  A_new = A
-  A_new[i, j] = a_new
-
-  # Calculate r
-  r = Target_A(X, Y, A_new, a_new, Sigma_Inv, N, p, B, gamma, tau, nu_1)  / Target_A(X, Y, A, a, Sigma_Inv, N, p, B, gamma, tau, nu_1)
-
-  # Generate uniform u
-  u = stats::runif(1, 0, 1)
-
-  if(!is.na(r)){
-
-    # Check whether r is big or not
-    if(min(1, r) >= u){
-
-      a = a_new
-
-    }
-
-  }
-
-  return(a)
-
-}
-
-
-
-
-
-
-
-
 #' Target function for a particular A entry and corresponding gamma
 #'
 #' @inheritParams Generate_Agamma
-#' @inheritParams Generate_B
 #' @param MultMat_Y p * n matrix input
+#' @param b scalar input
+#' @param phi scalar input, 0 or 1
+#' @param eta positive scalar input
 #' @param psi scalar input in between 0 and 1
 #' @param nu_2 positive scalar input
 #'
@@ -463,7 +266,7 @@ Target_Bphi = function(X, Y, B, Sigma_Inv, MultMat_Y, b, phi, eta, psi, nu_2){
   Sum = sum(rowSums(Diff^2) * Sigma_Inv)
 
   # Calculate Target value
-  Target =  -1/2 * Sum - phi * (b^2 / (2 * eta)) - (1 - phi) * (b^2/(2 * nu_2 * eta)) + phi * log(psi) + (1 - phi) * log(1 - psi)
+  Target =  -Sum/2 - phi * (b^2 / (2 * eta)) - (1 - phi) * (b^2/(2 * nu_2 * eta)) + phi * log(psi) + (1 - phi) * log(1 - psi)
 
 
   # Return Target value
@@ -528,7 +331,15 @@ Generate_Bphi = function(X, Y, B, i, j, Sigma_Inv, MultMat_Y, phi, eta, psi, nu_
 
 
 
-# Generate log-likelihood
+
+#' Log-likelihood generating function
+#'
+#' @inheritParams Generate_Agamma
+#' @param p positive integer input
+#'
+#' @return Log likelihood value corresponding to a particular A, B, X, Y and Sigma_Inv
+#'
+#' @examples
 LL = function(A, B, X, Y, Sigma_Inv, p, N){
 
   # Calculate I_P - A

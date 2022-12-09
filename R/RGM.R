@@ -54,8 +54,17 @@ RGM = function(X, Y, A0 = NULL, B0 = NULL, D = NULL, a_tau = 0.1, b_tau = 0.1, a
 
     }
 
-   # Check whether all the entries of D matrix is either 0 or 1
+   # Check whether all the entries of D matrix is between 0 or 1
    if(!is.numeric(D) || max(D) > 1 || min(D) < 0){
+
+     # Print an error message
+     stop("All the entries of the indicator matrix should be either 0 or 1")
+
+   }
+
+
+   # Check whether all the entries of D matrix is integer or not
+   if(sum(D != round(D)) != 0){
 
      # Print an error message
      stop("All the entries of the indicator matrix should be either 0 or 1")
@@ -90,7 +99,15 @@ RGM = function(X, Y, A0 = NULL, B0 = NULL, D = NULL, a_tau = 0.1, b_tau = 0.1, a
   if(!is.numeric(niter) || niter < 10000){
 
     # Print an error message
-    stop("Number of iterations should be large i.e. at least 10000")
+    stop("Number of iterations should be a large positive integer i.e. at least 10000")
+
+  }
+
+  # Check whether niter is an integer
+  if(niter != round(niter)){
+
+    # Print an error message
+    stop("Number of iterations should be a large positive integer i.e. at least 10000")
 
   }
 

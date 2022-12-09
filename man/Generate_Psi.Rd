@@ -11,9 +11,9 @@ Generate_Psi(Phi, d, a_psi, b_psi)
 
 \item{d}{non-negative scalar input}
 
-\item{a_psi}{positive scalar input}
+\item{a_psi}{positive scalar input, first parameter of beta distribution}
 
-\item{b_psi}{positive scalar input}
+\item{b_psi}{positive scalar input, second parameter of beta distribution}
 }
 \value{
 scalar value generated from beta distribution, rbeta(1, sum(Phi) + a_psi, d - sum(Phi) + b_psi)

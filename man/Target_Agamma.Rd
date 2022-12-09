@@ -32,7 +32,7 @@ Target_Agamma(X, Y, A, a, N, Sigma_Inv, p, B, gamma, tau, rho, nu_1)
 \item{nu_1}{positive scalar input}
 }
 \value{
-scalar target value
+scalar target value corresponding to a particular a and gamma value
 }
 \description{
 Target function for a particular A entry and corresponding gamma

@@ -11,11 +11,11 @@ Generate_Eta(b, phi, a_eta, b_eta, nu_2)
 
 \item{phi}{scalar input either 0 or 1}
 
-\item{a_eta}{positive scalar input}
+\item{a_eta}{positive scalar input, first parameter of inverse gamma distribution}
 
-\item{b_eta}{positive scalar input}
+\item{b_eta}{positive scalar input, second parameter of inverse gamma distribution}
 
-\item{nu_2}{positve scalar input}
+\item{nu_2}{positive scalar input generated from inverse gamma distribution}
 }
 \value{
 scalar value generated from inverse gamma distribution, phi / rgamma(1, a_eta + 1/2, b^2/2 + b_eta) + (1 - phi) / rgamma(1, a_eta + 1/2, b^2/(2 * nu_2) + b_eta)
