@@ -1,4 +1,85 @@
-RGM = function(X, Y, A0 = NULL, B0 = NULL, D = NULL, a_tau = 0.1, b_tau = 0.1, a_rho = 0.5, b_rho = 0.5, nu_1 = 0.0001, a_eta = 0.1, b_eta = 0.1, a_psi = 0.5, b_psi = 0.5, nu_2 = 0.0001, a_sigma = 0.1, b_sigma = 0.1, Prop_varA = 0.1, Prop_VarB = 0.001, niter = 10000){
+#' Title Fitting Reciprocal Graphical Models for Integrative Gene Regulatory Network
+#'
+#' @description RGM can be used to fit Reciprocal Graphical Models on gene expression data and DNA level measurements to find the relationship between different genes and the relationship between genes and DNA.
+#'
+#'
+#' @param X n * k matrix data input, each row denotes a particular observation and each column denotes a particular DNA.
+#' @param Y n * p matrix data input, each row denotes a particular observation and each column denotes a particular gene.
+#' @param A0 p * p matrix input. It is the initial value of the gene-gene interaction matrix. Diagonal entries of A0 should all be 0. Random initialization of A0 may increase the convergence time of the markov chain. Default value is NULL.
+#' @param B0  p * k matrix input. It is the initial value of the gene-DNA interaction matrix. Each row corresponds to a particular gene, each column corresponds to a particular DNA. Random initialization of B0 matrix may increase the convergence time of the markov chain. Default value is NULL.
+#' @param D p * k indicator matrix input. Each row corresponds to a particular gene, each column corresponds to a particular DNA. An entry is 1 if the corresponding DNA can affect the corresponding gene, else 0. Default value is NULL. If not given, all entry of D is taken to be 1.
+#' @param a_tau positive scalar input. It corresponds to the first parameter of a Inverse Gamma distribution. Default value is 0.1.
+#' @param b_tau positive scalar input. It corresponds to the second parameter of a Inverse Gamma distribution. Default value is 0.1.
+#' @param a_rho positive scalar input. It corresponds to the first parameter of a Beta distribution. Default value is 0.5.
+#' @param b_rho positive scalar input. It corresponds to the first parameter of a Beta distribution. Default value is 0.5.
+#' @param nu_1 positive scalar input. It corresponds to the variance of slab part of of spike and slab distribution of A. Default value is 0.0001.
+#' @param a_eta positive scalar input. It corresponds to the first parameter of a Inverse Gamma distribution. Default value is 0.1.
+#' @param b_eta positive scalar input. It corresponds to the second parameter of a Inverse Gamma distribution. Default value is 0.1.
+#' @param a_psi positive scalar input. It corresponds to the first parameter of a Beta distribution. Default value is 0.5.
+#' @param b_psi positive scalar input. It corresponds to the first parameter of a Beta distribution. Default value is 0.5.
+#' @param nu_2 positive scalar input. It corresponds to the variance of slab part of of spike and slab distribution of B. Default value is 0.0001.
+#' @param a_sigma positive scalar input. It corresponds to the first parameter of a Inverse Gamma distribution. Default value is 0.1.
+#' @param b_sigma positive scalar input. It corresponds to the second parameter of a Inverse Gamma distribution. Default value is 0.1.
+#' @param Prop_varA positive scalar input. It corresponds to the variance of the normal distribution of proposing A matrix terms. Default value is 0.1.
+#' @param Prop_VarB positive scalar input. It corresponds to the variance of the normal distribution of proposing B matrix terms. Default value is 0.1.
+#' @param niter positive integer input. It corresponds to number of iterations the markov chain runs. Give niter as large as possible to get the convergence. Minimum value is 10,000. Default value is 10,000.
+#'
+#' @return A list which will hold A, B, LL:
+#'
+#' \item{A}{p * p matrix output of Gene-Gene interactions.}
+#' \item{B}{p * k matrix output of Gene-DNA interactions.}
+#' \item{LL}{niter * 1 vector output of log-likelihood values of the model for all the iterations.}
+#'
+#' @export
+#'
+#' @examples
+#'
+#' # -----------------------------------------------------------------
+#' # Example 1:
+#'
+#'
+#' n = 500
+#' p = 3
+#' k = 3
+#'
+#' A = matrix(sample(c(-3,3), p^2, replace = T), p, p)
+#' diag(A) = 0
+#'
+#' B = matrix(0, p, k)
+#'
+#' for(i in 1:p){
+#'
+#'   B[i, i] = sample(c(-3, 3), 1, replace = T)
+#'
+#' }
+#'
+#' D = diag(3)
+#'
+#' Sigma = 0.5 * diag(p)
+#'
+#' Mult_Mat = solve(diag(p) - A)
+#'
+#' Variance = Mult_Mat %*% Sigma %*% t(Mult_Mat)
+#'
+#' X = matrix(runif(n * k, 0, 5), nrow = n, ncol = k)
+#'
+#' Y = matrix(0, nrow = n, ncol = p)
+#'
+#' for (i in 1:n) {
+#'
+#'  Y[i, ] = mvrnorm(n = 1, Mult_Mat %*% B %*% X[i, ], Variance)
+#'
+#' }
+#'
+#' Out = RGM(X, Y, A = A, B = B, D = D)
+#'
+#' A = Out$A
+#' B = Out$B
+#' LL = Out$LL
+#' plot(LL, type = 'l', xlab = "Number of Iterations", ylab = "Log-likelihood")
+#'
+#'
+RGM = function(X, Y, A0 = NULL, B0 = NULL, D = NULL, a_tau = 0.1, b_tau = 0.1, a_rho = 0.5, b_rho = 0.5, nu_1 = 0.0001, a_eta = 0.1, b_eta = 0.1, a_psi = 0.5, b_psi = 0.5, nu_2 = 0.0001, a_sigma = 0.1, b_sigma = 0.1, Prop_varA = 0.1, Prop_VarB = 0.1, niter = 10000){
 
   # Calculate number of datapoints and number of nodes from Y matrix
   n = nrow(Y)
