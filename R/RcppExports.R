@@ -29,3 +29,19 @@ Generate_Agamma_C <- function(X, Y, A, diag_p, i, j, Sigma_Inv, N, B, gamma, tau
     .Call(`_ReciprocalGraphicalModels_Generate_Agamma_C`, X, Y, A, diag_p, i, j, Sigma_Inv, N, B, gamma, tau, rho, nu_1, prop_var1)
 }
 
+Target_Bphi_c <- function(X, Y, B, Sigma_Inv, MultMat_Y, b, phi, eta, psi, nu_2) {
+    .Call(`_ReciprocalGraphicalModels_Target_Bphi_c`, X, Y, B, Sigma_Inv, MultMat_Y, b, phi, eta, psi, nu_2)
+}
+
+Generate_Bphi_c <- function(X, Y, B, i, j, Sigma_Inv, MultMat_Y, phi, eta, psi, nu_2, prop_var2) {
+    .Call(`_ReciprocalGraphicalModels_Generate_Bphi_c`, X, Y, B, i, j, Sigma_Inv, MultMat_Y, phi, eta, psi, nu_2, prop_var2)
+}
+
+LL_c <- function(A, B, X, Y, Sigma_Inv, diag_p, N) {
+    .Call(`_ReciprocalGraphicalModels_LL_c`, A, B, X, Y, Sigma_Inv, diag_p, N)
+}
+
+Get_AB_c <- function(A0, B0, X, Y, D, d, diag_p, a_tau = 0.1, b_tau = 0.1, a_rho = 0.5, b_rho = 0.5, nu_1 = 0.0001, a_eta = 0.1, b_eta = 0.1, a_psi = 0.5, b_psi = 0.5, nu_2 = 0.0001, a_sigma = 0.1, b_sigma = 0.1, Prop_varA = 5, Prop_VarB = 5, niter = 25000) {
+    .Call(`_ReciprocalGraphicalModels_Get_AB_c`, A0, B0, X, Y, D, d, diag_p, a_tau, b_tau, a_rho, b_rho, nu_1, a_eta, b_eta, a_psi, b_psi, nu_2, a_sigma, b_sigma, Prop_varA, Prop_VarB, niter)
+}
+
