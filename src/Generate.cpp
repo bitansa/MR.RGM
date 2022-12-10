@@ -201,3 +201,96 @@ NumericVector Generate_Agamma_C(const arma::mat& X, const arma::mat& Y, const ar
 }
 
 
+
+// Target function for B and phi
+// [[Rcpp::export]]
+double Target_Bphi_c(const arma::mat& X, const arma::mat& Y, const arma::mat& B, const arma::colvec& Sigma_Inv, const arma::mat& MultMat_Y, double b, double phi, double eta, double psi, double nu_2){
+
+
+  // Calculate Diff vector
+  arma::mat Diff = MultMat_Y - B * X.t();
+
+
+  // Calculate square difference
+  Diff = Diff % Diff;
+
+  // Initiate rowsum of difference^2
+  arma::colvec Diff_sum = sum(Diff, 1);
+
+
+  // Initiate Sum
+  double Sum = std::inner_product(Sigma_Inv.begin(), Sigma_Inv.end(), Diff_sum.begin(), 0.0);
+
+
+
+  // Calculate Target
+  double Target =  - Sum / 2 - phi * (b * b / (2 * eta)) - (1 - phi) * (b * b /(2 * nu_2 * eta)) + phi * log(psi) + (1 - phi) * log(1 - psi);
+
+
+  // Return Target
+  return(Target);
+
+}
+
+
+
+
+
+
+
+// Generate an entry of B matrix and phi
+// [[Rcpp::export]]
+NumericVector Generate_Bphi_c(const arma::mat& X, const arma::mat& Y, const arma::mat& B, double i, double j, const arma::colvec& Sigma_Inv, const arma::mat& MultMat_Y, double phi, double eta, double psi, double nu_2, double prop_var2){
+
+
+  // Initiate Output
+  NumericVector Output(2);
+
+  // Value to update
+  double b = B(i-1, j-1);
+
+
+  // Proposed value
+  NumericVector b_proposed = Rcpp::rnorm(1, b, std::sqrt(prop_var2));
+
+  // Propose b_new
+  double b_new = b_proposed(0);
+
+  // New B matrix with proposed b value
+  arma::mat B_new = B;
+
+  // Update B_new
+  B_new(i - 1, j - 1) = b_new;
+
+  // Calculate r
+  double r = Target_Bphi_c(X, Y, B_new, Sigma_Inv, MultMat_Y, b_new, 1 - phi, eta, psi, nu_2) - Target_Bphi_c(X, Y, B, Sigma_Inv, MultMat_Y, b, phi, eta, psi, nu_2);
+
+
+  // Generate uniform u
+  NumericVector rand_unif = Rcpp::runif(1, 0, 1);
+
+  // Generate u
+  double u = rand_unif(0);
+
+
+  // Check whether r is big or not
+  if(r > log(u)){
+
+    b = b_new;
+
+    phi = 1 - phi;
+
+  }
+
+  // Update Output
+  Output(0) = b;
+  Output(1) = phi;
+
+
+  return(Output);
+
+
+}
+
+
+
