@@ -293,4 +293,32 @@ NumericVector Generate_Bphi_c(const arma::mat& X, const arma::mat& Y, const arma
 }
 
 
+// Calculate log-likelihood
+// [[Rcpp::export]]
+double LL_c(const arma::mat& A, const arma::mat& B, const arma::mat& X, const arma::mat& Y, const arma::colvec& Sigma_Inv, const arma::mat& diag_p, double N){
+
+  // Calculate I_P - A
+  arma::mat Mult_Mat = diag_p - A;
+
+  // Calculate difference
+  arma::mat Diff = Mult_Mat * Y.t() - B * X.t();
+
+  // Calculate square difference
+  Diff = Diff % Diff;
+
+  // Initiate rowsum of difference^2
+  arma::colvec Diff_sum = sum(Diff, 1);
+
+  // Initiate Sum
+  double Sum = std::inner_product(Sigma_Inv.begin(), Sigma_Inv.end(), Diff_sum.begin(), 0.0);
+
+
+  // Calculate log-likelihood
+  double LL = N * real(arma::log_det(Mult_Mat)) - N / 2 * accu(log(1/Sigma_Inv)) - Sum / 2;
+
+  // Return LL
+  return(LL);
+
+}
+
 
