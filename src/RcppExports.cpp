@@ -69,12 +69,75 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// Generate_Sigma_c
+double Generate_Sigma_c(double n, double z_sum, double a_sigma, double b_sigma);
+RcppExport SEXP _ReciprocalGraphicalModels_Generate_Sigma_c(SEXP nSEXP, SEXP z_sumSEXP, SEXP a_sigmaSEXP, SEXP b_sigmaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type n(nSEXP);
+    Rcpp::traits::input_parameter< double >::type z_sum(z_sumSEXP);
+    Rcpp::traits::input_parameter< double >::type a_sigma(a_sigmaSEXP);
+    Rcpp::traits::input_parameter< double >::type b_sigma(b_sigmaSEXP);
+    rcpp_result_gen = Rcpp::wrap(Generate_Sigma_c(n, z_sum, a_sigma, b_sigma));
+    return rcpp_result_gen;
+END_RCPP
+}
+// Target_Agamma_c
+double Target_Agamma_c(const arma::mat& X, const arma::mat& Y, const arma::mat& A, const arma::mat& diag_p, double a, double N, const arma::colvec& Sigma_Inv, const arma::mat& B, double gamma, double tau, double rho, double nu_1);
+RcppExport SEXP _ReciprocalGraphicalModels_Target_Agamma_c(SEXP XSEXP, SEXP YSEXP, SEXP ASEXP, SEXP diag_pSEXP, SEXP aSEXP, SEXP NSEXP, SEXP Sigma_InvSEXP, SEXP BSEXP, SEXP gammaSEXP, SEXP tauSEXP, SEXP rhoSEXP, SEXP nu_1SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type A(ASEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type diag_p(diag_pSEXP);
+    Rcpp::traits::input_parameter< double >::type a(aSEXP);
+    Rcpp::traits::input_parameter< double >::type N(NSEXP);
+    Rcpp::traits::input_parameter< const arma::colvec& >::type Sigma_Inv(Sigma_InvSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type B(BSEXP);
+    Rcpp::traits::input_parameter< double >::type gamma(gammaSEXP);
+    Rcpp::traits::input_parameter< double >::type tau(tauSEXP);
+    Rcpp::traits::input_parameter< double >::type rho(rhoSEXP);
+    Rcpp::traits::input_parameter< double >::type nu_1(nu_1SEXP);
+    rcpp_result_gen = Rcpp::wrap(Target_Agamma_c(X, Y, A, diag_p, a, N, Sigma_Inv, B, gamma, tau, rho, nu_1));
+    return rcpp_result_gen;
+END_RCPP
+}
+// Generate_Agamma_C
+NumericVector Generate_Agamma_C(const arma::mat& X, const arma::mat& Y, const arma::mat& A, const arma::mat& diag_p, double i, double j, const arma::colvec& Sigma_Inv, double N, const arma::mat& B, double gamma, double tau, double rho, double nu_1, double prop_var1);
+RcppExport SEXP _ReciprocalGraphicalModels_Generate_Agamma_C(SEXP XSEXP, SEXP YSEXP, SEXP ASEXP, SEXP diag_pSEXP, SEXP iSEXP, SEXP jSEXP, SEXP Sigma_InvSEXP, SEXP NSEXP, SEXP BSEXP, SEXP gammaSEXP, SEXP tauSEXP, SEXP rhoSEXP, SEXP nu_1SEXP, SEXP prop_var1SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type A(ASEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type diag_p(diag_pSEXP);
+    Rcpp::traits::input_parameter< double >::type i(iSEXP);
+    Rcpp::traits::input_parameter< double >::type j(jSEXP);
+    Rcpp::traits::input_parameter< const arma::colvec& >::type Sigma_Inv(Sigma_InvSEXP);
+    Rcpp::traits::input_parameter< double >::type N(NSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type B(BSEXP);
+    Rcpp::traits::input_parameter< double >::type gamma(gammaSEXP);
+    Rcpp::traits::input_parameter< double >::type tau(tauSEXP);
+    Rcpp::traits::input_parameter< double >::type rho(rhoSEXP);
+    Rcpp::traits::input_parameter< double >::type nu_1(nu_1SEXP);
+    Rcpp::traits::input_parameter< double >::type prop_var1(prop_var1SEXP);
+    rcpp_result_gen = Rcpp::wrap(Generate_Agamma_C(X, Y, A, diag_p, i, j, Sigma_Inv, N, B, gamma, tau, rho, nu_1, prop_var1));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_ReciprocalGraphicalModels_Generate_Rho_c", (DL_FUNC) &_ReciprocalGraphicalModels_Generate_Rho_c, 4},
     {"_ReciprocalGraphicalModels_Generate_Psi_c", (DL_FUNC) &_ReciprocalGraphicalModels_Generate_Psi_c, 4},
     {"_ReciprocalGraphicalModels_Generate_Eta_c", (DL_FUNC) &_ReciprocalGraphicalModels_Generate_Eta_c, 5},
     {"_ReciprocalGraphicalModels_Generate_Tau_c", (DL_FUNC) &_ReciprocalGraphicalModels_Generate_Tau_c, 5},
+    {"_ReciprocalGraphicalModels_Generate_Sigma_c", (DL_FUNC) &_ReciprocalGraphicalModels_Generate_Sigma_c, 4},
+    {"_ReciprocalGraphicalModels_Target_Agamma_c", (DL_FUNC) &_ReciprocalGraphicalModels_Target_Agamma_c, 12},
+    {"_ReciprocalGraphicalModels_Generate_Agamma_C", (DL_FUNC) &_ReciprocalGraphicalModels_Generate_Agamma_C, 14},
     {NULL, NULL, 0}
 };
 

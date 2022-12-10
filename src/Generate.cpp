@@ -94,3 +94,110 @@ double Generate_Tau_c(double a, double gamma, double a_tau, double b_tau, double
 
 }
 
+
+
+
+// Generate sigma
+// [[Rcpp::export]]
+double Generate_Sigma_c(double n, double z_sum, double a_sigma, double b_sigma){
+
+  // Generate sigma based on Inverse gamma distribution
+  NumericVector sigma = 1 / Rcpp::rgamma(1, n/2 + a_sigma, 1/(z_sum/2 + b_sigma));
+
+  // Store Sigma
+  double Sigma = sigma(0);
+
+
+  // Return sigma
+  return(Sigma);
+
+}
+
+
+
+// Target function for A and gamma
+// [[Rcpp::export]]
+double Target_Agamma_c(const arma::mat& X, const arma::mat& Y, const arma::mat& A, const arma::mat& diag_p, double a, double N, const arma::colvec& Sigma_Inv, const arma::mat& B, double gamma, double tau, double rho, double nu_1){
+
+
+  // Calculate (I_p - A)
+  arma::mat Mult_Mat =  diag_p - A;
+
+  // Calculate difference
+  arma::mat Diff = Mult_Mat * Y.t() - B * X.t();
+
+  // Calculate square difference
+  Diff = Diff % Diff;
+
+  // Initiate rowsum of difference^2
+  arma::colvec Diff_sum = sum(Diff, 1);
+
+
+  // Initiate Sum
+  double Sum = std::inner_product(Sigma_Inv.begin(), Sigma_Inv.end(), Diff_sum.begin(), 0.0);
+
+  // Calculate Target
+  double Target = N * real(arma::log_det(Mult_Mat)) - Sum / 2 - gamma * (a * a/(2 * tau)) - (1 - gamma) *  (a * a/(2 * nu_1 * tau)) + gamma * log(rho) + (1 - gamma) * log(1 - rho);
+
+
+  // Return Target
+  return(Target);
+
+
+}
+
+
+// Generate an entry of A matrix and gamma
+// [[Rcpp::export]]
+NumericVector Generate_Agamma_C(const arma::mat& X, const arma::mat& Y, const arma::mat& A, const arma::mat& diag_p, double i, double j, const arma::colvec& Sigma_Inv, double N, const arma::mat& B, double gamma, double tau, double rho, double nu_1, double prop_var1){
+
+  // Initiate Output
+  NumericVector Output(2);
+
+  // Value to update
+  double a = A(i-1, j-1);
+
+
+  // Proposed value
+  NumericVector a_proposed = Rcpp::rnorm(1, a, std::sqrt(prop_var1));
+
+  // Propose a_new
+  double a_new = a_proposed(0);
+
+
+  // New A matrix with proposed a value
+  arma::mat A_new = A;
+
+  // Update A_new
+  A_new(i - 1, j - 1) = a_new;
+
+  // Calculate r
+  double r = Target_Agamma_c(X, Y, A_new, diag_p, a_new, N, Sigma_Inv, B, 1 - gamma, tau, rho, nu_1) - Target_Agamma_c(X, Y, A, diag_p, a, N, Sigma_Inv, B, gamma, tau, rho, nu_1);
+
+  // Generate uniform u
+  NumericVector rand_unif = Rcpp::runif(1, 0, 1);
+
+  // Generate u
+  double u = rand_unif(0);
+
+
+  // Check whether r is big or not
+  if(r > log(u)){
+
+    a = a_new;
+
+    gamma = 1 - gamma;
+
+  }
+
+  // Update Output
+  Output(0) = a;
+  Output(1) = gamma;
+
+
+  // Return Output
+  return(Output);
+
+}
+
+

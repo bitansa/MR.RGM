@@ -17,3 +17,15 @@ Generate_Tau_c <- function(a, gamma, a_tau, b_tau, nu_1) {
     .Call(`_ReciprocalGraphicalModels_Generate_Tau_c`, a, gamma, a_tau, b_tau, nu_1)
 }
 
+Generate_Sigma_c <- function(n, z_sum, a_sigma, b_sigma) {
+    .Call(`_ReciprocalGraphicalModels_Generate_Sigma_c`, n, z_sum, a_sigma, b_sigma)
+}
+
+Target_Agamma_c <- function(X, Y, A, diag_p, a, N, Sigma_Inv, B, gamma, tau, rho, nu_1) {
+    .Call(`_ReciprocalGraphicalModels_Target_Agamma_c`, X, Y, A, diag_p, a, N, Sigma_Inv, B, gamma, tau, rho, nu_1)
+}
+
+Generate_Agamma_C <- function(X, Y, A, diag_p, i, j, Sigma_Inv, N, B, gamma, tau, rho, nu_1, prop_var1) {
+    .Call(`_ReciprocalGraphicalModels_Generate_Agamma_C`, X, Y, A, diag_p, i, j, Sigma_Inv, N, B, gamma, tau, rho, nu_1, prop_var1)
+}
+
