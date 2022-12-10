@@ -32,11 +32,11 @@ RGM(
 
 \item{Y}{n * p matrix data input, each row denotes a particular observation and each column denotes a particular gene.}
 
-\item{A0}{p * p matrix input. It is the initial value of the gene gene interaction matrix. Random initialization of this matrix may take very large iterations for the chain to converge. Default value is NULL  .}
+\item{A0}{p * p matrix input. It is the initial value of the gene-gene interaction matrix. Diagonal entries of A0 should all be 0. Random initialization of A0 may increase the convergence time of the markov chain. Default value is NULL.}
 
-\item{B0}{p * k matrix input. It is the initial value of the gene DNA interaction matrix. Each row corresponds to a particular gene, each column corresponds to a particular DNA. Random initialization of this matrix may take long time for the chain to converge. Default value is NULL.}
+\item{B0}{p * k matrix input. It is the initial value of the gene-DNA interaction matrix. Each row corresponds to a particular gene, each column corresponds to a particular DNA. Random initialization of B0 matrix may increase the convergence time of the markov chain. Default value is NULL.}
 
-\item{D}{p * k indicator matrix input. Each row corresponds to a particular gene, each column corresponds to a particular DNA. An entry is 1 if the corresponding DNA can effect the corresponding gene, else 0. Default value is NULL. If not given, all entry of D is taken to be 1.}
+\item{D}{p * k indicator matrix input. Each row corresponds to a particular gene, each column corresponds to a particular DNA. An entry is 1 if the corresponding DNA can affect the corresponding gene, else 0. Default value is NULL. If not given, all entry of D is taken to be 1.}
 
 \item{a_tau}{positive scalar input. It corresponds to the first parameter of a Inverse Gamma distribution. Default value is 0.1.}
 
@@ -58,13 +58,13 @@ RGM(
 
 \item{nu_2}{positive scalar input. It corresponds to the variance of slab part of of spike and slab distribution of B. Default value is 0.0001.}
 
-\item{a_sigma}{postive scalar input. It corresponds to the first parameter of a Inverse Gamma distribution. Default value is 0.1.}
+\item{a_sigma}{positive scalar input. It corresponds to the first parameter of a Inverse Gamma distribution. Default value is 0.1.}
 
-\item{b_sigma}{postive scalar input. It corresponds to the second parameter of a Inverse Gamma distribution. Default value is 0.1.}
+\item{b_sigma}{positive scalar input. It corresponds to the second parameter of a Inverse Gamma distribution. Default value is 0.1.}
 
-\item{Prop_varA}{postive scalar input. It corresponds to the variance of the normal distribution of proposing A matrix terms. Default value is 0.1.}
+\item{Prop_varA}{positive scalar input. It corresponds to the variance of the normal distribution of proposing A matrix terms. Default value is 0.1.}
 
-\item{Prop_VarB}{postive scalar input. It corresponds to the variance of the normal distribution of proposing B matrix terms. Default value is 0.1.}
+\item{Prop_VarB}{positive scalar input. It corresponds to the variance of the normal distribution of proposing B matrix terms. Default value is 0.1.}
 
 \item{niter}{positive integer input. It corresponds to number of iterations the markov chain runs. Give niter as large as possible to get the convergence. Minimum value is 10,000. Default value is 10,000.}
 }
@@ -88,14 +88,14 @@ n = 500
 p = 3
 k = 3
 
-A = matrix(sample(c(-3,3), p^2, replace = T), p, p)
+A = matrix(sample(c(-3,3), p^2, replace = TRUE), p, p)
 diag(A) = 0
 
 B = matrix(0, p, k)
 
 for(i in 1:p){
 
-  B[i, i] = sample(c(-3, 3), 1, replace = T)
+  B[i, i] = sample(c(-3, 3), 1, replace = TRUE)
 
 }
 
@@ -113,7 +113,7 @@ Y = matrix(0, nrow = n, ncol = p)
 
 for (i in 1:n) {
 
- Y[i, ] = mvrnorm(n = 1, Mult_Mat \%*\% B \%*\% X[i, ], Variance)
+ Y[i, ] = MASS::mvrnorm(n = 1, Mult_Mat \%*\% B \%*\% X[i, ], Variance)
 
 }
 

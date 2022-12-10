@@ -42,14 +42,14 @@
 #' p = 3
 #' k = 3
 #'
-#' A = matrix(sample(c(-3,3), p^2, replace = T), p, p)
+#' A = matrix(sample(c(-3,3), p^2, replace = TRUE), p, p)
 #' diag(A) = 0
 #'
 #' B = matrix(0, p, k)
 #'
 #' for(i in 1:p){
 #'
-#'   B[i, i] = sample(c(-3, 3), 1, replace = T)
+#'   B[i, i] = sample(c(-3, 3), 1, replace = TRUE)
 #'
 #' }
 #'
@@ -67,7 +67,7 @@
 #'
 #' for (i in 1:n) {
 #'
-#'  Y[i, ] = mvrnorm(n = 1, Mult_Mat %*% B %*% X[i, ], Variance)
+#'  Y[i, ] = MASS::mvrnorm(n = 1, Mult_Mat %*% B %*% X[i, ], Variance)
 #'
 #' }
 #'
