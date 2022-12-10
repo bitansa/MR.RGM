@@ -39,10 +39,42 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// Generate_Eta_c
+double Generate_Eta_c(double b, double phi, double a_eta, double b_eta, double nu_2);
+RcppExport SEXP _ReciprocalGraphicalModels_Generate_Eta_c(SEXP bSEXP, SEXP phiSEXP, SEXP a_etaSEXP, SEXP b_etaSEXP, SEXP nu_2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type b(bSEXP);
+    Rcpp::traits::input_parameter< double >::type phi(phiSEXP);
+    Rcpp::traits::input_parameter< double >::type a_eta(a_etaSEXP);
+    Rcpp::traits::input_parameter< double >::type b_eta(b_etaSEXP);
+    Rcpp::traits::input_parameter< double >::type nu_2(nu_2SEXP);
+    rcpp_result_gen = Rcpp::wrap(Generate_Eta_c(b, phi, a_eta, b_eta, nu_2));
+    return rcpp_result_gen;
+END_RCPP
+}
+// Generate_Tau_c
+double Generate_Tau_c(double a, double gamma, double a_tau, double b_tau, double nu_1);
+RcppExport SEXP _ReciprocalGraphicalModels_Generate_Tau_c(SEXP aSEXP, SEXP gammaSEXP, SEXP a_tauSEXP, SEXP b_tauSEXP, SEXP nu_1SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type a(aSEXP);
+    Rcpp::traits::input_parameter< double >::type gamma(gammaSEXP);
+    Rcpp::traits::input_parameter< double >::type a_tau(a_tauSEXP);
+    Rcpp::traits::input_parameter< double >::type b_tau(b_tauSEXP);
+    Rcpp::traits::input_parameter< double >::type nu_1(nu_1SEXP);
+    rcpp_result_gen = Rcpp::wrap(Generate_Tau_c(a, gamma, a_tau, b_tau, nu_1));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_ReciprocalGraphicalModels_Generate_Rho_c", (DL_FUNC) &_ReciprocalGraphicalModels_Generate_Rho_c, 4},
     {"_ReciprocalGraphicalModels_Generate_Psi_c", (DL_FUNC) &_ReciprocalGraphicalModels_Generate_Psi_c, 4},
+    {"_ReciprocalGraphicalModels_Generate_Eta_c", (DL_FUNC) &_ReciprocalGraphicalModels_Generate_Eta_c, 5},
+    {"_ReciprocalGraphicalModels_Generate_Tau_c", (DL_FUNC) &_ReciprocalGraphicalModels_Generate_Tau_c, 5},
     {NULL, NULL, 0}
 };
 

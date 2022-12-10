@@ -39,3 +39,58 @@ double Generate_Psi_c(const arma::mat& Phi, double d, double a_psi, double b_psi
   return(Psi);
 
 }
+
+
+
+// Generate eta
+// [[Rcpp::export]]
+double Generate_Eta_c(double b, double phi, double a_eta, double b_eta, double nu_2){
+
+  NumericVector eta;
+
+  if(phi == 1){
+
+    eta = 1 / Rcpp::rgamma(1, a_eta + 1 / double(2), 1 / (b * b / 2 + b_eta));
+
+  } else {
+
+    eta = 1 / Rcpp::rgamma(1, a_eta + 1 / double(2), 1 / (b * b / (2 * nu_2) + b_eta));
+
+  }
+
+  // Store eta
+  double Eta = eta(0);
+
+
+  // Return eta
+  return(Eta);
+
+}
+
+
+
+// Generate tau
+// [[Rcpp::export]]
+double Generate_Tau_c(double a, double gamma, double a_tau, double b_tau, double nu_1){
+
+  NumericVector tau;
+
+  if(gamma == 1){
+
+    tau = 1 / Rcpp::rgamma(1, a_tau + 1 / double(2), 1 / (a * a / 2 + b_tau));
+
+  } else {
+
+    tau = 1 / Rcpp::rgamma(1, a_tau + 1 / double(2), 1 / (a * a / (2 * nu_1) + b_tau));
+
+  }
+
+  // Store Tau
+  double Tau = tau(0);
+
+
+  // Return tau
+  return(Tau);
+
+}
+

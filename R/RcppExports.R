@@ -9,3 +9,11 @@ Generate_Psi_c <- function(Phi, d, a_psi, b_psi) {
     .Call(`_ReciprocalGraphicalModels_Generate_Psi_c`, Phi, d, a_psi, b_psi)
 }
 
+Generate_Eta_c <- function(b, phi, a_eta, b_eta, nu_2) {
+    .Call(`_ReciprocalGraphicalModels_Generate_Eta_c`, b, phi, a_eta, b_eta, nu_2)
+}
+
+Generate_Tau_c <- function(a, gamma, a_tau, b_tau, nu_1) {
+    .Call(`_ReciprocalGraphicalModels_Generate_Tau_c`, a, gamma, a_tau, b_tau, nu_1)
+}
+
