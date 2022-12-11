@@ -42,7 +42,9 @@
 #' p = 3
 #' k = 3
 #'
-#' A = matrix(sample(c(-3,3), p^2, replace = TRUE), p, p)
+#' A = matrix(sample(c(-3, 3), p^2, replace = TRUE), p, p)
+#'
+#' # Diagonal entries of A matrix will always be 0
 #' diag(A) = 0
 #'
 #' B = matrix(0, p, k)
@@ -61,24 +63,34 @@
 #'
 #' Variance = Mult_Mat %*% Sigma %*% t(Mult_Mat)
 #'
+#' # Generate DNA expressions
 #' X = matrix(runif(n * k, 0, 5), nrow = n, ncol = k)
 #'
 #' Y = matrix(0, nrow = n, ncol = p)
 #'
+#' # Generate Gene expressions data based on DNA data
 #' for (i in 1:n) {
 #'
 #'  Y[i, ] = MASS::mvrnorm(n = 1, Mult_Mat %*% B %*% X[i, ], Variance)
 #'
 #' }
 #'
+#' # Apply RGM on the generated data
 #' Out = RGM(X, Y, A = A, B = B, D = D)
 #'
 #' A = Out$A
 #' B = Out$B
 #' LL = Out$LL
+#'
+#' # Plot log-likelihood of the model at each iteration
 #' plot(LL, type = 'l', xlab = "Number of Iterations", ylab = "Log-likelihood")
 #'
-#'
+#' @references
+#' Ni, Y., Ji, Y., & Müller, P. (2018).
+#' Reciprocal graphical models for integrative gene regulatory network analysis.
+#' \emph{Bayesian Analysis},
+#' \strong{13(4)}, 1095-1110.
+#' \doi{10.1214/17-BA1087}.
 RGM = function(X, Y, A0 = NULL, B0 = NULL, D = NULL, a_tau = 0.1, b_tau = 0.1, a_rho = 0.5, b_rho = 0.5, nu_1 = 0.0001, a_eta = 0.1, b_eta = 0.1, a_psi = 0.5, b_psi = 0.5, nu_2 = 0.0001, a_sigma = 0.1, b_sigma = 0.1, Prop_varA = 0.1, Prop_VarB = 0.1, niter = 10000){
 
   # Calculate number of datapoints and number of nodes from Y matrix
@@ -453,7 +465,7 @@ RGM = function(X, Y, A0 = NULL, B0 = NULL, D = NULL, a_tau = 0.1, b_tau = 0.1, a
 
 #' Title Fitting Reciprocal Graphical Models for Integrative Gene Regulatory Network
 #'
-#' @description RGM can be used to fit Reciprocal Graphical Models on gene expression data and DNA level measurements to find the relationship between different genes and the relationship between genes and DNA.
+#' @description RGM_cpp can be used to fit Reciprocal Graphical Models on gene expression data and DNA level measurements to find the relationship between different genes and the relationship between genes and DNA.
 #'
 #' @inheritParams RGM
 #'
@@ -476,7 +488,9 @@ RGM = function(X, Y, A0 = NULL, B0 = NULL, D = NULL, a_tau = 0.1, b_tau = 0.1, a
 #' p = 3
 #' k = 3
 #'
-#' A = matrix(sample(c(-3,3), p^2, replace = TRUE), p, p)
+#' A = matrix(sample(c(-3, 3), p^2, replace = TRUE), p, p)
+#'
+#' # Diagonal entries of A matrix will always be 0
 #' diag(A) = 0
 #'
 #' B = matrix(0, p, k)
@@ -495,24 +509,34 @@ RGM = function(X, Y, A0 = NULL, B0 = NULL, D = NULL, a_tau = 0.1, b_tau = 0.1, a
 #'
 #' Variance = Mult_Mat %*% Sigma %*% t(Mult_Mat)
 #'
+#' # Generate DNA expressions
 #' X = matrix(runif(n * k, 0, 5), nrow = n, ncol = k)
 #'
 #' Y = matrix(0, nrow = n, ncol = p)
 #'
+#' # Generate Gene expressions data based on DNA data
 #' for (i in 1:n) {
 #'
 #'  Y[i, ] = MASS::mvrnorm(n = 1, Mult_Mat %*% B %*% X[i, ], Variance)
 #'
 #' }
 #'
+#' # Apply RGM on the generated data
 #' Out = RGM_cpp(X, Y, A = A, B = B, D = D)
 #'
 #' A = Out$A
 #' B = Out$B
 #' LL = Out$LL
+#'
+#' # Plot log-likelihood of the model at each iteration
 #' plot(LL, type = 'l', xlab = "Number of Iterations", ylab = "Log-likelihood")
 #'
-#'
+#' @references
+#' Ni, Y., Ji, Y., & Müller, P. (2018).
+#' Reciprocal graphical models for integrative gene regulatory network analysis.
+#' \emph{Bayesian Analysis},
+#' \strong{13(4)}, 1095-1110.
+#' \doi{10.1214/17-BA1087}.
 RGM_cpp = function(X, Y, A0 = NULL, B0 = NULL, D = NULL, a_tau = 0.1, b_tau = 0.1, a_rho = 0.5, b_rho = 0.5, nu_1 = 0.0001, a_eta = 0.1, b_eta = 0.1, a_psi = 0.5, b_psi = 0.5, nu_2 = 0.0001, a_sigma = 0.1, b_sigma = 0.1, Prop_varA = 0.1, Prop_VarB = 0.1, niter = 10000){
 
   # Calculate number of datapoints and number of nodes from Y matrix

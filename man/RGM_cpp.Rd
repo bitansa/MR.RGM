@@ -76,7 +76,7 @@ A list which will hold A, B, LL:
 \item{LL}{niter * 1 vector output of log-likelihood values of the model for all the iterations.}
 }
 \description{
-RGM can be used to fit Reciprocal Graphical Models on gene expression data and DNA level measurements to find the relationship between different genes and the relationship between genes and DNA.
+RGM_cpp can be used to fit Reciprocal Graphical Models on gene expression data and DNA level measurements to find the relationship between different genes and the relationship between genes and DNA.
 }
 \examples{
 
@@ -88,7 +88,9 @@ n = 500
 p = 3
 k = 3
 
-A = matrix(sample(c(-3,3), p^2, replace = TRUE), p, p)
+A = matrix(sample(c(-3, 3), p^2, replace = TRUE), p, p)
+
+# Diagonal entries of A matrix will always be 0
 diag(A) = 0
 
 B = matrix(0, p, k)
@@ -107,22 +109,33 @@ Mult_Mat = solve(diag(p) - A)
 
 Variance = Mult_Mat \%*\% Sigma \%*\% t(Mult_Mat)
 
+# Generate DNA expressions
 X = matrix(runif(n * k, 0, 5), nrow = n, ncol = k)
 
 Y = matrix(0, nrow = n, ncol = p)
 
+# Generate Gene expressions data based on DNA data
 for (i in 1:n) {
 
  Y[i, ] = MASS::mvrnorm(n = 1, Mult_Mat \%*\% B \%*\% X[i, ], Variance)
 
 }
 
+# Apply RGM on the generated data
 Out = RGM_cpp(X, Y, A = A, B = B, D = D)
 
 A = Out$A
 B = Out$B
 LL = Out$LL
+
+# Plot log-likelihood of the model at each iteration
 plot(LL, type = 'l', xlab = "Number of Iterations", ylab = "Log-likelihood")
 
-
+}
+\references{
+Ni, Y., Ji, Y., & Müller, P. (2018).
+Reciprocal graphical models for integrative gene regulatory network analysis.
+\emph{Bayesian Analysis},
+\strong{13(4)}, 1095-1110.
+\doi{10.1214/17-BA1087}.
 }
