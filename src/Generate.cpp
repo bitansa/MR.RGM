@@ -75,12 +75,15 @@ double Generate_Tau_c(double a, double gamma, double a_tau, double b_tau, double
 
   NumericVector tau;
 
+  // Generate Tau based on the value of gamma
   if(gamma == 1){
 
+    // Generate Tau from an inverse gamma distribution
     tau = 1 / Rcpp::rgamma(1, a_tau + 1 / double(2), 1 / (a * a / 2 + b_tau));
 
   } else {
 
+    // Generate Tau from an inverse gamma distribution
     tau = 1 / Rcpp::rgamma(1, a_tau + 1 / double(2), 1 / (a * a / (2 * nu_1) + b_tau));
 
   }
@@ -181,7 +184,7 @@ NumericVector Generate_Agamma_C(const arma::mat& X, const arma::mat& Y, const ar
   double u = rand_unif(0);
 
 
-  // Check whether r is big or not
+  // Check whether r is greater than log(u) or not
   if(r > log(u)){
 
     a = a_new;
@@ -273,7 +276,7 @@ NumericVector Generate_Bphi_c(const arma::mat& X, const arma::mat& Y, const arma
   double u = rand_unif(0);
 
 
-  // Check whether r is big or not
+  // Check whether r is greater than log(u) or not
   if(r > log(u)){
 
     b = b_new;
@@ -306,15 +309,15 @@ double LL_c(const arma::mat& A, const arma::mat& B, const arma::mat& X, const ar
   // Calculate square difference
   Diff = Diff % Diff;
 
-  // Initiate rowsum of difference^2
+  // Calculate rowsum of difference^2
   arma::colvec Diff_sum = sum(Diff, 1);
 
-  // Initiate Sum
+  // Calculate inner product between Sigma_Inv vector and Diff vector
   double Sum = std::inner_product(Sigma_Inv.begin(), Sigma_Inv.end(), Diff_sum.begin(), 0.0);
 
 
   // Calculate log-likelihood
-  double LL = N * real(arma::log_det(Mult_Mat)) - N / 2 * accu(log(1/Sigma_Inv)) - Sum / 2;
+  double LL = N * real(arma::log_det(Mult_Mat)) - N / 2 * accu(log(1/Sigma_Inv)) - Sum / 2 - N / 2 * log(2 * arma::datum::pi);
 
   // Return LL
   return(LL);
