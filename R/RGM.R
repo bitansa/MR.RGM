@@ -249,9 +249,6 @@ RGM = function(X, Y, A0 = NULL, B0 = NULL, D = NULL, a_tau = 0.1, b_tau = 0.1, a
 
     }
 
-    # Print a warning message
-    warning("Random initialization of A matrix may take large enough number of iterations to converge")
-
     # Update A by A0
     A = A0
 
@@ -295,9 +292,6 @@ RGM = function(X, Y, A0 = NULL, B0 = NULL, D = NULL, a_tau = 0.1, b_tau = 0.1, a
       stop("B0 should be a numeric matrix")
 
     }
-
-    # Print a warning message
-    warning("Random initialization of B matrix may take large enough number of iterations to converge")
 
     # Update B by B0
     B = B0
@@ -695,9 +689,6 @@ RGM_cpp = function(X, Y, A0 = NULL, B0 = NULL, D = NULL, a_tau = 0.1, b_tau = 0.
 
     }
 
-    # Print a warning message
-    warning("Random initialization of A matrix may take large enough number of iterations to converge")
-
     # Update A by A0
     A = A0
 
@@ -741,9 +732,6 @@ RGM_cpp = function(X, Y, A0 = NULL, B0 = NULL, D = NULL, a_tau = 0.1, b_tau = 0.
       stop("B0 should be a numeric matrix")
 
     }
-
-    # Print a warning message
-    warning("Random initialization of B matrix may take large enough number of iterations to converge")
 
     # Update B by B0
     B = B0
