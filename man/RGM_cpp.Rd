@@ -83,16 +83,22 @@ RGM_cpp can be used to fit Reciprocal Graphical Models on gene expression data a
 # -----------------------------------------------------------------
 # Example 1:
 
+set.seed(500)
 
+# Number of datapoints
 n = 500
+
+# Number of Genes and number of DNAs
 p = 3
 k = 3
 
+# Initialize gene-gene interaction matrix
 A = matrix(sample(c(-3, 3), p^2, replace = TRUE), p, p)
 
 # Diagonal entries of A matrix will always be 0
 diag(A) = 0
 
+# Initialize gene-DNA interaction matrix
 B = matrix(0, p, k)
 
 for(i in 1:p){
@@ -101,6 +107,7 @@ for(i in 1:p){
 
 }
 
+# Indicator matrix for gene-DNA interaction
 D = diag(3)
 
 Sigma = 0.5 * diag(p)
@@ -121,9 +128,10 @@ for (i in 1:n) {
 
 }
 
-# Apply RGM on the generated data
+# Apply RGM_cpp on the generated data
 Out = RGM_cpp(X, Y, A = A, B = B, D = D)
 
+# Get gene-gene interaction matrix, gene-DNA interaction matrix and log-likelihood
 A = Out$A
 B = Out$B
 LL = Out$LL

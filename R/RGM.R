@@ -37,16 +37,22 @@
 #' # -----------------------------------------------------------------
 #' # Example 1:
 #'
+#' set.seed(500)
 #'
+#' # Number of datapoints
 #' n = 500
+#'
+#' # Number of Genes and number of DNAs
 #' p = 3
 #' k = 3
 #'
+#' # Initialize gene-gene interaction matrix
 #' A = matrix(sample(c(-3, 3), p^2, replace = TRUE), p, p)
 #'
 #' # Diagonal entries of A matrix will always be 0
 #' diag(A) = 0
 #'
+#' # Initialize gene-DNA interaction matrix
 #' B = matrix(0, p, k)
 #'
 #' for(i in 1:p){
@@ -55,6 +61,7 @@
 #'
 #' }
 #'
+#' # Indicator matrix for gene-DNA interaction
 #' D = diag(3)
 #'
 #' Sigma = 0.5 * diag(p)
@@ -78,6 +85,7 @@
 #' # Apply RGM on the generated data
 #' Out = RGM(X, Y, A = A, B = B, D = D)
 #'
+#' # Get gene-gene interaction matrix, gene-DNA interaction matrix and log-likelihood
 #' A = Out$A
 #' B = Out$B
 #' LL = Out$LL
@@ -477,16 +485,22 @@ RGM = function(X, Y, A0 = NULL, B0 = NULL, D = NULL, a_tau = 0.1, b_tau = 0.1, a
 #' # -----------------------------------------------------------------
 #' # Example 1:
 #'
+#' set.seed(500)
 #'
+#' # Number of datapoints
 #' n = 500
+#'
+#' # Number of Genes and number of DNAs
 #' p = 3
 #' k = 3
 #'
+#' # Initialize gene-gene interaction matrix
 #' A = matrix(sample(c(-3, 3), p^2, replace = TRUE), p, p)
 #'
 #' # Diagonal entries of A matrix will always be 0
 #' diag(A) = 0
 #'
+#' # Initialize gene-DNA interaction matrix
 #' B = matrix(0, p, k)
 #'
 #' for(i in 1:p){
@@ -495,6 +509,7 @@ RGM = function(X, Y, A0 = NULL, B0 = NULL, D = NULL, a_tau = 0.1, b_tau = 0.1, a
 #'
 #' }
 #'
+#' # Indicator matrix for gene-DNA interaction
 #' D = diag(3)
 #'
 #' Sigma = 0.5 * diag(p)
@@ -515,9 +530,10 @@ RGM = function(X, Y, A0 = NULL, B0 = NULL, D = NULL, a_tau = 0.1, b_tau = 0.1, a
 #'
 #' }
 #'
-#' # Apply RGM on the generated data
+#' # Apply RGM_cpp on the generated data
 #' Out = RGM_cpp(X, Y, A = A, B = B, D = D)
 #'
+#' # Get gene-gene interaction matrix, gene-DNA interaction matrix and log-likelihood
 #' A = Out$A
 #' B = Out$B
 #' LL = Out$LL

@@ -73,7 +73,7 @@ for(i in 1:p){
 
 }
 
-# Indicator matrix gene-DNA interaction
+# Indicator matrix for gene-DNA interaction
 D = diag(3)
 
 Sigma = 0.5 * diag(p)
