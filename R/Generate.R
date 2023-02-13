@@ -191,8 +191,6 @@ Target_Agamma = function(X, Y, A, a, N, Sigma_Inv, p, B, gamma, tau, rho, nu_1){
 
 
 
-
-
 #' A matrix entries and gamma generating function
 #'
 #'
@@ -200,11 +198,12 @@ Target_Agamma = function(X, Y, A, a, N, Sigma_Inv, p, B, gamma, tau, rho, nu_1){
 #' @param i integer input in between 1 and p
 #' @param j integer input in between 1 and p
 #' @param prop_var1 postive scalar input
+#' @param prop_var2 postive scalar input
 #'
 #' @return scalar a value and scalar gamma value, 0 or 1
 #'
 #' @examples
-Generate_Agamma = function(X, Y, A, i, j, Sigma_Inv, N, p, B, gamma, tau, rho, nu_1, prop_var1){
+Generate_Agamma = function(X, Y, A, i, j, Sigma_Inv, N, p, B, gamma, tau, rho, nu_1, prop_var1, prop_var2){
 
   # Value to update
   a = A[i, j]
@@ -216,9 +215,12 @@ Generate_Agamma = function(X, Y, A, i, j, Sigma_Inv, N, p, B, gamma, tau, rho, n
   A_new = A
   A_new[i, j] = a_new
 
-  # Calculate r
-  r = Target_Agamma(X, Y, A_new, a_new, N, Sigma_Inv, p, B, 1-gamma, tau, rho, nu_1) - Target_Agamma(X, Y, A, a, N, Sigma_Inv, p, B, gamma, tau, rho, nu_1)
+  # Calculate target values with a and a_new
+  Target1 = Target_Agamma(X, Y, A_new, a_new, N, Sigma_Inv, p, B, 1-gamma, tau, rho, nu_1)
+  Target2 = Target_Agamma(X, Y, A, a, N, Sigma_Inv, p, B, gamma, tau, rho, nu_1)
 
+  # Calculate r
+  r = Target1 - Target2
 
 
   # Generate uniform u
@@ -227,12 +229,45 @@ Generate_Agamma = function(X, Y, A, i, j, Sigma_Inv, N, p, B, gamma, tau, rho, n
   # Compare u and r
   if(r >= log(u)){
 
-    # Update a and gamma value
+    # Update a and gamma value and Target1
       a = a_new
 
       gamma = 1 - gamma
 
-    }
+      Target2 = Target1
+
+  }
+
+
+  # Update a keeping gamma fixed
+  A[i, j] = a
+
+  # Proposed value
+  a_new = stats::rnorm(1, a, prop_var2)
+
+  # New A matrix with proposed a value
+  A_new = A
+  A_new[i, j] = a_new
+
+  # Calculate target value with a_new
+  Target1 = Target_Agamma(X, Y, A_new, a_new, N, Sigma_Inv, p, B, gamma, tau, rho, nu_1)
+
+
+  # Calculate r
+  r = Target1 - Target2
+
+
+  # Generate uniform u
+  u = stats::runif(1, 0, 1)
+
+  # Compare u and r
+  if(r >= log(u)){
+
+    # Update a value
+    a = a_new
+
+  }
+
 
   # Return a and gamma value
   return(list(a = a, gamma = gamma))
@@ -283,25 +318,31 @@ Target_Bphi = function(X, Y, B, Sigma_Inv, MultMat_Y, b, phi, eta, psi, nu_2){
 #'
 #' @param i positive integer input in between 1 and p
 #' @param j positive integer input in between 1 and K
+#' @param prop_var1 positive scalar input
 #' @param prop_var2 positive scalar input
 #'
 #' @return scalar b value and scalar phi value, 0 or 1
 #'
 #' @examples
-Generate_Bphi = function(X, Y, B, i, j, Sigma_Inv, MultMat_Y, phi, eta, psi, nu_2, prop_var2){
+Generate_Bphi = function(X, Y, B, i, j, Sigma_Inv, MultMat_Y, phi, eta, psi, nu_2, prop_var1, prop_var2){
 
   # Value to update
   b = B[i, j]
 
   # Proposed value
-  b_new = stats::rnorm(1, b, prop_var2)
+  b_new = stats::rnorm(1, b, prop_var1)
 
   # New B matrix with proposed b value
   B_new = B
   B_new[i, j] = b_new
 
+  # Calculate target values with b and b_new
+  Target1 = Target_Bphi(X, Y, B_new, Sigma_Inv, MultMat_Y, b_new, 1 - phi, eta, psi, nu_2)
+  Target2 = Target_Bphi(X, Y, B, Sigma_Inv, MultMat_Y, b, phi, eta, psi, nu_2)
+
+
   # Calculate r
-  r = Target_Bphi(X, Y, B_new, Sigma_Inv, MultMat_Y, b_new, 1 - phi, eta, psi, nu_2) - Target_Bphi(X, Y, B, Sigma_Inv, MultMat_Y, b, phi, eta, psi, nu_2)
+  r = Target1 - Target2
 
 
 
@@ -311,10 +352,41 @@ Generate_Bphi = function(X, Y, B, i, j, Sigma_Inv, MultMat_Y, phi, eta, psi, nu_
   # Compare r with u
   if(r > log(u)){
 
-    # Update b and phi
+    # Update b, phi and Target1
     b = b_new
 
     phi = 1 - phi
+
+    Target2 = Target1
+
+  }
+
+  # Update b keeping phi fixed
+  B[i, j] = b
+
+  # Proposed value
+  b_new = stats::rnorm(1, b, prop_var2)
+
+  # New B matrix with proposed b value
+  B_new = B
+  B_new[i, j] = b_new
+
+  # Calculate target value with b_new
+  Target1 = Target_Bphi(X, Y, B_new, Sigma_Inv, MultMat_Y, b_new, phi, eta, psi, nu_2)
+
+
+  # Calculate r
+  r = Target1 - Target2
+
+
+  # Generate uniform u
+  u = stats::runif(1, 0, 1)
+
+  # Compare u and r
+  if(r >= log(u)){
+
+    # Update b value
+    b = b_new
 
   }
 
