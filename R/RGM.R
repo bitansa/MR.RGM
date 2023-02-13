@@ -20,8 +20,10 @@
 #' @param nu_2 positive scalar input. It corresponds to the variance of slab part of of spike and slab distribution of B. Default value is 0.0001.
 #' @param a_sigma positive scalar input. It corresponds to the first parameter of a Inverse Gamma distribution. Default value is 0.1.
 #' @param b_sigma positive scalar input. It corresponds to the second parameter of a Inverse Gamma distribution. Default value is 0.1.
-#' @param Prop_varA positive scalar input. It corresponds to the variance of the normal distribution of proposing A matrix terms. Default value is 0.1.
-#' @param Prop_VarB positive scalar input. It corresponds to the variance of the normal distribution of proposing B matrix terms. Default value is 0.1.
+#' @param Prop_varA1 positive scalar input. It corresponds to the variance of the normal distribution of proposing A matrix terms. Default value is 0.1.
+#' #' @param Prop_varA2 positive scalar input. It corresponds to the variance of the normal distribution of proposing A matrix terms. Default value is 5.
+#' @param Prop_VarB1 positive scalar input. It corresponds to the variance of the normal distribution of proposing B matrix terms. Default value is 0.1.
+#' #' @param Prop_varB2 positive scalar input. It corresponds to the variance of the normal distribution of proposing A matrix terms. Default value is 5.
 #' @param niter positive integer input. It corresponds to number of iterations the markov chain runs. Give niter as large as possible to get the convergence. Minimum value is 10,000. Default value is 10,000.
 #'
 #' @return A list which will hold A, B, LL:
@@ -99,7 +101,7 @@
 #' \emph{Bayesian Analysis},
 #' \strong{13(4)}, 1095-1110.
 #' \doi{10.1214/17-BA1087}.
-RGM = function(X, Y, A0 = NULL, B0 = NULL, D = NULL, a_tau = 0.1, b_tau = 0.1, a_rho = 0.5, b_rho = 0.5, nu_1 = 0.0001, a_eta = 0.1, b_eta = 0.1, a_psi = 0.5, b_psi = 0.5, nu_2 = 0.0001, a_sigma = 0.1, b_sigma = 0.1, Prop_varA = 0.1, Prop_VarB = 0.1, niter = 10000){
+RGM = function(X, Y, A0 = NULL, B0 = NULL, D = NULL, a_tau = 0.1, b_tau = 0.1, a_rho = 0.5, b_rho = 0.5, nu_1 = 0.0001, a_eta = 0.1, b_eta = 0.1, a_psi = 0.5, b_psi = 0.5, nu_2 = 0.0001, a_sigma = 0.1, b_sigma = 0.1, Prop_varA1 = 0.1, Prop_varA2 = 5, Prop_VarB1 = 0.1, Prop_varB2 = 5, niter = 10000){
 
   # Calculate number of datapoints and number of nodes from Y matrix
   n = nrow(Y)
@@ -188,7 +190,7 @@ RGM = function(X, Y, A0 = NULL, B0 = NULL, D = NULL, a_tau = 0.1, b_tau = 0.1, a
 
 
   # Check whether the variance terms are positive or not
-  if(!is.numeric(nu_1) || nu_1 <= 0 || !is.numeric(nu_2) || nu_2 <= 0 || !is.numeric(Prop_varA) || Prop_varA <= 0 || !is.numeric(Prop_VarB) || Prop_VarB <= 0){
+  if(!is.numeric(nu_1) || nu_1 <= 0 || !is.numeric(nu_2) || nu_2 <= 0 || !is.numeric(Prop_varA1) || Prop_varA1 <= 0 || !is.numeric(Prop_varA2) || Prop_varA2 <= 0 || !is.numeric(Prop_VarB1) || Prop_VarB1 <= 0 || !is.numeric(Prop_varB2) || Prop_varB2 <= 0){
 
     # Print an error message
     stop("All the variance terms should be positive")
@@ -358,7 +360,7 @@ RGM = function(X, Y, A0 = NULL, B0 = NULL, D = NULL, a_tau = 0.1, b_tau = 0.1, a
           Tau[j, l] = Generate_Tau(A[j, l], Gamma[j, l], a_tau = a_tau, b_tau = b_tau, nu_1 = nu_1)
 
           # Generate both a and gamma
-          Out = Generate_Agamma(X, Y, A, j, l, Sigma_Inv = Sigma_Inv, n, p, B, gamma = Gamma[j, l], tau = Tau[j, l], rho = Rho, nu_1 = nu_1, prop_var1 = Prop_varA)
+          Out = Generate_Agamma(X, Y, A, j, l, Sigma_Inv = Sigma_Inv, n, p, B, gamma = Gamma[j, l], tau = Tau[j, l], rho = Rho, nu_1 = nu_1, prop_var1 = Prop_varA1, prop_var2 = Prop_varA2)
 
           # Update A[j, l] and Gamma[j, l]
           A[j, l] = Out$a
@@ -394,7 +396,7 @@ RGM = function(X, Y, A0 = NULL, B0 = NULL, D = NULL, a_tau = 0.1, b_tau = 0.1, a
           Eta[j, l] = Generate_Eta(B[j, l], Phi[j, l], a_eta = a_eta, b_eta = b_eta, nu_2 = nu_2)
 
           # Generate both b and phi
-          Out = Generate_Bphi(X, Y, B, j, l, Sigma_Inv = Sigma_Inv,  MultMat_Y , phi = Phi[j, l], eta = Eta[j, l], psi = Psi, nu_2 = nu_2, prop_var2 = Prop_VarB)
+          Out = Generate_Bphi(X, Y, B, j, l, Sigma_Inv = Sigma_Inv,  MultMat_Y , phi = Phi[j, l], eta = Eta[j, l], psi = Psi, nu_2 = nu_2, prop_var1 = Prop_VarB1, prop_var2 = Prop_VarB2)
 
           # Update B[j, l] and Phi[j, l]
           B[j, l] = Out$b
