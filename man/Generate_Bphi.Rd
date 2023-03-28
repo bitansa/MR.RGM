@@ -16,6 +16,7 @@ Generate_Bphi(
   eta,
   psi,
   nu_2,
+  prop_var1,
   prop_var2
 )
 }
@@ -41,6 +42,8 @@ Generate_Bphi(
 \item{psi}{scalar input in between 0 and 1}
 
 \item{nu_2}{positive scalar input}
+
+\item{prop_var1}{positive scalar input}
 
 \item{prop_var2}{positive scalar input}
 }

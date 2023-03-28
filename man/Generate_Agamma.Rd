@@ -18,7 +18,8 @@ Generate_Agamma(
   tau,
   rho,
   nu_1,
-  prop_var1
+  prop_var1,
+  prop_var2
 )
 }
 \arguments{
@@ -49,6 +50,8 @@ Generate_Agamma(
 \item{nu_1}{positive scalar input}
 
 \item{prop_var1}{postive scalar input}
+
+\item{prop_var2}{postive scalar input}
 }
 \value{
 scalar a value and scalar gamma value, 0 or 1

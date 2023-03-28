@@ -62,10 +62,6 @@ RGM_cpp(
 
 \item{b_sigma}{positive scalar input. It corresponds to the second parameter of a Inverse Gamma distribution. Default value is 0.1.}
 
-\item{Prop_varA}{positive scalar input. It corresponds to the variance of the normal distribution of proposing A matrix terms. Default value is 0.1.}
-
-\item{Prop_VarB}{positive scalar input. It corresponds to the variance of the normal distribution of proposing B matrix terms. Default value is 0.1.}
-
 \item{niter}{positive integer input. It corresponds to number of iterations the markov chain runs. Give niter as large as possible to get the convergence. Minimum value is 10,000. Default value is 10,000.}
 }
 \value{

@@ -22,8 +22,10 @@ RGM(
   nu_2 = 1e-04,
   a_sigma = 0.1,
   b_sigma = 0.1,
-  Prop_varA = 0.1,
-  Prop_VarB = 0.1,
+  Prop_varA1 = 0.1,
+  Prop_varA2 = 5,
+  Prop_varB1 = 0.1,
+  Prop_varB2 = 5,
   niter = 10000
 )
 }
@@ -62,9 +64,13 @@ RGM(
 
 \item{b_sigma}{positive scalar input. It corresponds to the second parameter of a Inverse Gamma distribution. Default value is 0.1.}
 
-\item{Prop_varA}{positive scalar input. It corresponds to the variance of the normal distribution of proposing A matrix terms. Default value is 0.1.}
+\item{Prop_varA1}{positive scalar input. It corresponds to the variance of the normal distribution of proposing A matrix terms. Default value is 0.1.}
 
-\item{Prop_VarB}{positive scalar input. It corresponds to the variance of the normal distribution of proposing B matrix terms. Default value is 0.1.}
+\item{Prop_varA2}{positive scalar input. It corresponds to the variance of the normal distribution of proposing A matrix terms. Default value is 5.}
+
+\item{Prop_varB1}{positive scalar input. It corresponds to the variance of the normal distribution of proposing B matrix terms. Default value is 0.1.}
+
+\item{Prop_varB2}{positive scalar input. It corresponds to the variance of the normal distribution of proposing A matrix terms. Default value is 5.}
 
 \item{niter}{positive integer input. It corresponds to number of iterations the markov chain runs. Give niter as large as possible to get the convergence. Minimum value is 10,000. Default value is 10,000.}
 }

@@ -70,11 +70,11 @@ Generate_Eta = function(b, phi, a_eta, b_eta, nu_2){
   # Generate Eta based on Inverse Gamma distribution
   if(phi == 1){
 
-    Eta = 1 / stats::rgamma(1, a_eta + 1/2, b^2/2 + b_eta)
+    Eta = 1 / stats::rgamma(1, a_eta + 1/2, 1 / (b^2 / 2 + b_eta))
 
   } else {
 
-    Eta = 1 / stats::rgamma(1, a_eta + 1/2, b^2/(2 * nu_2) + b_eta)
+    Eta = 1 / stats::rgamma(1, a_eta + 1/2, 1 / (b^2 / (2 * nu_2) + b_eta))
 
   }
 
@@ -105,11 +105,11 @@ Generate_Tau = function(a, gamma, a_tau, b_tau, nu_1){
   # Generate Tau based on Inverse Gamma distribution
   if(gamma == 1){
 
-    Tau = 1 / stats::rgamma(1, a_tau + 1/2, a^2/2 + b_tau)
+    Tau = 1 / stats::rgamma(1, a_tau + 1/2, 1 / (a^2/2 + b_tau))
 
   } else {
 
-    Tau = 1 / stats::rgamma(1, a_tau + 1/2, a^2/(2 * nu_1) + b_tau)
+    Tau = 1 / stats::rgamma(1, a_tau + 1/2, 1 / (a^2/(2 * nu_1) + b_tau))
 
   }
 
@@ -135,7 +135,7 @@ Generate_Tau = function(a, gamma, a_tau, b_tau, nu_1){
 Generate_Sigma = function(n, z_sum, a_sigma, b_sigma){
 
   # Generate sigma based on Inverse gamma distribution
-  sigma = 1 / stats::rgamma(1, n/2 + a_sigma, z_sum/2 + b_sigma)
+  sigma = 1 / stats::rgamma(1, n/2 + a_sigma, 1 / (z_sum/2 + b_sigma))
 
   # Return sigma
   return(sigma)
@@ -209,7 +209,7 @@ Generate_Agamma = function(X, Y, A, i, j, Sigma_Inv, N, p, B, gamma, tau, rho, n
   a = A[i, j]
 
   # Proposed value
-  a_new = stats::rnorm(1, a, prop_var1)
+  a_new = stats::rnorm(1, a, sqrt(prop_var1))
 
   # New A matrix with proposed a value
   A_new = A
@@ -229,7 +229,7 @@ Generate_Agamma = function(X, Y, A, i, j, Sigma_Inv, N, p, B, gamma, tau, rho, n
   # Compare u and r
   if(r >= log(u)){
 
-    # Update a and gamma value and Target1
+    # Update a and gamma value and Target2
       a = a_new
 
       gamma = 1 - gamma
@@ -243,7 +243,7 @@ Generate_Agamma = function(X, Y, A, i, j, Sigma_Inv, N, p, B, gamma, tau, rho, n
   A[i, j] = a
 
   # Proposed value
-  a_new = stats::rnorm(1, a, prop_var2)
+  a_new = stats::rnorm(1, a, sqrt(prop_var2))
 
   # New A matrix with proposed a value
   A_new = A
@@ -330,7 +330,7 @@ Generate_Bphi = function(X, Y, B, i, j, Sigma_Inv, MultMat_Y, phi, eta, psi, nu_
   b = B[i, j]
 
   # Proposed value
-  b_new = stats::rnorm(1, b, prop_var1)
+  b_new = stats::rnorm(1, b, sqrt(prop_var1))
 
   # New B matrix with proposed b value
   B_new = B
@@ -352,7 +352,7 @@ Generate_Bphi = function(X, Y, B, i, j, Sigma_Inv, MultMat_Y, phi, eta, psi, nu_
   # Compare r with u
   if(r > log(u)){
 
-    # Update b, phi and Target1
+    # Update b, phi and Target2
     b = b_new
 
     phi = 1 - phi
