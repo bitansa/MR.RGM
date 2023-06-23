@@ -199,7 +199,7 @@ double Sample_A(const arma::mat& S_YY, const arma::mat& S_YX, const arma::mat& A
 double Target_B(const arma::mat& S_YX, const arma::mat& S_XX, const arma::mat& B, const arma::colvec& Sigma_Inv, const arma::mat& MultMat, double N, double b, double phi, double eta, double nu_2) {
 
   // Calculate Sum
-  double Sum = -2 * N * arma::trace(S_YX * B * arma::diagmat(Sigma_Inv) * MultMat) + N * arma::trace(S_XX * B * arma::diagmat(Sigma_Inv) * B);
+  double Sum = -2 * N * arma::trace(S_YX * B.t() * arma::diagmat(Sigma_Inv) * MultMat) + N * arma::trace(S_XX * B.t() * arma::diagmat(Sigma_Inv) * B);
 
   // Calculate Target value
   double Target = - Sum / 2 - phi * (b * b / (2 * eta)) - (1 - phi) * (0.5 * log(nu_2) + b * b / (2 * nu_2 * eta));
@@ -298,7 +298,7 @@ double LL(const arma::mat& A, const arma::mat& B, const arma::mat& S_YY, const a
 
   // Calculate Sum
   double Sum = N * arma::trace(S_YY * Mult_Mat.t() * arma::diagmat(Sigma_Inv) * Mult_Mat) - 2 * N * arma::trace(S_YX * B.t() * arma::diagmat(Sigma_Inv) * Mult_Mat)
-                   + N * arma::trace(S_XX * B * arma::diagmat(Sigma_Inv) * B);
+                   + N * arma::trace(S_XX * B.t() * arma::diagmat(Sigma_Inv) * B);
 
   // Calculate log-likelihood
   double LL = N * real(arma::log_det(Mult_Mat)) - N / 2 * accu(log(1/Sigma_Inv)) - Sum / 2 - N / 2 * log(2 * arma::datum::pi);
@@ -315,7 +315,7 @@ double LL(const arma::mat& A, const arma::mat& B, const arma::mat& S_YY, const a
 
 // Do MCMC sampling for threshold prior
 // [[Rcpp::export]]
-Rcpp::List RGM_Threshold(const arma::mat& S_YY, const arma::mat& S_YX, const arma::mat& S_XX, const arma::mat& D, double n, int nIter, int nBurnin, int Thin, double nu_1 = 0.0001, double nu_2 = 0.0001, double a_sigma = 0.1, double b_sigma = 0.1, double Prop_VarA = 0.01, double Prop_VarB = 0.01){
+Rcpp::List RGM_Threshold(const arma::mat& S_YY, const arma::mat& S_YX, const arma::mat& S_XX, const arma::mat& D, double n, int nIter, int nBurnin, int Thin, double nu_1 = 0.0001, double nu_2 = 0.0001, double a_sigma = 0.01, double b_sigma = 0.01, double Prop_VarA = 0.01, double Prop_VarB = 0.01){
 
 
   // Calculate number of nodes from S_YY matrix
@@ -377,7 +377,7 @@ Rcpp::List RGM_Threshold(const arma::mat& S_YY, const arma::mat& S_YX, const arm
   arma::cube Eta_Pst = arma::zeros(p, k, nPst);
   arma::colvec tA_Pst = arma::zeros(nPst);
   arma::colvec tB_Pst = arma::zeros(nPst);
-  arma::mat Sigma_Pst = arma::zeros(nPst, p);
+  arma::cube Sigma_Pst = arma::zeros(1, p, nPst);
 
   // Initialize LogLikelihood vector
   arma::colvec LL_Pst = arma::zeros(nPst);
@@ -464,7 +464,7 @@ Rcpp::List RGM_Threshold(const arma::mat& S_YY, const arma::mat& S_YX, const arm
     // Update A
     for (int j = 0; j < p; j++) {
 
-      for (int l = 0; l < k; l++) {
+      for (int l = 0; l < p; l++) {
 
         // Don't update the diagonal entries
         if (l != j) {
@@ -531,7 +531,7 @@ Rcpp::List RGM_Threshold(const arma::mat& S_YY, const arma::mat& S_YX, const arm
       Eta_Pst.slice(Itr) = Eta;
       tA_Pst(Itr) = tA;
       tB_Pst(Itr) = tB;
-      Sigma_Pst.row(Itr) = 1 / Sigma_Inv.t();
+      Sigma_Pst.slice(Itr) = 1 / Sigma_Inv.t();
       LL_Pst(Itr) = LL(A, B, S_YY, S_YX, S_XX, Sigma_Inv, p, n);
 
       // Increase Itr by 1
@@ -613,7 +613,7 @@ Rcpp::List RGM_SpikeSlab(const arma::mat& S_YY, const arma::mat& S_YX, const arm
   arma::cube Phi_Pst = arma::zeros(p, k, nPst);
   arma::cube Eta_Pst = arma::zeros(p, k, nPst);
   arma::cube Psi_Pst = arma::zeros(p, k, nPst);
-  arma::mat Sigma_Pst = arma::zeros(nPst, p);
+  arma::cube Sigma_Pst = arma::zeros(1, p, nPst);
 
   // Initialize LogLikelihood vector
   arma::colvec LL_Pst = arma::zeros(nPst);
@@ -683,7 +683,7 @@ Rcpp::List RGM_SpikeSlab(const arma::mat& S_YY, const arma::mat& S_YX, const arm
     // Update A
     for (int j = 0; j < p; j++) {
 
-      for (int l = 0; l < k; l++) {
+      for (int l = 0; l < p; l++) {
 
         // Don't update the diagonal entries
         if (l != j) {
@@ -729,7 +729,7 @@ Rcpp::List RGM_SpikeSlab(const arma::mat& S_YY, const arma::mat& S_YX, const arm
       Phi_Pst.slice(Itr) = Phi;
       Eta_Pst.slice(Itr) = Eta;
       Psi_Pst.slice(Itr) = Psi;
-      Sigma_Pst.row(Itr) = 1 / Sigma_Inv.t();
+      Sigma_Pst.slice(Itr) = 1 / Sigma_Inv.t();
       LL_Pst(Itr) = LL(A, B, S_YY, S_YX, S_XX, Sigma_Inv, p, n);
 
       // Increase Itr by 1

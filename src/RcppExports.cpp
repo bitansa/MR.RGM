@@ -11,67 +11,91 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// Generate_Rho_c
-double Generate_Rho_c(const arma::mat& Gamma, double p, double a_rho, double b_rho);
-RcppExport SEXP _ReciprocalGraphicalModels_Generate_Rho_c(SEXP GammaSEXP, SEXP pSEXP, SEXP a_rhoSEXP, SEXP b_rhoSEXP) {
+// Sample_Rho
+double Sample_Rho(double Gamma, double a_rho, double b_rho);
+RcppExport SEXP _ReciprocalGraphicalModels_Sample_Rho(SEXP GammaSEXP, SEXP a_rhoSEXP, SEXP b_rhoSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type Gamma(GammaSEXP);
-    Rcpp::traits::input_parameter< double >::type p(pSEXP);
+    Rcpp::traits::input_parameter< double >::type Gamma(GammaSEXP);
     Rcpp::traits::input_parameter< double >::type a_rho(a_rhoSEXP);
     Rcpp::traits::input_parameter< double >::type b_rho(b_rhoSEXP);
-    rcpp_result_gen = Rcpp::wrap(Generate_Rho_c(Gamma, p, a_rho, b_rho));
+    rcpp_result_gen = Rcpp::wrap(Sample_Rho(Gamma, a_rho, b_rho));
     return rcpp_result_gen;
 END_RCPP
 }
-// Generate_Psi_c
-double Generate_Psi_c(const arma::mat& Phi, double d, double a_psi, double b_psi);
-RcppExport SEXP _ReciprocalGraphicalModels_Generate_Psi_c(SEXP PhiSEXP, SEXP dSEXP, SEXP a_psiSEXP, SEXP b_psiSEXP) {
+// Sample_Psi
+double Sample_Psi(double Phi, double a_psi, double b_psi);
+RcppExport SEXP _ReciprocalGraphicalModels_Sample_Psi(SEXP PhiSEXP, SEXP a_psiSEXP, SEXP b_psiSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type Phi(PhiSEXP);
-    Rcpp::traits::input_parameter< double >::type d(dSEXP);
+    Rcpp::traits::input_parameter< double >::type Phi(PhiSEXP);
     Rcpp::traits::input_parameter< double >::type a_psi(a_psiSEXP);
     Rcpp::traits::input_parameter< double >::type b_psi(b_psiSEXP);
-    rcpp_result_gen = Rcpp::wrap(Generate_Psi_c(Phi, d, a_psi, b_psi));
+    rcpp_result_gen = Rcpp::wrap(Sample_Psi(Phi, a_psi, b_psi));
     return rcpp_result_gen;
 END_RCPP
 }
-// Generate_Eta_c
-double Generate_Eta_c(double b, double phi, double a_eta, double b_eta, double nu_2);
-RcppExport SEXP _ReciprocalGraphicalModels_Generate_Eta_c(SEXP bSEXP, SEXP phiSEXP, SEXP a_etaSEXP, SEXP b_etaSEXP, SEXP nu_2SEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< double >::type b(bSEXP);
-    Rcpp::traits::input_parameter< double >::type phi(phiSEXP);
-    Rcpp::traits::input_parameter< double >::type a_eta(a_etaSEXP);
-    Rcpp::traits::input_parameter< double >::type b_eta(b_etaSEXP);
-    Rcpp::traits::input_parameter< double >::type nu_2(nu_2SEXP);
-    rcpp_result_gen = Rcpp::wrap(Generate_Eta_c(b, phi, a_eta, b_eta, nu_2));
-    return rcpp_result_gen;
-END_RCPP
-}
-// Generate_Tau_c
-double Generate_Tau_c(double a, double gamma, double a_tau, double b_tau, double nu_1);
-RcppExport SEXP _ReciprocalGraphicalModels_Generate_Tau_c(SEXP aSEXP, SEXP gammaSEXP, SEXP a_tauSEXP, SEXP b_tauSEXP, SEXP nu_1SEXP) {
+// Sample_Tau
+double Sample_Tau(double a, double gamma, double tau, double nu_1);
+RcppExport SEXP _ReciprocalGraphicalModels_Sample_Tau(SEXP aSEXP, SEXP gammaSEXP, SEXP tauSEXP, SEXP nu_1SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< double >::type a(aSEXP);
     Rcpp::traits::input_parameter< double >::type gamma(gammaSEXP);
-    Rcpp::traits::input_parameter< double >::type a_tau(a_tauSEXP);
-    Rcpp::traits::input_parameter< double >::type b_tau(b_tauSEXP);
+    Rcpp::traits::input_parameter< double >::type tau(tauSEXP);
     Rcpp::traits::input_parameter< double >::type nu_1(nu_1SEXP);
-    rcpp_result_gen = Rcpp::wrap(Generate_Tau_c(a, gamma, a_tau, b_tau, nu_1));
+    rcpp_result_gen = Rcpp::wrap(Sample_Tau(a, gamma, tau, nu_1));
     return rcpp_result_gen;
 END_RCPP
 }
-// Generate_Sigma_c
-double Generate_Sigma_c(double n, double z_sum, double a_sigma, double b_sigma);
-RcppExport SEXP _ReciprocalGraphicalModels_Generate_Sigma_c(SEXP nSEXP, SEXP z_sumSEXP, SEXP a_sigmaSEXP, SEXP b_sigmaSEXP) {
+// Sample_Eta
+double Sample_Eta(double b, double phi, double eta, double nu_2);
+RcppExport SEXP _ReciprocalGraphicalModels_Sample_Eta(SEXP bSEXP, SEXP phiSEXP, SEXP etaSEXP, SEXP nu_2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type b(bSEXP);
+    Rcpp::traits::input_parameter< double >::type phi(phiSEXP);
+    Rcpp::traits::input_parameter< double >::type eta(etaSEXP);
+    Rcpp::traits::input_parameter< double >::type nu_2(nu_2SEXP);
+    rcpp_result_gen = Rcpp::wrap(Sample_Eta(b, phi, eta, nu_2));
+    return rcpp_result_gen;
+END_RCPP
+}
+// Sample_Gamma
+double Sample_Gamma(double a, double tau, double rho, double nu_1);
+RcppExport SEXP _ReciprocalGraphicalModels_Sample_Gamma(SEXP aSEXP, SEXP tauSEXP, SEXP rhoSEXP, SEXP nu_1SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type a(aSEXP);
+    Rcpp::traits::input_parameter< double >::type tau(tauSEXP);
+    Rcpp::traits::input_parameter< double >::type rho(rhoSEXP);
+    Rcpp::traits::input_parameter< double >::type nu_1(nu_1SEXP);
+    rcpp_result_gen = Rcpp::wrap(Sample_Gamma(a, tau, rho, nu_1));
+    return rcpp_result_gen;
+END_RCPP
+}
+// Sample_Phi
+double Sample_Phi(double b, double eta, double psi, double nu_2);
+RcppExport SEXP _ReciprocalGraphicalModels_Sample_Phi(SEXP bSEXP, SEXP etaSEXP, SEXP psiSEXP, SEXP nu_2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type b(bSEXP);
+    Rcpp::traits::input_parameter< double >::type eta(etaSEXP);
+    Rcpp::traits::input_parameter< double >::type psi(psiSEXP);
+    Rcpp::traits::input_parameter< double >::type nu_2(nu_2SEXP);
+    rcpp_result_gen = Rcpp::wrap(Sample_Phi(b, eta, psi, nu_2));
+    return rcpp_result_gen;
+END_RCPP
+}
+// Sample_Sigma
+double Sample_Sigma(double n, double z_sum, double a_sigma, double b_sigma);
+RcppExport SEXP _ReciprocalGraphicalModels_Sample_Sigma(SEXP nSEXP, SEXP z_sumSEXP, SEXP a_sigmaSEXP, SEXP b_sigmaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -79,128 +103,185 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type z_sum(z_sumSEXP);
     Rcpp::traits::input_parameter< double >::type a_sigma(a_sigmaSEXP);
     Rcpp::traits::input_parameter< double >::type b_sigma(b_sigmaSEXP);
-    rcpp_result_gen = Rcpp::wrap(Generate_Sigma_c(n, z_sum, a_sigma, b_sigma));
+    rcpp_result_gen = Rcpp::wrap(Sample_Sigma(n, z_sum, a_sigma, b_sigma));
     return rcpp_result_gen;
 END_RCPP
 }
-// Target_Agamma_c
-double Target_Agamma_c(const arma::mat& X, const arma::mat& Y, const arma::mat& A, const arma::mat& diag_p, double a, double N, const arma::colvec& Sigma_Inv, const arma::mat& B, double gamma, double tau, double rho, double nu_1);
-RcppExport SEXP _ReciprocalGraphicalModels_Target_Agamma_c(SEXP XSEXP, SEXP YSEXP, SEXP ASEXP, SEXP diag_pSEXP, SEXP aSEXP, SEXP NSEXP, SEXP Sigma_InvSEXP, SEXP BSEXP, SEXP gammaSEXP, SEXP tauSEXP, SEXP rhoSEXP, SEXP nu_1SEXP) {
+// Target_A
+double Target_A(const arma::mat& S_YY, const arma::mat& S_YX, const arma::mat& A, double a, double N, const arma::colvec& Sigma_Inv, double p, const arma::mat& B, double gamma, double tau, double nu_1);
+RcppExport SEXP _ReciprocalGraphicalModels_Target_A(SEXP S_YYSEXP, SEXP S_YXSEXP, SEXP ASEXP, SEXP aSEXP, SEXP NSEXP, SEXP Sigma_InvSEXP, SEXP pSEXP, SEXP BSEXP, SEXP gammaSEXP, SEXP tauSEXP, SEXP nu_1SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type S_YY(S_YYSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type S_YX(S_YXSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type A(ASEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type diag_p(diag_pSEXP);
     Rcpp::traits::input_parameter< double >::type a(aSEXP);
     Rcpp::traits::input_parameter< double >::type N(NSEXP);
     Rcpp::traits::input_parameter< const arma::colvec& >::type Sigma_Inv(Sigma_InvSEXP);
+    Rcpp::traits::input_parameter< double >::type p(pSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type B(BSEXP);
     Rcpp::traits::input_parameter< double >::type gamma(gammaSEXP);
     Rcpp::traits::input_parameter< double >::type tau(tauSEXP);
-    Rcpp::traits::input_parameter< double >::type rho(rhoSEXP);
     Rcpp::traits::input_parameter< double >::type nu_1(nu_1SEXP);
-    rcpp_result_gen = Rcpp::wrap(Target_Agamma_c(X, Y, A, diag_p, a, N, Sigma_Inv, B, gamma, tau, rho, nu_1));
+    rcpp_result_gen = Rcpp::wrap(Target_A(S_YY, S_YX, A, a, N, Sigma_Inv, p, B, gamma, tau, nu_1));
     return rcpp_result_gen;
 END_RCPP
 }
-// Generate_Agamma_C
-NumericVector Generate_Agamma_C(const arma::mat& X, const arma::mat& Y, const arma::mat& A, const arma::mat& diag_p, double i, double j, const arma::colvec& Sigma_Inv, double N, const arma::mat& B, double gamma, double tau, double rho, double nu_1, double prop_var1);
-RcppExport SEXP _ReciprocalGraphicalModels_Generate_Agamma_C(SEXP XSEXP, SEXP YSEXP, SEXP ASEXP, SEXP diag_pSEXP, SEXP iSEXP, SEXP jSEXP, SEXP Sigma_InvSEXP, SEXP NSEXP, SEXP BSEXP, SEXP gammaSEXP, SEXP tauSEXP, SEXP rhoSEXP, SEXP nu_1SEXP, SEXP prop_var1SEXP) {
+// Sample_A
+double Sample_A(const arma::mat& S_YY, const arma::mat& S_YX, const arma::mat& A, const arma::mat& A_Pseudo, double i, double j, const arma::colvec& Sigma_Inv, double N, double p, const arma::mat& B, double gamma, double tau, double nu_1, double prop_var1, double tA);
+RcppExport SEXP _ReciprocalGraphicalModels_Sample_A(SEXP S_YYSEXP, SEXP S_YXSEXP, SEXP ASEXP, SEXP A_PseudoSEXP, SEXP iSEXP, SEXP jSEXP, SEXP Sigma_InvSEXP, SEXP NSEXP, SEXP pSEXP, SEXP BSEXP, SEXP gammaSEXP, SEXP tauSEXP, SEXP nu_1SEXP, SEXP prop_var1SEXP, SEXP tASEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type S_YY(S_YYSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type S_YX(S_YXSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type A(ASEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type diag_p(diag_pSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type A_Pseudo(A_PseudoSEXP);
     Rcpp::traits::input_parameter< double >::type i(iSEXP);
     Rcpp::traits::input_parameter< double >::type j(jSEXP);
     Rcpp::traits::input_parameter< const arma::colvec& >::type Sigma_Inv(Sigma_InvSEXP);
     Rcpp::traits::input_parameter< double >::type N(NSEXP);
+    Rcpp::traits::input_parameter< double >::type p(pSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type B(BSEXP);
     Rcpp::traits::input_parameter< double >::type gamma(gammaSEXP);
     Rcpp::traits::input_parameter< double >::type tau(tauSEXP);
-    Rcpp::traits::input_parameter< double >::type rho(rhoSEXP);
     Rcpp::traits::input_parameter< double >::type nu_1(nu_1SEXP);
     Rcpp::traits::input_parameter< double >::type prop_var1(prop_var1SEXP);
-    rcpp_result_gen = Rcpp::wrap(Generate_Agamma_C(X, Y, A, diag_p, i, j, Sigma_Inv, N, B, gamma, tau, rho, nu_1, prop_var1));
+    Rcpp::traits::input_parameter< double >::type tA(tASEXP);
+    rcpp_result_gen = Rcpp::wrap(Sample_A(S_YY, S_YX, A, A_Pseudo, i, j, Sigma_Inv, N, p, B, gamma, tau, nu_1, prop_var1, tA));
     return rcpp_result_gen;
 END_RCPP
 }
-// Target_Bphi_c
-double Target_Bphi_c(const arma::mat& X, const arma::mat& Y, const arma::mat& B, const arma::colvec& Sigma_Inv, const arma::mat& MultMat_Y, double b, double phi, double eta, double psi, double nu_2);
-RcppExport SEXP _ReciprocalGraphicalModels_Target_Bphi_c(SEXP XSEXP, SEXP YSEXP, SEXP BSEXP, SEXP Sigma_InvSEXP, SEXP MultMat_YSEXP, SEXP bSEXP, SEXP phiSEXP, SEXP etaSEXP, SEXP psiSEXP, SEXP nu_2SEXP) {
+// Target_B
+double Target_B(const arma::mat& S_YX, const arma::mat& S_XX, const arma::mat& B, const arma::colvec& Sigma_Inv, const arma::mat& MultMat, double N, double b, double phi, double eta, double nu_2);
+RcppExport SEXP _ReciprocalGraphicalModels_Target_B(SEXP S_YXSEXP, SEXP S_XXSEXP, SEXP BSEXP, SEXP Sigma_InvSEXP, SEXP MultMatSEXP, SEXP NSEXP, SEXP bSEXP, SEXP phiSEXP, SEXP etaSEXP, SEXP nu_2SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type S_YX(S_YXSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type S_XX(S_XXSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type B(BSEXP);
     Rcpp::traits::input_parameter< const arma::colvec& >::type Sigma_Inv(Sigma_InvSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type MultMat_Y(MultMat_YSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type MultMat(MultMatSEXP);
+    Rcpp::traits::input_parameter< double >::type N(NSEXP);
     Rcpp::traits::input_parameter< double >::type b(bSEXP);
     Rcpp::traits::input_parameter< double >::type phi(phiSEXP);
     Rcpp::traits::input_parameter< double >::type eta(etaSEXP);
-    Rcpp::traits::input_parameter< double >::type psi(psiSEXP);
     Rcpp::traits::input_parameter< double >::type nu_2(nu_2SEXP);
-    rcpp_result_gen = Rcpp::wrap(Target_Bphi_c(X, Y, B, Sigma_Inv, MultMat_Y, b, phi, eta, psi, nu_2));
+    rcpp_result_gen = Rcpp::wrap(Target_B(S_YX, S_XX, B, Sigma_Inv, MultMat, N, b, phi, eta, nu_2));
     return rcpp_result_gen;
 END_RCPP
 }
-// Generate_Bphi_c
-NumericVector Generate_Bphi_c(const arma::mat& X, const arma::mat& Y, const arma::mat& B, double i, double j, const arma::colvec& Sigma_Inv, const arma::mat& MultMat_Y, double phi, double eta, double psi, double nu_2, double prop_var2);
-RcppExport SEXP _ReciprocalGraphicalModels_Generate_Bphi_c(SEXP XSEXP, SEXP YSEXP, SEXP BSEXP, SEXP iSEXP, SEXP jSEXP, SEXP Sigma_InvSEXP, SEXP MultMat_YSEXP, SEXP phiSEXP, SEXP etaSEXP, SEXP psiSEXP, SEXP nu_2SEXP, SEXP prop_var2SEXP) {
+// Sample_B
+double Sample_B(const arma::mat& S_YX, const arma::mat& S_XX, const arma::mat& B, const arma::mat& B_Pseudo, double i, double j, const arma::colvec& Sigma_Inv, const arma::mat& MultMat, double N, double phi, double eta, double nu_2, double prop_var2, double tB);
+RcppExport SEXP _ReciprocalGraphicalModels_Sample_B(SEXP S_YXSEXP, SEXP S_XXSEXP, SEXP BSEXP, SEXP B_PseudoSEXP, SEXP iSEXP, SEXP jSEXP, SEXP Sigma_InvSEXP, SEXP MultMatSEXP, SEXP NSEXP, SEXP phiSEXP, SEXP etaSEXP, SEXP nu_2SEXP, SEXP prop_var2SEXP, SEXP tBSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type S_YX(S_YXSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type S_XX(S_XXSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type B(BSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type B_Pseudo(B_PseudoSEXP);
     Rcpp::traits::input_parameter< double >::type i(iSEXP);
     Rcpp::traits::input_parameter< double >::type j(jSEXP);
     Rcpp::traits::input_parameter< const arma::colvec& >::type Sigma_Inv(Sigma_InvSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type MultMat_Y(MultMat_YSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type MultMat(MultMatSEXP);
+    Rcpp::traits::input_parameter< double >::type N(NSEXP);
     Rcpp::traits::input_parameter< double >::type phi(phiSEXP);
     Rcpp::traits::input_parameter< double >::type eta(etaSEXP);
-    Rcpp::traits::input_parameter< double >::type psi(psiSEXP);
     Rcpp::traits::input_parameter< double >::type nu_2(nu_2SEXP);
     Rcpp::traits::input_parameter< double >::type prop_var2(prop_var2SEXP);
-    rcpp_result_gen = Rcpp::wrap(Generate_Bphi_c(X, Y, B, i, j, Sigma_Inv, MultMat_Y, phi, eta, psi, nu_2, prop_var2));
+    Rcpp::traits::input_parameter< double >::type tB(tBSEXP);
+    rcpp_result_gen = Rcpp::wrap(Sample_B(S_YX, S_XX, B, B_Pseudo, i, j, Sigma_Inv, MultMat, N, phi, eta, nu_2, prop_var2, tB));
     return rcpp_result_gen;
 END_RCPP
 }
-// LL_c
-double LL_c(const arma::mat& A, const arma::mat& B, const arma::mat& X, const arma::mat& Y, const arma::colvec& Sigma_Inv, const arma::mat& diag_p, double N);
-RcppExport SEXP _ReciprocalGraphicalModels_LL_c(SEXP ASEXP, SEXP BSEXP, SEXP XSEXP, SEXP YSEXP, SEXP Sigma_InvSEXP, SEXP diag_pSEXP, SEXP NSEXP) {
+// Sample_tn
+double Sample_tn(double mu, double sigma, double a, double b);
+RcppExport SEXP _ReciprocalGraphicalModels_Sample_tn(SEXP muSEXP, SEXP sigmaSEXP, SEXP aSEXP, SEXP bSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< double >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< double >::type a(aSEXP);
+    Rcpp::traits::input_parameter< double >::type b(bSEXP);
+    rcpp_result_gen = Rcpp::wrap(Sample_tn(mu, sigma, a, b));
+    return rcpp_result_gen;
+END_RCPP
+}
+// tn_pdf
+double tn_pdf(double x, double mu, double sigma, double a, double b);
+RcppExport SEXP _ReciprocalGraphicalModels_tn_pdf(SEXP xSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP aSEXP, SEXP bSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type x(xSEXP);
+    Rcpp::traits::input_parameter< double >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< double >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< double >::type a(aSEXP);
+    Rcpp::traits::input_parameter< double >::type b(bSEXP);
+    rcpp_result_gen = Rcpp::wrap(tn_pdf(x, mu, sigma, a, b));
+    return rcpp_result_gen;
+END_RCPP
+}
+// LL
+double LL(const arma::mat& A, const arma::mat& B, const arma::mat& S_YY, const arma::mat& S_YX, const arma::mat& S_XX, const arma::colvec& Sigma_Inv, double p, double N);
+RcppExport SEXP _ReciprocalGraphicalModels_LL(SEXP ASEXP, SEXP BSEXP, SEXP S_YYSEXP, SEXP S_YXSEXP, SEXP S_XXSEXP, SEXP Sigma_InvSEXP, SEXP pSEXP, SEXP NSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::mat& >::type A(ASEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type B(BSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type S_YY(S_YYSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type S_YX(S_YXSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type S_XX(S_XXSEXP);
     Rcpp::traits::input_parameter< const arma::colvec& >::type Sigma_Inv(Sigma_InvSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type diag_p(diag_pSEXP);
+    Rcpp::traits::input_parameter< double >::type p(pSEXP);
     Rcpp::traits::input_parameter< double >::type N(NSEXP);
-    rcpp_result_gen = Rcpp::wrap(LL_c(A, B, X, Y, Sigma_Inv, diag_p, N));
+    rcpp_result_gen = Rcpp::wrap(LL(A, B, S_YY, S_YX, S_XX, Sigma_Inv, p, N));
     return rcpp_result_gen;
 END_RCPP
 }
-// Get_AB_c
-Rcpp::List Get_AB_c(const arma::mat& A0, const arma::mat& B0, const arma::mat& X, const arma::mat& Y, const arma::mat& D, double d, const arma::mat& diag_p, double a_tau, double b_tau, double a_rho, double b_rho, double nu_1, double a_eta, double b_eta, double a_psi, double b_psi, double nu_2, double a_sigma, double b_sigma, double Prop_varA, double Prop_VarB, double niter);
-RcppExport SEXP _ReciprocalGraphicalModels_Get_AB_c(SEXP A0SEXP, SEXP B0SEXP, SEXP XSEXP, SEXP YSEXP, SEXP DSEXP, SEXP dSEXP, SEXP diag_pSEXP, SEXP a_tauSEXP, SEXP b_tauSEXP, SEXP a_rhoSEXP, SEXP b_rhoSEXP, SEXP nu_1SEXP, SEXP a_etaSEXP, SEXP b_etaSEXP, SEXP a_psiSEXP, SEXP b_psiSEXP, SEXP nu_2SEXP, SEXP a_sigmaSEXP, SEXP b_sigmaSEXP, SEXP Prop_varASEXP, SEXP Prop_VarBSEXP, SEXP niterSEXP) {
+// RGM_Threshold
+Rcpp::List RGM_Threshold(const arma::mat& S_YY, const arma::mat& S_YX, const arma::mat& S_XX, const arma::mat& D, double n, int nIter, int nBurnin, int Thin, double nu_1, double nu_2, double a_sigma, double b_sigma, double Prop_VarA, double Prop_VarB);
+RcppExport SEXP _ReciprocalGraphicalModels_RGM_Threshold(SEXP S_YYSEXP, SEXP S_YXSEXP, SEXP S_XXSEXP, SEXP DSEXP, SEXP nSEXP, SEXP nIterSEXP, SEXP nBurninSEXP, SEXP ThinSEXP, SEXP nu_1SEXP, SEXP nu_2SEXP, SEXP a_sigmaSEXP, SEXP b_sigmaSEXP, SEXP Prop_VarASEXP, SEXP Prop_VarBSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type A0(A0SEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type B0(B0SEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type S_YY(S_YYSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type S_YX(S_YXSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type S_XX(S_XXSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type D(DSEXP);
-    Rcpp::traits::input_parameter< double >::type d(dSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type diag_p(diag_pSEXP);
+    Rcpp::traits::input_parameter< double >::type n(nSEXP);
+    Rcpp::traits::input_parameter< int >::type nIter(nIterSEXP);
+    Rcpp::traits::input_parameter< int >::type nBurnin(nBurninSEXP);
+    Rcpp::traits::input_parameter< int >::type Thin(ThinSEXP);
+    Rcpp::traits::input_parameter< double >::type nu_1(nu_1SEXP);
+    Rcpp::traits::input_parameter< double >::type nu_2(nu_2SEXP);
+    Rcpp::traits::input_parameter< double >::type a_sigma(a_sigmaSEXP);
+    Rcpp::traits::input_parameter< double >::type b_sigma(b_sigmaSEXP);
+    Rcpp::traits::input_parameter< double >::type Prop_VarA(Prop_VarASEXP);
+    Rcpp::traits::input_parameter< double >::type Prop_VarB(Prop_VarBSEXP);
+    rcpp_result_gen = Rcpp::wrap(RGM_Threshold(S_YY, S_YX, S_XX, D, n, nIter, nBurnin, Thin, nu_1, nu_2, a_sigma, b_sigma, Prop_VarA, Prop_VarB));
+    return rcpp_result_gen;
+END_RCPP
+}
+// RGM_SpikeSlab
+Rcpp::List RGM_SpikeSlab(const arma::mat& S_YY, const arma::mat& S_YX, const arma::mat& S_XX, const arma::mat& D, double n, int nIter, int nBurnin, int Thin, double a_tau, double b_tau, double a_rho, double b_rho, double nu_1, double a_eta, double b_eta, double a_psi, double b_psi, double nu_2, double a_sigma, double b_sigma, double Prop_VarA, double Prop_VarB);
+RcppExport SEXP _ReciprocalGraphicalModels_RGM_SpikeSlab(SEXP S_YYSEXP, SEXP S_YXSEXP, SEXP S_XXSEXP, SEXP DSEXP, SEXP nSEXP, SEXP nIterSEXP, SEXP nBurninSEXP, SEXP ThinSEXP, SEXP a_tauSEXP, SEXP b_tauSEXP, SEXP a_rhoSEXP, SEXP b_rhoSEXP, SEXP nu_1SEXP, SEXP a_etaSEXP, SEXP b_etaSEXP, SEXP a_psiSEXP, SEXP b_psiSEXP, SEXP nu_2SEXP, SEXP a_sigmaSEXP, SEXP b_sigmaSEXP, SEXP Prop_VarASEXP, SEXP Prop_VarBSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type S_YY(S_YYSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type S_YX(S_YXSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type S_XX(S_XXSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type D(DSEXP);
+    Rcpp::traits::input_parameter< double >::type n(nSEXP);
+    Rcpp::traits::input_parameter< int >::type nIter(nIterSEXP);
+    Rcpp::traits::input_parameter< int >::type nBurnin(nBurninSEXP);
+    Rcpp::traits::input_parameter< int >::type Thin(ThinSEXP);
     Rcpp::traits::input_parameter< double >::type a_tau(a_tauSEXP);
     Rcpp::traits::input_parameter< double >::type b_tau(b_tauSEXP);
     Rcpp::traits::input_parameter< double >::type a_rho(a_rhoSEXP);
@@ -213,26 +294,30 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type nu_2(nu_2SEXP);
     Rcpp::traits::input_parameter< double >::type a_sigma(a_sigmaSEXP);
     Rcpp::traits::input_parameter< double >::type b_sigma(b_sigmaSEXP);
-    Rcpp::traits::input_parameter< double >::type Prop_varA(Prop_varASEXP);
+    Rcpp::traits::input_parameter< double >::type Prop_VarA(Prop_VarASEXP);
     Rcpp::traits::input_parameter< double >::type Prop_VarB(Prop_VarBSEXP);
-    Rcpp::traits::input_parameter< double >::type niter(niterSEXP);
-    rcpp_result_gen = Rcpp::wrap(Get_AB_c(A0, B0, X, Y, D, d, diag_p, a_tau, b_tau, a_rho, b_rho, nu_1, a_eta, b_eta, a_psi, b_psi, nu_2, a_sigma, b_sigma, Prop_varA, Prop_VarB, niter));
+    rcpp_result_gen = Rcpp::wrap(RGM_SpikeSlab(S_YY, S_YX, S_XX, D, n, nIter, nBurnin, Thin, a_tau, b_tau, a_rho, b_rho, nu_1, a_eta, b_eta, a_psi, b_psi, nu_2, a_sigma, b_sigma, Prop_VarA, Prop_VarB));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_ReciprocalGraphicalModels_Generate_Rho_c", (DL_FUNC) &_ReciprocalGraphicalModels_Generate_Rho_c, 4},
-    {"_ReciprocalGraphicalModels_Generate_Psi_c", (DL_FUNC) &_ReciprocalGraphicalModels_Generate_Psi_c, 4},
-    {"_ReciprocalGraphicalModels_Generate_Eta_c", (DL_FUNC) &_ReciprocalGraphicalModels_Generate_Eta_c, 5},
-    {"_ReciprocalGraphicalModels_Generate_Tau_c", (DL_FUNC) &_ReciprocalGraphicalModels_Generate_Tau_c, 5},
-    {"_ReciprocalGraphicalModels_Generate_Sigma_c", (DL_FUNC) &_ReciprocalGraphicalModels_Generate_Sigma_c, 4},
-    {"_ReciprocalGraphicalModels_Target_Agamma_c", (DL_FUNC) &_ReciprocalGraphicalModels_Target_Agamma_c, 12},
-    {"_ReciprocalGraphicalModels_Generate_Agamma_C", (DL_FUNC) &_ReciprocalGraphicalModels_Generate_Agamma_C, 14},
-    {"_ReciprocalGraphicalModels_Target_Bphi_c", (DL_FUNC) &_ReciprocalGraphicalModels_Target_Bphi_c, 10},
-    {"_ReciprocalGraphicalModels_Generate_Bphi_c", (DL_FUNC) &_ReciprocalGraphicalModels_Generate_Bphi_c, 12},
-    {"_ReciprocalGraphicalModels_LL_c", (DL_FUNC) &_ReciprocalGraphicalModels_LL_c, 7},
-    {"_ReciprocalGraphicalModels_Get_AB_c", (DL_FUNC) &_ReciprocalGraphicalModels_Get_AB_c, 22},
+    {"_ReciprocalGraphicalModels_Sample_Rho", (DL_FUNC) &_ReciprocalGraphicalModels_Sample_Rho, 3},
+    {"_ReciprocalGraphicalModels_Sample_Psi", (DL_FUNC) &_ReciprocalGraphicalModels_Sample_Psi, 3},
+    {"_ReciprocalGraphicalModels_Sample_Tau", (DL_FUNC) &_ReciprocalGraphicalModels_Sample_Tau, 4},
+    {"_ReciprocalGraphicalModels_Sample_Eta", (DL_FUNC) &_ReciprocalGraphicalModels_Sample_Eta, 4},
+    {"_ReciprocalGraphicalModels_Sample_Gamma", (DL_FUNC) &_ReciprocalGraphicalModels_Sample_Gamma, 4},
+    {"_ReciprocalGraphicalModels_Sample_Phi", (DL_FUNC) &_ReciprocalGraphicalModels_Sample_Phi, 4},
+    {"_ReciprocalGraphicalModels_Sample_Sigma", (DL_FUNC) &_ReciprocalGraphicalModels_Sample_Sigma, 4},
+    {"_ReciprocalGraphicalModels_Target_A", (DL_FUNC) &_ReciprocalGraphicalModels_Target_A, 11},
+    {"_ReciprocalGraphicalModels_Sample_A", (DL_FUNC) &_ReciprocalGraphicalModels_Sample_A, 15},
+    {"_ReciprocalGraphicalModels_Target_B", (DL_FUNC) &_ReciprocalGraphicalModels_Target_B, 10},
+    {"_ReciprocalGraphicalModels_Sample_B", (DL_FUNC) &_ReciprocalGraphicalModels_Sample_B, 14},
+    {"_ReciprocalGraphicalModels_Sample_tn", (DL_FUNC) &_ReciprocalGraphicalModels_Sample_tn, 4},
+    {"_ReciprocalGraphicalModels_tn_pdf", (DL_FUNC) &_ReciprocalGraphicalModels_tn_pdf, 5},
+    {"_ReciprocalGraphicalModels_LL", (DL_FUNC) &_ReciprocalGraphicalModels_LL, 8},
+    {"_ReciprocalGraphicalModels_RGM_Threshold", (DL_FUNC) &_ReciprocalGraphicalModels_RGM_Threshold, 14},
+    {"_ReciprocalGraphicalModels_RGM_SpikeSlab", (DL_FUNC) &_ReciprocalGraphicalModels_RGM_SpikeSlab, 22},
     {NULL, NULL, 0}
 };
 

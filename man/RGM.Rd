@@ -5,41 +5,32 @@
 \title{Title Fitting Reciprocal Graphical Models for Integrative Gene Regulatory Network}
 \usage{
 RGM(
-  X,
-  Y,
-  A0 = NULL,
-  B0 = NULL,
-  D = NULL,
-  a_tau = 0.1,
-  b_tau = 0.1,
+  S_YY,
+  S_YX,
+  S_XX,
+  d,
+  n,
+  nIter = 10000,
+  nBurnin = 2000,
+  Thin = 1,
+  prior = c("Threshold", "Spike and Slab"),
+  a_tau = 0.01,
+  b_tau = 0.01,
   a_rho = 0.5,
   b_rho = 0.5,
   nu_1 = 1e-04,
-  a_eta = 0.1,
-  b_eta = 0.1,
+  a_eta = 0.01,
+  b_eta = 0.01,
   a_psi = 0.5,
   b_psi = 0.5,
   nu_2 = 1e-04,
-  a_sigma = 0.1,
-  b_sigma = 0.1,
-  Prop_varA1 = 0.1,
-  Prop_varA2 = 5,
-  Prop_varB1 = 0.1,
-  Prop_varB2 = 5,
-  niter = 10000
+  a_sigma = 0.01,
+  b_sigma = 0.01,
+  Prop_VarA = 0.01,
+  Prop_VarB = 0.01
 )
 }
 \arguments{
-\item{X}{n * k matrix data input, each row denotes a particular observation and each column denotes a particular DNA.}
-
-\item{Y}{n * p matrix data input, each row denotes a particular observation and each column denotes a particular gene.}
-
-\item{A0}{p * p matrix input. It is the initial value of the gene-gene interaction matrix. Diagonal entries of A0 should all be 0. Random initialization of A0 may increase the convergence time of the markov chain. Default value is NULL.}
-
-\item{B0}{p * k matrix input. It is the initial value of the gene-DNA interaction matrix. Each row corresponds to a particular gene, each column corresponds to a particular DNA. Random initialization of B0 matrix may increase the convergence time of the markov chain. Default value is NULL.}
-
-\item{D}{p * k indicator matrix input. Each row corresponds to a particular gene, each column corresponds to a particular DNA. An entry is 1 if the corresponding DNA can affect the corresponding gene, else 0. Default value is NULL. If not given, all entry of D is taken to be 1.}
-
 \item{a_tau}{positive scalar input. It corresponds to the first parameter of a Inverse Gamma distribution. Default value is 0.1.}
 
 \item{b_tau}{positive scalar input. It corresponds to the second parameter of a Inverse Gamma distribution. Default value is 0.1.}
@@ -63,6 +54,16 @@ RGM(
 \item{a_sigma}{positive scalar input. It corresponds to the first parameter of a Inverse Gamma distribution. Default value is 0.1.}
 
 \item{b_sigma}{positive scalar input. It corresponds to the second parameter of a Inverse Gamma distribution. Default value is 0.1.}
+
+\item{X}{n * k matrix data input, each row denotes a particular observation and each column denotes a particular DNA.}
+
+\item{Y}{n * p matrix data input, each row denotes a particular observation and each column denotes a particular gene.}
+
+\item{A0}{p * p matrix input. It is the initial value of the gene-gene interaction matrix. Diagonal entries of A0 should all be 0. Random initialization of A0 may increase the convergence time of the markov chain. Default value is NULL.}
+
+\item{B0}{p * k matrix input. It is the initial value of the gene-DNA interaction matrix. Each row corresponds to a particular gene, each column corresponds to a particular DNA. Random initialization of B0 matrix may increase the convergence time of the markov chain. Default value is NULL.}
+
+\item{D}{p * k indicator matrix input. Each row corresponds to a particular gene, each column corresponds to a particular DNA. An entry is 1 if the corresponding DNA can affect the corresponding gene, else 0. Default value is NULL. If not given, all entry of D is taken to be 1.}
 
 \item{Prop_varA1}{positive scalar input. It corresponds to the variance of the normal distribution of proposing A matrix terms. Default value is 0.1.}
 
@@ -130,17 +131,22 @@ Y = matrix(0, nrow = n, ncol = p)
 # Generate Gene expressions data based on DNA data
 for (i in 1:n) {
 
- Y[i, ] = MASS::mvrnorm(n = 1, Mult_Mat \%*\% B \%*\% X[i, ], Variance)
+ Y[i, ] = MASS::mvrnorm(1, Mult_Mat \%*\% B \%*\% X[i, ], Variance)
 
 }
 
+# Calculate S_YY, S_YX and S_XX
+S_YY = t(Y) \%*\% Y / n
+S_YX = t(Y) \%*\% X / n
+S_XX = t(X) \%*\% X / n
+
 # Apply RGM on the generated data
-Out = RGM(X, Y, A = A, B = B, D = D)
+Out = RGM(S_YY, S_YX, S_XX, d = rep(1, 3), n = n)
 
 # Get gene-gene interaction matrix, gene-DNA interaction matrix and log-likelihood
-A = Out$A
-B = Out$B
-LL = Out$LL
+A_Est = Out$A_Est
+B_Est = Out$B_Est
+LL = Out$LL_Pst
 
 # Plot log-likelihood of the model at each iteration
 plot(LL, type = 'l', xlab = "Number of Iterations", ylab = "Log-likelihood")

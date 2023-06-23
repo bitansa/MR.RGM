@@ -80,17 +80,22 @@
 #' # Generate Gene expressions data based on DNA data
 #' for (i in 1:n) {
 #'
-#'  Y[i, ] = MASS::mvrnorm(n = 1, Mult_Mat %*% B %*% X[i, ], Variance)
+#'  Y[i, ] = MASS::mvrnorm(1, Mult_Mat %*% B %*% X[i, ], Variance)
 #'
 #' }
+#'
+#' # Calculate S_YY, S_YX and S_XX
+#' S_YY = t(Y) %*% Y / n
+#' S_YX = t(Y) %*% X / n
+#' S_XX = t(X) %*% X / n
 #'
 #' # Apply RGM on the generated data
-#' Out = RGM(X, Y, A = A, B = B, D = D)
+#' Out = RGM(S_YY, S_YX, S_XX, d = rep(1, 3), n = n)
 #'
 #' # Get gene-gene interaction matrix, gene-DNA interaction matrix and log-likelihood
-#' A = Out$A
-#' B = Out$B
-#' LL = Out$LL
+#' A_Est = Out$A_Est
+#' B_Est = Out$B_Est
+#' LL = Out$LL_Pst
 #'
 #' # Plot log-likelihood of the model at each iteration
 #' plot(LL, type = 'l', xlab = "Number of Iterations", ylab = "Log-likelihood")
@@ -101,83 +106,46 @@
 #' \emph{Bayesian Analysis},
 #' \strong{13(4)}, 1095-1110.
 #' \doi{10.1214/17-BA1087}.
-RGM = function(X, Y, A0 = NULL, B0 = NULL, D = NULL, a_tau = 0.1, b_tau = 0.1, a_rho = 0.5, b_rho = 0.5, nu_1 = 0.0001, a_eta = 0.1, b_eta = 0.1, a_psi = 0.5, b_psi = 0.5, nu_2 = 0.0001, a_sigma = 0.1, b_sigma = 0.1, Prop_varA1 = 0.1, Prop_varA2 = 5, Prop_varB1 = 0.1, Prop_varB2 = 5, niter = 10000){
+RGM = function(S_YY, S_YX, S_XX, d, n, nIter = 10000, nBurnin = 2000, Thin = 1, prior = c("Threshold", "Spike and Slab"), a_tau = 0.01, b_tau = 0.01, a_rho = 0.5, b_rho = 0.5, nu_1 = 0.0001, a_eta = 0.01, b_eta = 0.01, a_psi = 0.5, b_psi = 0.5, nu_2 = 0.0001, a_sigma = 0.01, b_sigma = 0.01, Prop_VarA = 0.01, Prop_VarB = 0.01){
 
-  # Calculate number of datapoints and number of nodes from Y matrix
-  n = nrow(Y)
-  p = ncol(Y)
+  # Calculate number of nodes from S_YY matrix
+  p = ncol(S_YY)
 
-  # Calculate number of columns of X matrix i.e. number of covariates
-  k = ncol(X)
+  # Calculate number of columns of S_XX matrix i.e. number of covariates
+  k = ncol(S_XX)
 
-  # Check whether number of rows of X and Y are same
-  if(nrow(X) != n){
-
-    # Print an error message
-    stop("Number of datapoints for both node values and covariate values should be same")
-
-  }
-
-  # Check all the elements of X is numeric
-  if(!is.numeric(X)){
+  # Check whether n is a positive integer
+  if(!is.numeric(n) || n != round(n) || n <= 0){
 
     # Print an error message
-    stop("All the entries of node output should be numeric")
-
+    stop("Number of datapoints should be a positive integer.")
 
   }
 
-  # Check all the elements of Y is numeric
-  if(!is.numeric(Y)){
+  # Check whether d is a vector of non-negative integers of length p and sum od entries of d is equal to k
+  if(!is.numeric(d) || sum(d != round(d)) != 0 || sum(d <= 0) != 0 || length(d) != p || sum(d) != k){
 
     # Print an error message
-    stop("All the entries of covariate output should be numeric")
-
-
-  }
-
-  # Check whether D is given or not
-  if(is.null(D)){
-
-    # Create a D matrix with all entries 1
-    D = matrix(1, nrow = p, ncol = k)
-
-  } else {
-
-    # Check the dimensions of D matrix
-    if(nrow(D) != p){
-
-      # Print an error message
-      stop("Number of rows of the indicator matrix should be equal to the number of nodes")
-
-    } else if(ncol(D) != k){
-
-      # Print an error message
-      stop("Number of columns of the indicator matrix should be equal to the number of covariates")
-
-    }
-
-   # Check whether all the entries of D matrix is between 0 or 1
-   if(!is.numeric(D) || max(D) > 1 || min(D) < 0){
-
-     # Print an error message
-     stop("All the entries of the indicator matrix should be either 0 or 1")
-
-   }
-
-
-   # Check whether all the entries of D matrix is integer or not
-   if(sum(D != round(D)) != 0){
-
-     # Print an error message
-     stop("All the entries of the indicator matrix should be either 0 or 1")
-
-    }
+    stop("d should be a vector of positive integers of length equal to number of nodes and sum of entries should be equal to number of covariates.")
 
   }
 
-  # Store number of non-zero entries of D
-  d = length(which(D != 0))
+  # Initialize D matrix
+  D = matrix(0, p, k)
+
+  # Initialize m
+  m = 1
+
+  # Calculate D matrix based on d vector
+  for (i in 1:p) {
+
+    # Update ith row of D
+    D[i, m:(m + d[i] - 1)] = 1
+
+    # Update m
+    m = m + d[i]
+
+  }
 
 
   # Check whether the inverse gamma parameters are positive or not
@@ -190,7 +158,7 @@ RGM = function(X, Y, A0 = NULL, B0 = NULL, D = NULL, a_tau = 0.1, b_tau = 0.1, a
 
 
   # Check whether the variance terms are positive or not
-  if(!is.numeric(nu_1) || nu_1 <= 0 || !is.numeric(nu_2) || nu_2 <= 0 || !is.numeric(Prop_varA1) || Prop_varA1 <= 0 || !is.numeric(Prop_varA2) || Prop_varA2 <= 0 || !is.numeric(Prop_varB1) || Prop_varB1 <= 0 || !is.numeric(Prop_varB2) || Prop_varB2 <= 0){
+  if(!is.numeric(nu_1) || nu_1 <= 0 || !is.numeric(nu_2) || nu_2 <= 0 || !is.numeric(Prop_VarA) || Prop_VarA <= 0 || !is.numeric(Prop_VarB) || Prop_VarB <= 0){
 
     # Print an error message
     stop("All the variance terms should be positive")
@@ -198,613 +166,117 @@ RGM = function(X, Y, A0 = NULL, B0 = NULL, D = NULL, a_tau = 0.1, b_tau = 0.1, a
   }
 
 
-  # Check whether niter term is large enough or not
-  if(!is.numeric(niter) || niter < 10000){
+  # Check whether nIter is a postive integer
+  if(!is.numeric(nIter) || nIter != round(nIter) || nIter <= 0){
 
     # Print an error message
-    stop("Number of iterations should be a large positive integer i.e. at least 10000")
+    stop("Number of iterations should be a positive integer.")
 
   }
 
-  # Check whether niter is an integer
-  if(niter != round(niter)){
+  # Check whether nBurnin is a non-negative integer and strictly less than nIter
+  if(!is.numeric(nBurnin) || nBurnin != round(nBurnin) || nBurnin < 0 || nBurnin >= nIter){
 
     # Print an error message
-    stop("Number of iterations should be a large positive integer i.e. at least 10000")
+    stop("Number of Burnin points should be a nonnegative integer strictly less than number of iterations.")
+
+  }
+
+  # Check whether Thin is a positive integer less than equal to (nIter - nBurnin)
+  if(!is.numeric(Thin) || Thin != round(Thin) || Thin <= 0 || Thin > (nIter - nBurnin)){
+
+    # Print an error message
+    stop("Thin should be a positive integer less than or equal to the difference between number of iterations and number of burnin points.")
 
   }
 
 
-  # Initialize Sigma Inverse vector i.e. inverse of each Sigma_ii
-  Sigma_Inv = stats::rgamma(p, a_sigma, b_sigma)
+  # Apply RGM for Threshold prior and Spike and Slab prior
+  if ("Threshold" %in% prior){
 
-  # Initialize Bernoulli parameters Rho, Psi
-  Rho = stats::rbeta(1, a_rho, b_rho)
-  Psi = stats::rbeta(1, a_psi, b_psi)
+    # Run the algorithm for Threshold prior
+    Output = RGM_Threshold(S_YY, S_YX, S_XX, D, n, nIter = nIter, nBurnin = nBurnin, Thin = Thin, nu_1 = nu_1, nu_2 = nu_2,
+                           a_sigma = a_sigma, b_sigma = b_sigma, Prop_VarA = Prop_VarA, Prop_VarB = Prop_VarB)
 
-  # Initialize Gamma, Tau, Phi and Eta matrices
-  Gamma = matrix(stats::rbinom(p^2, 1, Rho), nrow = p, ncol = p)
-  Phi = matrix(stats::rbinom(p * k, 1, Psi), nrow = p, ncol = k)
-  Tau = matrix(1 / stats::rgamma(p^2, a_tau, b_tau), nrow = p, ncol = p)
-  Eta = matrix(1 / stats::rgamma(p * k, a_eta, b_eta), nrow = p, ncol = k)
+    # Calculate estimates from the output
+    A_Est = apply(Output$A_Pst, MARGIN = c(1, 2), FUN = mean)
+    B_Est = apply(Output$B_Pst, MARGIN = c(1, 2), FUN = mean)
+    A0_Est = apply(Output$A0_Pst, MARGIN = c(1, 2), FUN = mean)
+    B0_Est = apply(Output$B0_Pst, MARGIN = c(1, 2), FUN = mean)
+    Gamma_Est = apply(Output$Gamma_Pst, MARGIN = c(1, 2), FUN = mean)
+    Tau_Est = apply(Output$Tau_Pst, MARGIN = c(1, 2), FUN = mean)
+    Phi_Est = apply(Output$Phi_Pst, MARGIN = c(1, 2), FUN = mean)
+    Eta_Est = apply(Output$Eta_Pst, MARGIN = c(1, 2), FUN = mean)
+    tA_Est = mean(Output$tA_Pst)
+    tB_Est = mean(Output$tB_Pst)
+    Sigma_Est = apply(Output$Sigma_Pst, MARGIN = c(1, 2), FUN = mean)
+    zA_Est = (Gamma_Est > 0.5) * 1
+    zB_Est = (Phi_Est > 0.5) * 1
 
-  # Make the diagonals of Gamma and Tau matrix to be 0
-  diag(Gamma) = 0
-  diag(Tau) = 0
+    # Return outputs
+    return(list(A_Est = A_Est, B_Est = B_Est, zA_Est = zA_Est, zB_Est = zB_Est,
+                A0_Est = A0_Est, B0_Est = B0_Est, Gamma_Est = Gamma_Est, Tau_Est = Tau_Est,
+                Phi_Est = Phi_Est, Eta_Est = Eta_Est, tA_Est = tA_Est, tB_Est = tB_Est,
+                Sigma_Est = Sigma_Est,
+                A_Pst = Output$A_Pst, B_Pst = Output$B_Pst,
+                A0_Pst = Output$A0_Pst, B0_Pst = Output$B0_Pst, Gamma_Pst = Output$Gamma_Pst, Tau_Pst = Output$Tau_Pst,
+                Phi_Pst = Output$Phi_Pst, Eta_Pst = Output$Eta_Pst, tA_Pst = Output$tA_Pst, tB_Pst = Output$tB_Pst,
+                Sigma_Pst = Output$Sigma_Pst,
+                AccptA = Output$AccptA, AccptB = Output$AccptB, Accpt_tA = Output$Accpt_tA, Accpt_tB = Output$Accpt_tB,
+                LL_Pst = Output$LL_Pst))
 
-  # Make Phi[i, j] = 0 and Eta[i, j] = 0 if D[i, j] = 0
-  Phi = Phi * D
-  Eta = Eta * D
 
-  # Initialize A and B matrix
-  A = matrix(0, nrow = p, ncol = p)
-  B = matrix(0, nrow = p, ncol = k)
 
-  # Check whether A0 matrix is null otherwise initialize it
-  if(!is.null(A0)){
 
-    # Check the dimensions of A0
-    if(nrow(A0) != p || ncol(A0) != p){
 
-      # Print an error message
-      stop("Number of rows and columns of A0 matrix should be equal to number of nodes")
+  } else if ("Spike and Slab" %in% prior){
 
-    }
+    # Run the algorithm for Threshold prior
+    Output = RGM_SpikeSlab(S_YY, S_YX, S_XX, D, n, nIter = nIter, nBurnin = nBurnin, Thin = Thin, a_tau = a_tau, b_tau = b_tau,
+                           a_rho = a_rho, b_rho = b_rho, nu_1 = nu_1, a_eta = a_eta, b_eta = b_eta, a_psi = a_psi, b_psi = b_psi,
+                           nu_2 = nu_2, a_sigma = a_sigma, b_sigma = b_sigma, Prop_VarA = Prop_VarA, Prop_VarB = Prop_VarB)
 
-    # Check all the entries of A0 is numeric and diagonal is 0
-    if(!is.numeric(A0) || sum(diag(A0) != 0) != 0){
 
-      # Print an error message
-      stop("A0 should be a numeric matrix with diagonal entries all 0")
 
-    }
+    # Calculate estimates from the output
+    A_Est = apply(Output$A_Pst, MARGIN = c(1, 2), FUN = mean)
+    B_Est = apply(Output$B_Pst, MARGIN = c(1, 2), FUN = mean)
+    Gamma_Est = apply(Output$Gamma_Pst, MARGIN = c(1, 2), FUN = mean)
+    Rho_Est = apply(Output$Rho_Pst, MARGIN = c(1, 2), FUN = mean)
+    Tau_Est = apply(Output$Tau_Pst, MARGIN = c(1, 2), FUN = mean)
+    Phi_Est = apply(Output$Phi_Pst, MARGIN = c(1, 2), FUN = mean)
+    Eta_Est = apply(Output$Eta_Pst, MARGIN = c(1, 2), FUN = mean)
+    Psi_Est = apply(Output$Psi_Pst, MARGIN = c(1, 2), FUN = mean)
+    Sigma_Est = apply(Output$Sigma_Pst, MARGIN = c(1, 2), FUN = mean)
+    zA_Est = (Gamma_Est > 0.5) * 1
+    zB_Est = (Phi_Est > 0.5) * 1
 
-    # Update A by A0
-    A = A0
+    # Return outputs
+    return(list(A_Est = A_Est, B_Est = B_Est, zA_Est = zA_Est, zB_Est = zB_Est,
+                Gamma_Est = Gamma_Est, Tau_Est = Tau_Est, Rho_Est = Rho_Est,
+                Phi_Est = Phi_Est, Eta_Est = Eta_Est, Psi_Est = Psi_Est,
+                Sigma_Est = Sigma_Est,
+                A_Pst = Output$A_Pst, B_Pst = Output$B_Pst,
+                Gamma_Pst = Output$Gamma_Pst, Tau_Pst = Output$Tau_Pst, Rho_Pst = Output$Rho_Pst,
+                Phi_Pst = Output$Phi_Pst, Eta_Pst = Output$Eta_Pst, Psi_Pst = Output$Psi_Pst,
+                Sigma_Pst = Output$Sigma_Pst,
+                AccptA = Output$AccptA, AccptB = Output$AccptB,
+                LL_Pst = Output$LL_Pst))
 
-  } else {
 
-    # Initialize A matrix
-    for (i in 1:p) {
 
-      for (j in 1:p) {
+  } else{
 
-        if(j != i) {
+    # Print an error message
+    stop("Please specify a prior among Threshold prior and Spike and Slab prior.")
 
-          # Generate A[i, j]
-          A[i, j] = Gamma[i, j] * stats::rnorm(1, 0, Tau[i, j]) + (1 - Gamma[i, j]) * stats::rnorm(1, 0, Tau[i, j] * nu_1)
-
-        }
-
-      }
-
-    }
 
   }
 
 
 
-  # Check whether B0 matrix is null otherwise initialize it
-  if(!is.null(B0)){
-
-    # Check the dimensions of B0
-    if(nrow(B0) != p || ncol(B0) != k){
-
-      # Print an error message
-      stop("Number of rows of B0 matrix should be equal to number of nodes and Number of columns of B0 matrix should be equal to number of covariates")
-
-    }
-
-    # Check all the entries of B0 is numeric
-    if(!is.numeric(B0)){
-
-      # Print an error message
-      stop("B0 should be a numeric matrix")
-
-    }
-
-    # Update B by B0
-    B = B0
-
-    # Multiply B pointwise with D to make B[i, j] = 0 if D[i, j] = 0
-    B = B * D
-
-  } else {
-
-    # Initialize B matrix
-    for (i in 1:p) {
-
-      for (j in 1:k) {
-
-        if(D[i, j] != 0) {
-
-          # Generate B[i, j]
-          B[i, j] = Phi[i, j] * stats::rnorm(1, 0, Eta[i, j]) + (1 - Phi[i, j]) * stats::rnorm(1, 0, Eta[i, j] * nu_2)
-
-        }
-
-      }
-
-    }
-
-  }
-
-
-  # Initialize A_Update, B_Update, Gamma_update, Phi_Update matrices and Log-likelihood vector
-  A_Update = matrix(0, nrow = p * p, ncol = niter)
-  B_Update = matrix(0, nrow = p * k, ncol = niter)
-  Gamma_Update = matrix(0, nrow = p * p, ncol = niter)
-  Phi_Update = matrix(0, nrow = p * k, ncol = niter)
-  LogLikelihood = rep(0, niter)
-
-
-  # Run a  loop to update all the parameters
-  for (i in 1:niter) {
-
-    # Update Rho
-    Rho = Generate_Rho(Gamma = Gamma, p, a_rho = a_rho, b_rho = b_rho)
-
-    # Update Psi
-    Psi = Generate_Psi(Phi = Phi, d, a_psi = a_psi, b_psi = b_psi)
-
-
-    # Update Tau based on corresponding a and gamma and then Update a and gamma based on the corresponding tau
-    for (j in 1:p) {
-
-      for (l in 1:p) {
-
-        # Don't update the diagonal entries
-        if(l != j){
-
-          # Update Tau
-          Tau[j, l] = Generate_Tau(A[j, l], Gamma[j, l], a_tau = a_tau, b_tau = b_tau, nu_1 = nu_1)
-
-          # Generate both a and gamma
-          Out = Generate_Agamma(X, Y, A, j, l, Sigma_Inv = Sigma_Inv, n, p, B, gamma = Gamma[j, l], tau = Tau[j, l], rho = Rho, nu_1 = nu_1, prop_var1 = Prop_varA1, prop_var2 = Prop_varA2)
-
-          # Update A[j, l] and Gamma[j, l]
-          A[j, l] = Out$a
-
-          Gamma[j, l] = Out$gamma
-
-
-          # Update A_Update and Gamma_Update
-          A_Update[p * (l - 1) + j , i] = Out$a
-
-          Gamma_Update[p * (l - 1) + j , i] = Out$gamma
-
-
-        }
-
-      }
-
-    }
-
-    # Calculate (I_p - A) %*% t(Y)
-    MultMat_Y = tcrossprod((diag(p) - A), Y)
-
-
-    # Update Eta based on corresponding b and phi and then Update b and phi based on the corresponding eta
-    for (j in 1:p) {
-
-      for (l in 1:k) {
-
-        # Don't update if the corresponding D entry is 0
-        if(D[j, l] != 0){
-
-          # Update Eta
-          Eta[j, l] = Generate_Eta(B[j, l], Phi[j, l], a_eta = a_eta, b_eta = b_eta, nu_2 = nu_2)
-
-          # Generate both b and phi
-          Out = Generate_Bphi(X, Y, B, j, l, Sigma_Inv = Sigma_Inv,  MultMat_Y , phi = Phi[j, l], eta = Eta[j, l], psi = Psi, nu_2 = nu_2, prop_var1 = Prop_varB1, prop_var2 = Prop_varB2)
-
-          # Update B[j, l] and Phi[j, l]
-          B[j, l] = Out$b
-
-          Phi[j, l] = Out$phi
-
-          # Update B_Update and Phi_Update
-          B_Update[p * (l - 1) + j , i] = Out$b
-
-          Phi_Update[p * (l - 1) + j , i] = Out$phi
-
-
-        }
-
-      }
-
-    }
-
-
-    # Calculate I_p - A
-    Mult_Mat = diag(p) - A
-
-    # Calculate Diff matrix as (I_p - A) %*% t(Y) - B %*% t(X)
-    Diff = tcrossprod(Mult_Mat, Y) - tcrossprod(B, X)
-
-    # Update Sigma_Inv vector
-    for (j in 1:p) {
-
-      Sigma_Inv[j] = 1 / Generate_Sigma(n, sum(Diff[j, ]^2), a_sigma, b_sigma)
-
-    }
-
-
-    # Update Log-likelihood
-    LogLikelihood[i] = LL(A, B, X, Y, Sigma_Inv = Sigma_Inv, p, n)
-
-
-  }
-
-  # Calculate Gamma and Phi as the rowmeans of Gamma_Update and Phi_Update
-  Gamma = matrix(rowMeans(Gamma_Update[, 3000:niter]), nrow = p, ncol = p)
-  Phi = matrix(rowMeans(Phi_Update[, 3000:niter]), nrow = p, ncol = k)
-
-  # Calculate A and B as the rowmeans of A_Update and B_Update
-  A = matrix(rowMeans(A_Update[, 3000:niter]), nrow = p, ncol = p)
-  B = matrix(rowMeans(B_Update[, 3000:niter]), nrow = p, ncol = k)
-
-  # Take A[i, j] = A[i, j] if Gamma[i, j] > 1/2 else take 0
-  A = A * (Gamma >= 1/2)
-
-  # Take B[i, j] = B[i, j] if Phi[i, j] > 1/2 else take 0
-  B = B * (Phi >= 1/2)
-
-
-  # Return A, B and log-likelihood
-  return(list(A = A, B = B, LL = LogLikelihood))
 
 }
 
 
 
-
-####################################################################
-####################################################################
-
-
-
-
-
-
-#' Title Fitting Reciprocal Graphical Models for Integrative Gene Regulatory Network
-#'
-#' @description RGM_cpp can be used to fit Reciprocal Graphical Models on gene expression data and DNA level measurements to find the relationship between different genes and the relationship between genes and DNA.
-#'
-#' @inheritParams RGM
-#'
-#'
-#' @return A list which will hold A, B, LL:
-#'
-#' \item{A}{p * p matrix output of Gene-Gene interactions.}
-#' \item{B}{p * k matrix output of Gene-DNA interactions.}
-#' \item{LL}{niter * 1 vector output of log-likelihood values of the model for all the iterations.}
-#'
-#' @export
-#'
-#' @examples
-#'
-#' # -----------------------------------------------------------------
-#' # Example 1:
-#'
-#' set.seed(500)
-#'
-#' # Number of datapoints
-#' n = 500
-#'
-#' # Number of Genes and number of DNAs
-#' p = 3
-#' k = 3
-#'
-#' # Initialize gene-gene interaction matrix
-#' A = matrix(sample(c(-3, 3), p^2, replace = TRUE), p, p)
-#'
-#' # Diagonal entries of A matrix will always be 0
-#' diag(A) = 0
-#'
-#' # Initialize gene-DNA interaction matrix
-#' B = matrix(0, p, k)
-#'
-#' for(i in 1:p){
-#'
-#'   B[i, i] = sample(c(-3, 3), 1, replace = TRUE)
-#'
-#' }
-#'
-#' # Indicator matrix for gene-DNA interaction
-#' D = diag(3)
-#'
-#' Sigma = 0.5 * diag(p)
-#'
-#' Mult_Mat = solve(diag(p) - A)
-#'
-#' Variance = Mult_Mat %*% Sigma %*% t(Mult_Mat)
-#'
-#' # Generate DNA expressions
-#' X = matrix(runif(n * k, 0, 5), nrow = n, ncol = k)
-#'
-#' Y = matrix(0, nrow = n, ncol = p)
-#'
-#' # Generate Gene expressions data based on DNA data
-#' for (i in 1:n) {
-#'
-#'  Y[i, ] = MASS::mvrnorm(n = 1, Mult_Mat %*% B %*% X[i, ], Variance)
-#'
-#' }
-#'
-#' # Apply RGM_cpp on the generated data
-#' Out = RGM_cpp(X, Y, A = A, B = B, D = D)
-#'
-#' # Get gene-gene interaction matrix, gene-DNA interaction matrix and log-likelihood
-#' A = Out$A
-#' B = Out$B
-#' LL = Out$LL
-#'
-#' # Plot log-likelihood of the model at each iteration
-#' plot(LL, type = 'l', xlab = "Number of Iterations", ylab = "Log-likelihood")
-#'
-#' @references
-#' Ni, Y., Ji, Y., & Müller, P. (2018).
-#' Reciprocal graphical models for integrative gene regulatory network analysis.
-#' \emph{Bayesian Analysis},
-#' \strong{13(4)}, 1095-1110.
-#' \doi{10.1214/17-BA1087}.
-RGM_cpp = function(X, Y, A0 = NULL, B0 = NULL, D = NULL, a_tau = 0.1, b_tau = 0.1, a_rho = 0.5, b_rho = 0.5, nu_1 = 0.0001, a_eta = 0.1, b_eta = 0.1, a_psi = 0.5, b_psi = 0.5, nu_2 = 0.0001, a_sigma = 0.1, b_sigma = 0.1, Prop_varA = 0.1, Prop_VarB = 0.1, niter = 10000){
-
-  # Calculate number of datapoints and number of nodes from Y matrix
-  n = nrow(Y)
-  p = ncol(Y)
-
-  # Calculate number of columns of X matrix i.e. number of covariates
-  k = ncol(X)
-
-  # Check whether number of rows of X and Y are same
-  if(nrow(X) != n){
-
-    # Print an error message
-    stop("Number of datapoints for both node values and covariate values should be same")
-
-  }
-
-  # Check all the elements of X is numeric
-  if(!is.numeric(X)){
-
-    # Print an error message
-    stop("All the entries of node output should be numeric")
-
-
-  }
-
-  # Check all the elements of Y is numeric
-  if(!is.numeric(Y)){
-
-    # Print an error message
-    stop("All the entries of covariate output should be numeric")
-
-
-  }
-
-  # Check whether D is given or not
-  if(is.null(D)){
-
-    # Create a D matrix with all entries 1
-    D = matrix(1, nrow = p, ncol = k)
-
-  } else {
-
-    # Check the dimensions of D matrix
-    if(nrow(D) != p){
-
-      # Print an error message
-      stop("Number of rows of the indicator matrix should be equal to the number of nodes")
-
-    } else if(ncol(D) != k){
-
-      # Print an error message
-      stop("Number of columns of the indicator matrix should be equal to the number of covariates")
-
-    }
-
-    # Check whether all the entries of D matrix is between 0 or 1
-    if(!is.numeric(D) || max(D) > 1 || min(D) < 0){
-
-      # Print an error message
-      stop("All the entries of the indicator matrix should be either 0 or 1")
-
-    }
-
-
-    # Check whether all the entries of D matrix is integer or not
-    if(sum(D != round(D)) != 0){
-
-      # Print an error message
-      stop("All the entries of the indicator matrix should be either 0 or 1")
-
-    }
-
-  }
-
-  # Store number of non-zero entries of D
-  d = length(which(D != 0))
-
-
-  # Check whether the inverse gamma parameters are positive or not
-  if(!is.numeric(a_tau) || a_tau < 0 || !is.numeric(b_tau) || b_tau < 0 || !is.numeric(a_rho) || a_rho < 0 || !is.numeric(b_rho) || b_rho < 0 || !is.numeric(a_eta) || a_eta < 0 || !is.numeric(b_eta) || b_eta < 0 || !is.numeric(a_psi) || a_psi < 0 || !is.numeric(b_psi) || b_psi < 0 || !is.numeric(a_sigma) || a_sigma < 0 || !is.numeric(b_sigma) || b_sigma < 0){
-
-    # Print an error message
-    stop("All the inverse gamma parameters should be positive")
-
-  }
-
-
-  # Check whether the variance terms are positive or not
-  if(!is.numeric(nu_1) || nu_1 <= 0 || !is.numeric(nu_2) || nu_2 <= 0 || !is.numeric(Prop_varA) || Prop_varA <= 0 || !is.numeric(Prop_VarB) || Prop_VarB <= 0){
-
-    # Print an error message
-    stop("All the variance terms should be positive")
-
-  }
-
-
-  # Check whether niter term is large enough or not
-  if(!is.numeric(niter) || niter < 10000){
-
-    # Print an error message
-    stop("Number of iterations should be a large positive integer i.e. at least 10000")
-
-  }
-
-  # Check whether niter is an integer
-  if(niter != round(niter)){
-
-    # Print an error message
-    stop("Number of iterations should be a large positive integer i.e. at least 10000")
-
-  }
-
-
-  # Initialize Sigma Inverse vector i.e. inverse of each Sigma_ii
-  Sigma_Inv = stats::rgamma(p, a_sigma, b_sigma)
-
-  # Initialize Bernoulli parameters Rho, Psi
-  Rho = stats::rbeta(1, a_rho, b_rho)
-  Psi = stats::rbeta(1, a_psi, b_psi)
-
-  # Initialize Gamma, Tau, Phi and Eta matrices
-  Gamma = matrix(stats::rbinom(p^2, 1, Rho), nrow = p, ncol = p)
-  Phi = matrix(stats::rbinom(p * k, 1, Psi), nrow = p, ncol = k)
-  Tau = matrix(1 / stats::rgamma(p^2, a_tau, b_tau), nrow = p, ncol = p)
-  Eta = matrix(1 / stats::rgamma(p * k, a_eta, b_eta), nrow = p, ncol = k)
-
-  # Make the diagonals of Gamma and Tau matrix to be 0
-  diag(Gamma) = 0
-  diag(Tau) = 0
-
-  # Make Phi[i, j] = 0 and Eta[i, j] = 0 if D[i, j] = 0
-  Phi = Phi * D
-  Eta = Eta * D
-
-  # Initialize A and B matrix
-  A = matrix(0, nrow = p, ncol = p)
-  B = matrix(0, nrow = p, ncol = k)
-
-  # Check whether A0 matrix is null otherwise initialize it
-  if(!is.null(A0)){
-
-    # Check the dimensions of A0
-    if(nrow(A0) != p || ncol(A0) != p){
-
-      # Print an error message
-      stop("Number of rows and columns of A0 matrix should be equal to number of nodes")
-
-    }
-
-    # Check all the entries of A0 is numeric and diagonal is 0
-    if(!is.numeric(A0) || sum(diag(A0) != 0) != 0){
-
-      # Print an error message
-      stop("A0 should be a numeric matrix with diagonal entries all 0")
-
-    }
-
-    # Update A by A0
-    A = A0
-
-  } else {
-
-    # Initialize A matrix
-    for (i in 1:p) {
-
-      for (j in 1:p) {
-
-        if(j != i) {
-
-          # Generate A[i, j]
-          A[i, j] = Gamma[i, j] * stats::rnorm(1, 0, Tau[i, j]) + (1 - Gamma[i, j]) * stats::rnorm(1, 0, Tau[i, j] * nu_1)
-
-        }
-
-      }
-
-    }
-
-  }
-
-
-
-  # Check whether B0 matrix is null otherwise initialize it
-  if(!is.null(B0)){
-
-    # Check the dimensions of B0
-    if(nrow(B0) != p || ncol(B0) != k){
-
-      # Print an error message
-      stop("Number of rows of B0 matrix should be equal to number of nodes and Number of columns of B0 matrix should be equal to number of covariates")
-
-    }
-
-    # Check all the entries of B0 is numeric
-    if(!is.numeric(B0)){
-
-      # Print an error message
-      stop("B0 should be a numeric matrix")
-
-    }
-
-    # Update B by B0
-    B = B0
-
-    # Multiply B pointwise with D to make B[i, j] = 0 if D[i, j] = 0
-    B = B * D
-
-  } else {
-
-    # Initialize B matrix
-    for (i in 1:p) {
-
-      for (j in 1:k) {
-
-        if(D[i, j] != 0) {
-
-          # Generate B[i, j]
-          B[i, j] = Phi[i, j] * stats::rnorm(1, 0, Eta[i, j]) + (1 - Phi[i, j]) * stats::rnorm(1, 0, Eta[i, j] * nu_2)
-
-        }
-
-      }
-
-    }
-
-  }
-
-
-
-  # Run Get_AB_c function to get A_Update, B_Update, Gamma_Update, Phi_Update and log-likelihood
-  Output = Get_AB_c(A0 = A, B0 = B, X = X, Y = Y, D = D, d = d, diag_p = diag(p), a_tau = a_tau, b_tau = b_tau, a_rho = a_rho, b_rho = b_rho, nu_1 = nu_1, a_eta = a_eta, b_eta = b_eta, a_psi = a_psi, b_psi = b_psi, nu_2 = nu_2, a_sigma = a_sigma, b_sigma = b_sigma, Prop_varA = Prop_varA, Prop_VarB = Prop_VarB , niter = niter)
-
-  # Store the outputs
-  A_Update = Output$A_Update
-  B_Update = Output$B_Update
-  Gamma_Update = Output$Gamma_Update
-  Phi_Update = Output$Phi_Update
-  LogLikelihood = Output$LL_1
-
-  # Calculate Gamma and Phi as the rowmeans of Gamma_Update and Phi_Update
-  Gamma = matrix(rowMeans(Gamma_Update[, 3000:niter]), nrow = p, ncol = p)
-  Phi = matrix(rowMeans(Phi_Update[, 3000:niter]), nrow = p, ncol = k)
-
-  # Calculate A and B as the rowmeans of A_Update and B_Update
-  A = matrix(rowMeans(A_Update[, 3000:niter]), nrow = p, ncol = p)
-  B = matrix(rowMeans(B_Update[, 3000:niter]), nrow = p, ncol = k)
-
-  # Take A[i, j] = A[i, j] if Gamma[i, j] > 1/2 else take 0
-  A = A * (Gamma >= 1/2)
-
-  # Take B[i, j] = B[i, j] if Phi[i, j] > 1/2 else take 0
-  B = B * (Phi >= 1/2)
-
-
-  # Return A, B and log-likelihood
-  return(list(A = A, B = B, LL = LogLikelihood))
-
-}
