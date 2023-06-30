@@ -90,48 +90,45 @@ RGM can be used to fit Reciprocal Graphical Models on gene expression data and D
 # -----------------------------------------------------------------
 # Example 1:
 
-set.seed(500)
+set.seed(123)
 
 # Number of datapoints
-n = 500
+n = 10000
 
 # Number of Genes and number of DNAs
-p = 3
-k = 3
+p = 5
+k = 5
 
 # Initialize gene-gene interaction matrix
-A = matrix(sample(c(-3, 3), p^2, replace = TRUE), p, p)
+A = matrix(sample(c(-0.1, 0.1), p^2, replace = TRUE), p, p)
 
 # Diagonal entries of A matrix will always be 0
 diag(A) = 0
 
+# Make the network sparse
+A[sample(which(A!=0), length(which(A!=0))/2)] = 0
+
 # Initialize gene-DNA interaction matrix
-B = matrix(0, p, k)
+B = diag(p)
 
-for(i in 1:p){
-
-  B[i, i] = sample(c(-3, 3), 1, replace = TRUE)
-
-}
 
 # Indicator matrix for gene-DNA interaction
-D = diag(3)
+D = diag(p)
 
-Sigma = 0.5 * diag(p)
+Sigma = diag(p)
 
 Mult_Mat = solve(diag(p) - A)
 
 Variance = Mult_Mat \%*\% Sigma \%*\% t(Mult_Mat)
 
 # Generate DNA expressions
-X = matrix(runif(n * k, 0, 5), nrow = n, ncol = k)
+X = matrix(rnorm(n * k, 0, 1), nrow = n, ncol = k)
 
 Y = matrix(0, nrow = n, ncol = p)
 
-# Generate Gene expressions data based on DNA data
 for (i in 1:n) {
 
- Y[i, ] = MASS::mvrnorm(1, Mult_Mat \%*\% B \%*\% X[i, ], Variance)
+    Y[i, ] = MASS::mvrnorm(n = 1, Mult_Mat \%*\% B \%*\% X[i, ], Variance)
 
 }
 
@@ -141,7 +138,7 @@ S_YX = t(Y) \%*\% X / n
 S_XX = t(X) \%*\% X / n
 
 # Apply RGM on the generated data
-Out = RGM(S_YY, S_YX, S_XX, d = rep(1, 3), n = n)
+Out = RGM(S_YY, S_YX, S_XX, d = rep(1, p), n = n)
 
 # Get gene-gene interaction matrix, gene-DNA interaction matrix and log-likelihood
 A_Est = Out$A_Est
