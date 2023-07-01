@@ -3,47 +3,95 @@
 #' @description RGM can be used to fit Reciprocal Graphical Models on gene expression data and DNA level measurements to find the relationship between different genes and the relationship between genes and DNA.
 #'
 #'
-#' @param X n * k matrix data input, each row denotes a particular observation and each column denotes a particular DNA.
-#' @param Y n * p matrix data input, each row denotes a particular observation and each column denotes a particular protein.
+#' @param X n * k matrix data input, each row denotes a particular observation and each column denotes a particular DNA. Default value is NULL.
+#' @param Y n * p matrix data input, each row denotes a particular observation and each column denotes a particular protein. Default value is NULL.
+#' @param S_YY p * p matrix data input, where p denotes number of proteins. It is obtained by t(Y) %*% Y / n.
+#' @param S_YX p * k matrix data input, where p denotes number of proteins and k denotes number of DNAs. It is obtained by t(Y) %*% X / n.
+#' @param S_XX k * k matrix data input, where k denotes number of DNAs. It is obtained by t(X) %*% X / n.
+#' @param Beta p * k matrix data input, where each row corresponds to a particular protein and each column corresponds to a particular DNA. Each entry is the regression coefficient of the particular protein on the particular DNA. If you want to use Beta as an input first centralize each column of Y and X and then calculate Beta, S_XX and Sigma_Hat.
+#' @param Sigma_Hat p * k matrix data input, where each row corresponds to a particular protein and each column corresponds to a particular DNA. Each entry is the mean square error for regressing the particular protein on the particular DNA. If you want to use Sigma_Hat as an input first centralize each column of Y and X and then calculate Beta, S_XX and Sigma_Hat.
 #' @param d Vector input of length p. Each element is a non-negative integer corresponds to number of covariates affecting a particular protein, sum of which should be k.
-#' @param b_tau positive scalar input. It corresponds to the second parameter of a Inverse Gamma distribution. Default value is 0.1.
-#' @param a_rho positive scalar input. It corresponds to the first parameter of a Beta distribution. Default value is 0.5.
-#' @param b_rho positive scalar input. It corresponds to the first parameter of a Beta distribution. Default value is 0.5.
-#' @param nu_1 positive scalar input. It corresponds to the variance of slab part of of spike and slab distribution of A. Default value is 0.0001.
-#' @param a_eta positive scalar input. It corresponds to the first parameter of a Inverse Gamma distribution. Default value is 0.1.
-#' @param b_eta positive scalar input. It corresponds to the second parameter of a Inverse Gamma distribution. Default value is 0.1.
-#' @param a_psi positive scalar input. It corresponds to the first parameter of a Beta distribution. Default value is 0.5.
-#' @param b_psi positive scalar input. It corresponds to the first parameter of a Beta distribution. Default value is 0.5.
-#' @param nu_2 positive scalar input. It corresponds to the variance of slab part of of spike and slab distribution of B. Default value is 0.0001.
-#' @param a_sigma positive scalar input. It corresponds to the first parameter of a Inverse Gamma distribution. Default value is 0.1.
-#' @param b_sigma positive scalar input. It corresponds to the second parameter of a Inverse Gamma distribution. Default value is 0.1.
-#' @param Prop_varA1 positive scalar input. It corresponds to the variance of the normal distribution of proposing A matrix terms. Default value is 0.1.
-#' @param Prop_varA2 positive scalar input. It corresponds to the variance of the normal distribution of proposing A matrix terms. Default value is 5.
-#' @param Prop_varB1 positive scalar input. It corresponds to the variance of the normal distribution of proposing B matrix terms. Default value is 0.1.
-#' @param Prop_varB2 positive scalar input. It corresponds to the variance of the normal distribution of proposing A matrix terms. Default value is 5.
-#' @param niter positive integer input. It corresponds to number of iterations the markov chain runs. Give niter as large as possible to get the convergence. Minimum value is 10,000. Default value is 10,000.
+#' @param n Positive integer input corresponding to number of datapoints.
+#' @param nIter Positive integer input corresponding to number of MCMC sampling. Default value is 10,000.
+#' @param nBurnin Non-negative integer input corresponding to number of samples to be discarded. nBurnin should be less than nIter. Default value is 2000.
+#' @param Thin Positive integer input corresponding to thinning of posterior samples. Thin should be less than or equal to (nIter - nBurnin). Default value is 1.
+#' @param prior Prior assumption on the graph structure. It can either be "Threshold" or "Spike and Slab". Default is "Threshold".
+#' @param a_tau Positive scalar input. It corresponds to the first parameter of an Inverse Gamma distribution. Default value is 0.01.
+#' @param b_tau Positive scalar input. It corresponds to the second parameter of an Inverse Gamma distribution. Default value is 0.01.
+#' @param a_rho Positive scalar input. It corresponds to the first parameter of a Beta distribution. Default value is 0.5.
+#' @param b_rho Positive scalar input. It corresponds to the second parameter of a Beta distribution. Default value is 0.5.
+#' @param nu_1 Positive scalar input. It corresponds to the variance of slab part of spike and slab distribution of A. Default value is 0.0001.
+#' @param a_eta Positive scalar input. It corresponds to the first parameter of an Inverse Gamma distribution. Default value is 0.01.
+#' @param b_eta Positive scalar input. It corresponds to the second parameter of an Inverse Gamma distribution. Default value is 0.01.
+#' @param a_psi Positive scalar input. It corresponds to the first parameter of a Beta distribution. Default value is 0.5.
+#' @param b_psi Positive scalar input. It corresponds to the second parameter of a Beta distribution. Default value is 0.5.
+#' @param nu_2 Positive scalar input. It corresponds to the variance of slab part of spike and slab distribution of B. Default value is 0.0001.
+#' @param a_sigma Positive scalar input. It corresponds to the first parameter of an Inverse Gamma distribution corresponding to the variance of the model. Default value is 0.01.
+#' @param b_sigma positive scalar input. It corresponds to the second parameter of an Inverse Gamma distribution corresponding to the variance of the model. Default value is 0.01.
+#' @param Prop_VarA positive scalar input. It corresponds to the variance of the normal distribution for proposing A matrix terms. Default value is 0.01.
+#' @param Prop_VarB positive scalar input. It corresponds to the variance of the normal distribution for proposing B matrix terms. Default value is 0.01.
 #'
-#' @return A list which will hold A, B, LL:
+#' @return
 #'
-#' \item{A}{p * p matrix output of Gene-Gene interactions.}
-#' \item{B}{p * k matrix output of Gene-DNA interactions.}
-#' \item{LL}{niter * 1 vector output of log-likelihood values of the model for all the iterations.}
+#' \item{A_Est}{p * p matrix output of Protein-Protein interactions.}
+#' \item{B_Est}{p * k matrix output of Protein-DNA interactions.}
+#' \item{zA_Est}{p * p matrix output of the graph structure between the proteins.}
+#' \item{zB_Est}{p * k matrix output of the graph structure between the proteins and the DNAs.}
+#' \item{A0_Est}{p * p matrix output of Protein-Protein interactions before thresholding for Threshold prior.}
+#' \item{B0_Est}{p * k matrix output of Protein-DNA interactions before thresholding for Threshold prior.}
+#' \item{Gamma_Est}{p * p matrix output of probabilities of Protein-Protein interactions.}
+#' \item{Tau_Est}{p * p matrix output of variances of Protein-Protein interactions.}
+#' \item{Phi_Est}{p * k matrix output of probabilities of Protein-DNA interactions.}
+#' \item{Eta_Est}{p * k matrix output of variances of Protein-DNA interactions.}
+#' \item{tA_Est}{Scalar output of thresholding value of Protein-Protein interactions for Threshold prior.}
+#' \item{tB_Est}{Scalar output of thresholding value of Protein-DNA interactions for Threshold prior.}
+#' \item{Sigma_Est}{Vector output of length p corresponding to variances of each protein.}
+#' \item{A_Pst}{Array ouput of posterior samples of Protein-Protein interactions.}
+#' \item{B_Pst}{Array ouput of posterior samples of Protein-DNA interactions.}
+#' \item{A0_Pst}{Array ouput of posterior samples of Protein-Protein interactions before thresholding for Threshold prior.}
+#' \item{B0_Pst}{Array ouput of posterior samples of Protein-DNA interactions before thresholding for Threshold prior.}
+#' \item{Gamma_Pst}{Array ouput of posterior samples of probabilities of Protein-Protein interactions.}
+#' \item{Tau_Pst}{Array ouput of posterior samples of variances of Protein-Protein interactions.}
+#' \item{Phi_Pst}{Array ouput of posterior samples of probabilities of Protein-DNA interactions.}
+#' \item{Eta_Pst}{Array ouput of posterior samples of variances of Protein-DNA interactions.}
+#' \item{tA_Pst}{Vector ouput of posterior samples of thresholding value of Protein-Protein interactions for Threshold prior.}
+#' \item{tB_Pst}{Vector ouput of posterior samples of thresholding value of Protein-DNA interactions for Threshold prior.}
+#' \item{Sigma_Pst}{Array ouput of posterior samples of variances of each protein.}
+#' \item{AccptA}{Percentage acceptance of entries of A matrix i.e. Protein-Protein interactions.}
+#' \item{AccptB}{Percentage acceptance of entries of B matrix i.e. Protein-DNA interactions.}
+#' \item{Accpt_tA}{Percentage acceptance of the thresholding value for Protein-Protein interactions for Threshold prior.}
+#' \item{Accpt_tB}{Percentage acceptance of the thresholding value for Protein-DNA interactions for Threshold prior.}
+#' \item{LL_Pst}{Vector ouput of posterior log-likelihoods of the model.}
+#' \item{Rho_Est}{p * p matrix output of bernoulli success probabilities of Protein-Protein interactions for Spike and Slab prior.}
+#' \item{Psi_Est}{p * k matrix output of bernoulli success probabilities of Protein-DNA interactions for Spike and Slab prior.}
+#' \item{Rho_Pst}{Array ouput of posterior samples of bernoulli success probabilities of Protein-Protein interactions for Spike and Slab prior.}
+#' \item{Psi_Pst}{Array ouput of posterior samples of bernoulli success probabilities of Protein-DNA interactions for Spike and Slab prior.}
+#'
+#'
+#'
+#'
+#'
+#'
+#'
 #'
 #' @export
 #'
 #' @examples
 #'
+#'
 #' # -----------------------------------------------------------------
 #' # Example 1:
+#' # Run RGM based on individual level data with Threshold prior
 #'
-#' set.seed(123)
+#' # Data Generation
+#' set.seed(9154)
 #'
 #' # Number of datapoints
 #' n = 10000
 #'
 #' # Number of Genes and number of DNAs
 #' p = 5
-#' k = 5
+#' k = 6
 #'
 #' # Initialize gene-gene interaction matrix
 #' A = matrix(sample(c(-0.1, 0.1), p^2, replace = TRUE), p, p)
@@ -55,11 +103,25 @@
 #' A[sample(which(A!=0), length(which(A!=0))/2)] = 0
 #'
 #' # Initialize gene-DNA interaction matrix
-#' B = diag(p)
+#' B = matrix(0, p, k)
+#'
+#' # Create d vector
+#' d = c(2, 1, 1, 1, 1)
 #'
 #'
-#' # Indicator matrix for gene-DNA interaction
-#' D = diag(p)
+#' # Initialize m
+#' m = 1
+#'
+#' # Calculate B matrix based on d vector
+#' for (i in 1:p) {
+#'
+#'  # Update ith row of B
+#'  B[i, m:(m + d[i] - 1)] = 1
+#'
+#'  # Update m
+#'  m = m + d[i]
+#'
+#' }
 #'
 #' Sigma = diag(p)
 #'
@@ -78,21 +140,242 @@
 #'
 #' }
 #'
-#' # Calculate S_YY, S_YX and S_XX
+#' # Print true Protein-Protein interaction matrix and Protein-DNA interaction matrix
+#' A
+#' B
+#'
+#' # Apply RGM on the generated data for Threshold Prior
+#' Output = RGM(X = X, Y = Y, d = c(2, 1, 1, 1, 1), n = 10000, prior = "Threshold")
+#'
+#' # Get the graph structure between the proteins
+#' Output$zA_Est
+#'
+#' # Get Protein-Protein interactions
+#' Output$A_Est
+#'
+#' # Get the graph structure between the proteins and the DNAs
+#' Output$zB_Est
+#'
+#' # Get Protein-DNA interactions
+#' Output$B_Est
+#'
+#' # Plot posterior log-likelihood
+#' plot(Output$LL_Pst, type = 'l', xlab = "Number of Iterations", ylab = "Log-likelihood")
+#'
+#'
+#'
+#'
+#' # -----------------------------------------------------------------
+#' # Example 2:
+#' # Run RGM based on summary level data with Spike and Slab prior
+#'
+#' # Data Generation
+#' set.seed(9154)
+#'
+#' # Number of datapoints
+#' n = 10000
+#'
+#' # Number of Genes and number of DNAs
+#' p = 5
+#' k = 6
+#'
+#' # Initialize gene-gene interaction matrix
+#' A = matrix(sample(c(-0.1, 0.1), p^2, replace = TRUE), p, p)
+#'
+#' # Diagonal entries of A matrix will always be 0
+#' diag(A) = 0
+#'
+#' # Make the network sparse
+#' A[sample(which(A!=0), length(which(A!=0))/2)] = 0
+#'
+#' # Initialize gene-DNA interaction matrix
+#' B = matrix(0, p, k)
+#'
+#' # Create d vector
+#' d = c(2, 1, 1, 1, 1)
+#'
+#'
+#' # Initialize m
+#' m = 1
+#'
+#' # Calculate B matrix based on d vector
+#' for (i in 1:p) {
+#'
+#'  # Update ith row of B
+#'  B[i, m:(m + d[i] - 1)] = 1
+#'
+#'  # Update m
+#'  m = m + d[i]
+#'
+#' }
+#'
+#' Sigma = diag(p)
+#'
+#' Mult_Mat = solve(diag(p) - A)
+#'
+#' Variance = Mult_Mat %*% Sigma %*% t(Mult_Mat)
+#'
+#' # Generate DNA expressions
+#' X = matrix(rnorm(n * k, 0, 1), nrow = n, ncol = k)
+#'
+#' Y = matrix(0, nrow = n, ncol = p)
+#'
+#' for (i in 1:n) {
+#'
+#'     Y[i, ] = MASS::mvrnorm(n = 1, Mult_Mat %*% B %*% X[i, ], Variance)
+#'
+#' }
+#'
+#'
+#' # Calculate summary level data
 #' S_YY = t(Y) %*% Y / n
 #' S_YX = t(Y) %*% X / n
 #' S_XX = t(X) %*% X / n
 #'
-#' # Apply RGM on the generated data
-#' Out = RGM(S_YY, S_YX, S_XX, d = rep(1, p), n = n)
 #'
-#' # Get gene-gene interaction matrix, gene-DNA interaction matrix and log-likelihood
-#' A_Est = Out$A_Est
-#' B_Est = Out$B_Est
-#' LL = Out$LL_Pst
+#' # Print true Protein-Protein interaction matrix and Protein-DNA interaction matrix
+#' A
+#' B
 #'
-#' # Plot log-likelihood of the model at each iteration
-#' plot(LL, type = 'l', xlab = "Number of Iterations", ylab = "Log-likelihood")
+#'
+#' # Apply RGM on the generated data for Threshold Prior
+#' Output = RGM(S_YY = S_YY, S_YX = S_YX, S_XX = S_XX,
+#'           d = c(2, 1, 1, 1, 1), n = 10000, prior = "Spike and Slab")
+#'
+#' # Get the graph structure between the proteins
+#' Output$zA_Est
+#'
+#' # Get Protein-Protein interactions
+#' Output$A_Est
+#'
+#' # Get the graph structure between the proteins and the DNAs
+#' Output$zB_Est
+#'
+#' # Get Protein-DNA interactions
+#' Output$B_Est
+#'
+#' # Plot posterior log-likelihood
+#' plot(Output$LL_Pst, type = 'l', xlab = "Number of Iterations", ylab = "Log-likelihood")
+#'
+#'
+#'
+#'
+#' # -----------------------------------------------------------------
+#' # Example 3:
+#' # Run RGM based on Beta and Sigma_Hat with Threshold prior
+#'
+#' # Data Generation
+#' set.seed(9154)
+#'
+#' # Number of datapoints
+#' n = 10000
+#'
+#' # Number of Genes and number of DNAs
+#' p = 5
+#' k = 6
+#'
+#' # Initialize gene-gene interaction matrix
+#' A = matrix(sample(c(-0.1, 0.1), p^2, replace = TRUE), p, p)
+#'
+#' # Diagonal entries of A matrix will always be 0
+#' diag(A) = 0
+#'
+#' # Make the network sparse
+#' A[sample(which(A!=0), length(which(A!=0))/2)] = 0
+#'
+#' # Initialize gene-DNA interaction matrix
+#' B = matrix(0, p, k)
+#'
+#' # Create d vector
+#' d = c(2, 1, 1, 1, 1)
+#'
+#'
+#' # Initialize m
+#' m = 1
+#'
+#' # Calculate B matrix based on d vector
+#' for (i in 1:p) {
+#'
+#'  # Update ith row of B
+#'  B[i, m:(m + d[i] - 1)] = 1
+#'
+#'  # Update m
+#'  m = m + d[i]
+#'
+#' }
+#'
+#' Sigma = diag(p)
+#'
+#' Mult_Mat = solve(diag(p) - A)
+#'
+#' Variance = Mult_Mat %*% Sigma %*% t(Mult_Mat)
+#'
+#' # Generate DNA expressions
+#' X = matrix(rnorm(n * k, 0, 1), nrow = n, ncol = k)
+#'
+#' Y = matrix(0, nrow = n, ncol = p)
+#'
+#' for (i in 1:n) {
+#'
+#'     Y[i, ] = MASS::mvrnorm(n = 1, Mult_Mat %*% B %*% X[i, ], Variance)
+#'
+#' }
+#'
+#'
+#' # Centralize Data
+#' Y = t(t(Y) - colMeans(Y))
+#' X = t(t(X) - colMeans(X))
+#'
+#' # Calculate S_XX
+#' S_XX = t(X) %*% X / n
+#'
+#' # Generate Beta matrix and Sigma_Hat
+#' Beta = matrix(0, nrow = p, ncol = k)
+#' Sigma_Hat = matrix(0, nrow = p, ncol = k)
+#'
+#' for (i in 1:p) {
+#'
+#'    for (j in 1:k) {
+#'
+#'        fit = lm(Y[, i] ~ X[, j])
+#'
+#'        Beta[i, j] =  fit$coefficients[2]
+#'
+#'        Sigma_Hat[i, j] = sum(fit$residuals^2) / n
+#'
+#'        }
+#'
+#'    }
+#'
+#'
+#' # Print true Protein-Protein interaction matrix and Protein-DNA interaction matrix
+#' A
+#' B
+#'
+#'
+#' # Apply RGM on the generated data for Threshold Prior
+#' Output = RGM(S_XX = S_XX, Beta = Beta, Sigma_Hat = Sigma_Hat,
+#'           d = c(2, 1, 1, 1, 1), n = 10000, prior = "Spike and Slab")
+#'
+#' # Get the graph structure between the proteins
+#' Output$zA_Est
+#'
+#' # Get Protein-Protein interactions
+#' Output$A_Est
+#'
+#' # Get the graph structure between the proteins and the DNAs
+#' Output$zB_Est
+#'
+#' # Get Protein-DNA interactions
+#' Output$B_Est
+#'
+#' # Plot posterior log-likelihood
+#' plot(Output$LL_Pst, type = 'l', xlab = "Number of Iterations", ylab = "Log-likelihood")
+#'
+#'
+#'
+#'
+#'
 #'
 #' @references
 #' Ni, Y., Ji, Y., & Müller, P. (2018).
@@ -274,7 +557,7 @@ RGM = function(X = NULL, Y = NULL, S_YY = NULL, S_YX = NULL, S_XX = NULL, Beta =
     S_YY_Diag = Sigma_Hat[, 1] + 2 * Beta[, 1] * S_YX[, 1] - Beta[, 1]^2 * S_XX[1, 1]
 
     # Calculate correlation matrix between X and between Y and X
-    Cor_X = cov2cor(S_XX)
+    Cor_X = stats::cov2cor(S_XX)
     Cor_YX = t(t(Beta * (1 / sqrt(S_YY_Diag))) * sqrt(diag(S_XX)))
 
     # Calculate determinant of Cor_X
