@@ -1,4 +1,4 @@
-#' Title Fitting Reciprocal Graphical Models for Integrative Gene Regulatory Network
+#' Fitting Reciprocal Graphical Models for Integrative Gene Regulatory Network
 #'
 #' @description RGM can be used to fit Reciprocal Graphical Models on gene expression data and DNA level measurements to find the relationship between different genes and the relationship between genes and DNA.
 #'
@@ -238,7 +238,7 @@
 #' B
 #'
 #'
-#' # Apply RGM on the generated data for Threshold Prior
+#' # Apply RGM on the generated data for Spike and Slab Prior
 #' Output = RGM(S_YY = S_YY, S_YX = S_YX, S_XX = S_XX,
 #'           d = c(2, 1, 1, 1, 1), n = 10000, prior = "Spike and Slab")
 #'
@@ -355,7 +355,7 @@
 #'
 #' # Apply RGM on the generated data for Threshold Prior
 #' Output = RGM(S_XX = S_XX, Beta = Beta, Sigma_Hat = Sigma_Hat,
-#'           d = c(2, 1, 1, 1, 1), n = 10000, prior = "Spike and Slab")
+#'           d = c(2, 1, 1, 1, 1), n = 10000, prior = "Threshold")
 #'
 #' # Get the graph structure between the proteins
 #' Output$zA_Est

@@ -13,7 +13,203 @@ knitr::opts_chunk$set(
 )
 ```
 
-# ReciprocalGraphicalModels
+# RGM
 
 <!-- badges: start -->
 <!-- badges: end -->
+
+## Intended use of the package
+
+For a given dataset of gene expressions and DNA expressions, this R-package will estimate the gene-gene interactions and the gene-DNA interactions and then create a graph connecting them. A spike and slab prior is assumed for each interaction parameter based on our prior knowledge to calculate posterior estimates of the interactions. The package includes various helper functions that generate gibbs samples of the parameter values for the prior distributions and interaction parameter values based on other parameter values. The package have two main functions that, using the gibbs estimates of these parameters produced by the helper functions at each iteration, will provide estimates of the values of gene-gene interactions and gene-DNA interactions. 
+
+
+## Installation instructions
+
+You can install RGM R package from GitHub with:
+
+```{r, eval = F}
+
+    install.packages("devtools")
+
+    devtools::install_github("bitansa/RGM")
+
+```  
+      
+
+Once the RGM package is installed load the library in the R workspace.
+
+```{r}
+
+     library("RGM")
+
+```
+
+## Example
+
+We will give a small example to show the functionality of the two functions RGM and RGM_cpp available in this package to calculate gene-gene interactions and gene-DNA interactions for a given gene expressions and DNA expressions dataset. RGM_cpp function is a bit faster as it is written in Rcpp, but the functionality of both the functions are same. First we simulate the dataset. 
+
+```{r}
+
+set.seed(9154)
+
+# Number of datapoints
+n = 10000
+
+# Number of Genes and number of DNAs
+p = 5
+k = 6
+
+# Indicator of which DNA affacts which gene
+d = c(2, 1, 1, 1, 1)
+
+# Initialize Protein-Protein interaction matrix
+A = matrix(sample(c(-0.1, 0.1), p^2, replace = TRUE), p, p)
+
+diag(A) = 0
+
+# Make the network sparse
+A[sample(which(A!=0), length(which(A!=0))/2)] = 0
+
+# Initialize Protein-DNA interaction matrix
+B = matrix(0, p, k)
+
+# Initialize m
+m = 1
+
+# Calculate B matrix based on d vector
+for (i in 1:p) {
+  
+  # Update ith row of B
+  B[i, m:(m + d[i] - 1)] = 1
+  
+  # Update m
+  m = m + d[i]
+  
+}
+
+# Create variance-covariance matrix
+Sigma = 1 * diag(p)
+
+Mult_Mat = solve(diag(p) - A)
+
+Variance = Mult_Mat %*% Sigma %*% t(Mult_Mat)
+
+# Generate DNA expressions
+X = matrix(runif(n * k, 0, 5), nrow = n, ncol = k)
+
+Y = matrix(0, nrow = n, ncol = p)
+
+# Generate Protein expressions data based on DNA data
+for (i in 1:n) {
+
+ Y[i, ] = MASS::mvrnorm(n = 1, Mult_Mat %*% B %*% X[i, ], Variance)
+
+}
+
+# Print Protein-Protein interactions and Protein-DNA interactions
+A
+B
+
+
+```
+
+We will now apply RGM based on individual level data, summary level data and beta matrix to show its functionality.
+
+```{r}
+
+# Apply RGM on individual level data with Threshold prior
+Output1 = RGM(X = X, Y = Y, d = c(2, 1, 1, 1, 1), n = 10000, prior = "Threshold")
+
+# Calculate summary level data
+S_YY = t(Y) %*% Y / n
+S_YX = t(Y) %*% X / n
+S_XX = t(X) %*% X / n
+
+# Apply RGM on summary level data for Spike and Slab Prior
+Output2 = RGM(S_YY = S_YY, S_YX = S_YX, S_XX = S_XX,
+           d = c(2, 1, 1, 1, 1), n = 10000, prior = "Spike and Slab")
+
+# Calculate Beta and Sigma_Hat
+# Centralize Data
+Y = t(t(Y) - colMeans(Y))
+X = t(t(X) - colMeans(X))
+
+# Calculate S_XX
+S_XX = t(X) %*% X / n
+
+# Generate Beta matrix and Sigma_Hat
+Beta = matrix(0, nrow = p, ncol = k)
+Sigma_Hat = matrix(0, nrow = p, ncol = k)
+
+for (i in 1:p) {
+
+    for (j in 1:k) {
+
+        fit = lm(Y[, i] ~ X[, j])
+
+        Beta[i, j] =  fit$coefficients[2]
+
+        Sigma_Hat[i, j] = sum(fit$residuals^2) / n
+
+        }
+
+}
+
+
+# Apply RGM on S_XX, Beta and Sigma_Hat for Threshold Prior
+Output3 = RGM(S_XX = S_XX, Beta = Beta, Sigma_Hat = Sigma_Hat,
+           d = c(2, 1, 1, 1, 1), n = 10000, prior = "Threshold")
+
+```
+
+We get the Protein-Protein interactions from the outputs in the following way:
+```{r}
+
+Output1$A_Est
+Output2$A_Est
+Output3$A_Est
+
+
+```
+We get the graph structure between the proteins from the outputs in the following way:
+```{r}
+
+Output1$zA_Est
+Output2$zA_Est
+Output3$zA_Est
+
+
+```
+
+We get the Protein-DNA interactions from the outputs in the following way:
+```{r}
+
+Output1$B_Est
+Output2$B_Est
+Output3$B_Est
+
+
+```
+We get the graph structure between the proteins and the DNAs from the outputs in the following way:
+```{r}
+
+Output1$zB_Est
+Output2$zB_Est
+Output3$zB_Est
+
+
+```
+
+We can plot the log-likelihoods from the outputs in the following way:
+```{r}
+
+plot(Output1$LL_Pst, type = 'l', xlab = "Iterations", ylab = "Log-likelihood", col = 'red')
+plot(Output2$LL_Pst, type = 'l', xlab = "Iterations", ylab = "Log-likelihood", col = 'blue')
+plot(Output3$LL_Pst, type = 'l', xlab = "Iterations", ylab = "Log-likelihood", col = 'green')
+
+
+
+```
+
+## References
+Yang Ni. Yuan Ji. Peter Müller. "Reciprocal Graphical Models for Integrative Gene Regulatory Network Analysis." Bayesian Anal. 13 (4) 1095 - 1110, December 2018. https://doi.org/10.1214/17-BA1087
