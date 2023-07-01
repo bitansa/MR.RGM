@@ -13,7 +13,7 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 
 // Sample_Rho
 double Sample_Rho(double Gamma, double a_rho, double b_rho);
-RcppExport SEXP _ReciprocalGraphicalModels_Sample_Rho(SEXP GammaSEXP, SEXP a_rhoSEXP, SEXP b_rhoSEXP) {
+RcppExport SEXP _RGM_Sample_Rho(SEXP GammaSEXP, SEXP a_rhoSEXP, SEXP b_rhoSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -26,7 +26,7 @@ END_RCPP
 }
 // Sample_Psi
 double Sample_Psi(double Phi, double a_psi, double b_psi);
-RcppExport SEXP _ReciprocalGraphicalModels_Sample_Psi(SEXP PhiSEXP, SEXP a_psiSEXP, SEXP b_psiSEXP) {
+RcppExport SEXP _RGM_Sample_Psi(SEXP PhiSEXP, SEXP a_psiSEXP, SEXP b_psiSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -39,7 +39,7 @@ END_RCPP
 }
 // Sample_Tau
 double Sample_Tau(double a, double gamma, double tau, double nu_1);
-RcppExport SEXP _ReciprocalGraphicalModels_Sample_Tau(SEXP aSEXP, SEXP gammaSEXP, SEXP tauSEXP, SEXP nu_1SEXP) {
+RcppExport SEXP _RGM_Sample_Tau(SEXP aSEXP, SEXP gammaSEXP, SEXP tauSEXP, SEXP nu_1SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -53,7 +53,7 @@ END_RCPP
 }
 // Sample_Eta
 double Sample_Eta(double b, double phi, double eta, double nu_2);
-RcppExport SEXP _ReciprocalGraphicalModels_Sample_Eta(SEXP bSEXP, SEXP phiSEXP, SEXP etaSEXP, SEXP nu_2SEXP) {
+RcppExport SEXP _RGM_Sample_Eta(SEXP bSEXP, SEXP phiSEXP, SEXP etaSEXP, SEXP nu_2SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -67,7 +67,7 @@ END_RCPP
 }
 // Sample_Gamma
 double Sample_Gamma(double a, double tau, double rho, double nu_1);
-RcppExport SEXP _ReciprocalGraphicalModels_Sample_Gamma(SEXP aSEXP, SEXP tauSEXP, SEXP rhoSEXP, SEXP nu_1SEXP) {
+RcppExport SEXP _RGM_Sample_Gamma(SEXP aSEXP, SEXP tauSEXP, SEXP rhoSEXP, SEXP nu_1SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -81,7 +81,7 @@ END_RCPP
 }
 // Sample_Phi
 double Sample_Phi(double b, double eta, double psi, double nu_2);
-RcppExport SEXP _ReciprocalGraphicalModels_Sample_Phi(SEXP bSEXP, SEXP etaSEXP, SEXP psiSEXP, SEXP nu_2SEXP) {
+RcppExport SEXP _RGM_Sample_Phi(SEXP bSEXP, SEXP etaSEXP, SEXP psiSEXP, SEXP nu_2SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -95,7 +95,7 @@ END_RCPP
 }
 // Sample_Sigma
 double Sample_Sigma(double n, double z_sum, double a_sigma, double b_sigma);
-RcppExport SEXP _ReciprocalGraphicalModels_Sample_Sigma(SEXP nSEXP, SEXP z_sumSEXP, SEXP a_sigmaSEXP, SEXP b_sigmaSEXP) {
+RcppExport SEXP _RGM_Sample_Sigma(SEXP nSEXP, SEXP z_sumSEXP, SEXP a_sigmaSEXP, SEXP b_sigmaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -109,7 +109,7 @@ END_RCPP
 }
 // Target_A
 double Target_A(const arma::mat& S_YY, const arma::mat& S_YX, const arma::mat& A, double a, double N, const arma::colvec& Sigma_Inv, double p, const arma::mat& B, double gamma, double tau, double nu_1);
-RcppExport SEXP _ReciprocalGraphicalModels_Target_A(SEXP S_YYSEXP, SEXP S_YXSEXP, SEXP ASEXP, SEXP aSEXP, SEXP NSEXP, SEXP Sigma_InvSEXP, SEXP pSEXP, SEXP BSEXP, SEXP gammaSEXP, SEXP tauSEXP, SEXP nu_1SEXP) {
+RcppExport SEXP _RGM_Target_A(SEXP S_YYSEXP, SEXP S_YXSEXP, SEXP ASEXP, SEXP aSEXP, SEXP NSEXP, SEXP Sigma_InvSEXP, SEXP pSEXP, SEXP BSEXP, SEXP gammaSEXP, SEXP tauSEXP, SEXP nu_1SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -130,7 +130,7 @@ END_RCPP
 }
 // Sample_A
 double Sample_A(const arma::mat& S_YY, const arma::mat& S_YX, const arma::mat& A, const arma::mat& A_Pseudo, double i, double j, const arma::colvec& Sigma_Inv, double N, double p, const arma::mat& B, double gamma, double tau, double nu_1, double prop_var1, double tA);
-RcppExport SEXP _ReciprocalGraphicalModels_Sample_A(SEXP S_YYSEXP, SEXP S_YXSEXP, SEXP ASEXP, SEXP A_PseudoSEXP, SEXP iSEXP, SEXP jSEXP, SEXP Sigma_InvSEXP, SEXP NSEXP, SEXP pSEXP, SEXP BSEXP, SEXP gammaSEXP, SEXP tauSEXP, SEXP nu_1SEXP, SEXP prop_var1SEXP, SEXP tASEXP) {
+RcppExport SEXP _RGM_Sample_A(SEXP S_YYSEXP, SEXP S_YXSEXP, SEXP ASEXP, SEXP A_PseudoSEXP, SEXP iSEXP, SEXP jSEXP, SEXP Sigma_InvSEXP, SEXP NSEXP, SEXP pSEXP, SEXP BSEXP, SEXP gammaSEXP, SEXP tauSEXP, SEXP nu_1SEXP, SEXP prop_var1SEXP, SEXP tASEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -155,7 +155,7 @@ END_RCPP
 }
 // Target_B
 double Target_B(const arma::mat& S_YX, const arma::mat& S_XX, const arma::mat& B, const arma::colvec& Sigma_Inv, const arma::mat& MultMat, double N, double b, double phi, double eta, double nu_2);
-RcppExport SEXP _ReciprocalGraphicalModels_Target_B(SEXP S_YXSEXP, SEXP S_XXSEXP, SEXP BSEXP, SEXP Sigma_InvSEXP, SEXP MultMatSEXP, SEXP NSEXP, SEXP bSEXP, SEXP phiSEXP, SEXP etaSEXP, SEXP nu_2SEXP) {
+RcppExport SEXP _RGM_Target_B(SEXP S_YXSEXP, SEXP S_XXSEXP, SEXP BSEXP, SEXP Sigma_InvSEXP, SEXP MultMatSEXP, SEXP NSEXP, SEXP bSEXP, SEXP phiSEXP, SEXP etaSEXP, SEXP nu_2SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -175,7 +175,7 @@ END_RCPP
 }
 // Sample_B
 double Sample_B(const arma::mat& S_YX, const arma::mat& S_XX, const arma::mat& B, const arma::mat& B_Pseudo, double i, double j, const arma::colvec& Sigma_Inv, const arma::mat& MultMat, double N, double phi, double eta, double nu_2, double prop_var2, double tB);
-RcppExport SEXP _ReciprocalGraphicalModels_Sample_B(SEXP S_YXSEXP, SEXP S_XXSEXP, SEXP BSEXP, SEXP B_PseudoSEXP, SEXP iSEXP, SEXP jSEXP, SEXP Sigma_InvSEXP, SEXP MultMatSEXP, SEXP NSEXP, SEXP phiSEXP, SEXP etaSEXP, SEXP nu_2SEXP, SEXP prop_var2SEXP, SEXP tBSEXP) {
+RcppExport SEXP _RGM_Sample_B(SEXP S_YXSEXP, SEXP S_XXSEXP, SEXP BSEXP, SEXP B_PseudoSEXP, SEXP iSEXP, SEXP jSEXP, SEXP Sigma_InvSEXP, SEXP MultMatSEXP, SEXP NSEXP, SEXP phiSEXP, SEXP etaSEXP, SEXP nu_2SEXP, SEXP prop_var2SEXP, SEXP tBSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -199,7 +199,7 @@ END_RCPP
 }
 // Sample_tn
 double Sample_tn(double mu, double sigma, double a, double b);
-RcppExport SEXP _ReciprocalGraphicalModels_Sample_tn(SEXP muSEXP, SEXP sigmaSEXP, SEXP aSEXP, SEXP bSEXP) {
+RcppExport SEXP _RGM_Sample_tn(SEXP muSEXP, SEXP sigmaSEXP, SEXP aSEXP, SEXP bSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -213,7 +213,7 @@ END_RCPP
 }
 // tn_pdf
 double tn_pdf(double x, double mu, double sigma, double a, double b);
-RcppExport SEXP _ReciprocalGraphicalModels_tn_pdf(SEXP xSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP aSEXP, SEXP bSEXP) {
+RcppExport SEXP _RGM_tn_pdf(SEXP xSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP aSEXP, SEXP bSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -228,7 +228,7 @@ END_RCPP
 }
 // LL
 double LL(const arma::mat& A, const arma::mat& B, const arma::mat& S_YY, const arma::mat& S_YX, const arma::mat& S_XX, const arma::colvec& Sigma_Inv, double p, double N);
-RcppExport SEXP _ReciprocalGraphicalModels_LL(SEXP ASEXP, SEXP BSEXP, SEXP S_YYSEXP, SEXP S_YXSEXP, SEXP S_XXSEXP, SEXP Sigma_InvSEXP, SEXP pSEXP, SEXP NSEXP) {
+RcppExport SEXP _RGM_LL(SEXP ASEXP, SEXP BSEXP, SEXP S_YYSEXP, SEXP S_YXSEXP, SEXP S_XXSEXP, SEXP Sigma_InvSEXP, SEXP pSEXP, SEXP NSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -246,7 +246,7 @@ END_RCPP
 }
 // RGM_Threshold
 Rcpp::List RGM_Threshold(const arma::mat& S_YY, const arma::mat& S_YX, const arma::mat& S_XX, const arma::mat& D, double n, int nIter, int nBurnin, int Thin, double nu_1, double nu_2, double a_sigma, double b_sigma, double Prop_VarA, double Prop_VarB);
-RcppExport SEXP _ReciprocalGraphicalModels_RGM_Threshold(SEXP S_YYSEXP, SEXP S_YXSEXP, SEXP S_XXSEXP, SEXP DSEXP, SEXP nSEXP, SEXP nIterSEXP, SEXP nBurninSEXP, SEXP ThinSEXP, SEXP nu_1SEXP, SEXP nu_2SEXP, SEXP a_sigmaSEXP, SEXP b_sigmaSEXP, SEXP Prop_VarASEXP, SEXP Prop_VarBSEXP) {
+RcppExport SEXP _RGM_RGM_Threshold(SEXP S_YYSEXP, SEXP S_YXSEXP, SEXP S_XXSEXP, SEXP DSEXP, SEXP nSEXP, SEXP nIterSEXP, SEXP nBurninSEXP, SEXP ThinSEXP, SEXP nu_1SEXP, SEXP nu_2SEXP, SEXP a_sigmaSEXP, SEXP b_sigmaSEXP, SEXP Prop_VarASEXP, SEXP Prop_VarBSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -270,7 +270,7 @@ END_RCPP
 }
 // RGM_SpikeSlab
 Rcpp::List RGM_SpikeSlab(const arma::mat& S_YY, const arma::mat& S_YX, const arma::mat& S_XX, const arma::mat& D, double n, int nIter, int nBurnin, int Thin, double a_tau, double b_tau, double a_rho, double b_rho, double nu_1, double a_eta, double b_eta, double a_psi, double b_psi, double nu_2, double a_sigma, double b_sigma, double Prop_VarA, double Prop_VarB);
-RcppExport SEXP _ReciprocalGraphicalModels_RGM_SpikeSlab(SEXP S_YYSEXP, SEXP S_YXSEXP, SEXP S_XXSEXP, SEXP DSEXP, SEXP nSEXP, SEXP nIterSEXP, SEXP nBurninSEXP, SEXP ThinSEXP, SEXP a_tauSEXP, SEXP b_tauSEXP, SEXP a_rhoSEXP, SEXP b_rhoSEXP, SEXP nu_1SEXP, SEXP a_etaSEXP, SEXP b_etaSEXP, SEXP a_psiSEXP, SEXP b_psiSEXP, SEXP nu_2SEXP, SEXP a_sigmaSEXP, SEXP b_sigmaSEXP, SEXP Prop_VarASEXP, SEXP Prop_VarBSEXP) {
+RcppExport SEXP _RGM_RGM_SpikeSlab(SEXP S_YYSEXP, SEXP S_YXSEXP, SEXP S_XXSEXP, SEXP DSEXP, SEXP nSEXP, SEXP nIterSEXP, SEXP nBurninSEXP, SEXP ThinSEXP, SEXP a_tauSEXP, SEXP b_tauSEXP, SEXP a_rhoSEXP, SEXP b_rhoSEXP, SEXP nu_1SEXP, SEXP a_etaSEXP, SEXP b_etaSEXP, SEXP a_psiSEXP, SEXP b_psiSEXP, SEXP nu_2SEXP, SEXP a_sigmaSEXP, SEXP b_sigmaSEXP, SEXP Prop_VarASEXP, SEXP Prop_VarBSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -302,26 +302,26 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_ReciprocalGraphicalModels_Sample_Rho", (DL_FUNC) &_ReciprocalGraphicalModels_Sample_Rho, 3},
-    {"_ReciprocalGraphicalModels_Sample_Psi", (DL_FUNC) &_ReciprocalGraphicalModels_Sample_Psi, 3},
-    {"_ReciprocalGraphicalModels_Sample_Tau", (DL_FUNC) &_ReciprocalGraphicalModels_Sample_Tau, 4},
-    {"_ReciprocalGraphicalModels_Sample_Eta", (DL_FUNC) &_ReciprocalGraphicalModels_Sample_Eta, 4},
-    {"_ReciprocalGraphicalModels_Sample_Gamma", (DL_FUNC) &_ReciprocalGraphicalModels_Sample_Gamma, 4},
-    {"_ReciprocalGraphicalModels_Sample_Phi", (DL_FUNC) &_ReciprocalGraphicalModels_Sample_Phi, 4},
-    {"_ReciprocalGraphicalModels_Sample_Sigma", (DL_FUNC) &_ReciprocalGraphicalModels_Sample_Sigma, 4},
-    {"_ReciprocalGraphicalModels_Target_A", (DL_FUNC) &_ReciprocalGraphicalModels_Target_A, 11},
-    {"_ReciprocalGraphicalModels_Sample_A", (DL_FUNC) &_ReciprocalGraphicalModels_Sample_A, 15},
-    {"_ReciprocalGraphicalModels_Target_B", (DL_FUNC) &_ReciprocalGraphicalModels_Target_B, 10},
-    {"_ReciprocalGraphicalModels_Sample_B", (DL_FUNC) &_ReciprocalGraphicalModels_Sample_B, 14},
-    {"_ReciprocalGraphicalModels_Sample_tn", (DL_FUNC) &_ReciprocalGraphicalModels_Sample_tn, 4},
-    {"_ReciprocalGraphicalModels_tn_pdf", (DL_FUNC) &_ReciprocalGraphicalModels_tn_pdf, 5},
-    {"_ReciprocalGraphicalModels_LL", (DL_FUNC) &_ReciprocalGraphicalModels_LL, 8},
-    {"_ReciprocalGraphicalModels_RGM_Threshold", (DL_FUNC) &_ReciprocalGraphicalModels_RGM_Threshold, 14},
-    {"_ReciprocalGraphicalModels_RGM_SpikeSlab", (DL_FUNC) &_ReciprocalGraphicalModels_RGM_SpikeSlab, 22},
+    {"_RGM_Sample_Rho", (DL_FUNC) &_RGM_Sample_Rho, 3},
+    {"_RGM_Sample_Psi", (DL_FUNC) &_RGM_Sample_Psi, 3},
+    {"_RGM_Sample_Tau", (DL_FUNC) &_RGM_Sample_Tau, 4},
+    {"_RGM_Sample_Eta", (DL_FUNC) &_RGM_Sample_Eta, 4},
+    {"_RGM_Sample_Gamma", (DL_FUNC) &_RGM_Sample_Gamma, 4},
+    {"_RGM_Sample_Phi", (DL_FUNC) &_RGM_Sample_Phi, 4},
+    {"_RGM_Sample_Sigma", (DL_FUNC) &_RGM_Sample_Sigma, 4},
+    {"_RGM_Target_A", (DL_FUNC) &_RGM_Target_A, 11},
+    {"_RGM_Sample_A", (DL_FUNC) &_RGM_Sample_A, 15},
+    {"_RGM_Target_B", (DL_FUNC) &_RGM_Target_B, 10},
+    {"_RGM_Sample_B", (DL_FUNC) &_RGM_Sample_B, 14},
+    {"_RGM_Sample_tn", (DL_FUNC) &_RGM_Sample_tn, 4},
+    {"_RGM_tn_pdf", (DL_FUNC) &_RGM_tn_pdf, 5},
+    {"_RGM_LL", (DL_FUNC) &_RGM_LL, 8},
+    {"_RGM_RGM_Threshold", (DL_FUNC) &_RGM_RGM_Threshold, 14},
+    {"_RGM_RGM_SpikeSlab", (DL_FUNC) &_RGM_RGM_SpikeSlab, 22},
     {NULL, NULL, 0}
 };
 
-RcppExport void R_init_ReciprocalGraphicalModels(DllInfo *dll) {
+RcppExport void R_init_RGM(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 }

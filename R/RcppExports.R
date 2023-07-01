@@ -2,66 +2,66 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 Sample_Rho <- function(Gamma, a_rho, b_rho) {
-    .Call(`_ReciprocalGraphicalModels_Sample_Rho`, Gamma, a_rho, b_rho)
+    .Call(`_RGM_Sample_Rho`, Gamma, a_rho, b_rho)
 }
 
 Sample_Psi <- function(Phi, a_psi, b_psi) {
-    .Call(`_ReciprocalGraphicalModels_Sample_Psi`, Phi, a_psi, b_psi)
+    .Call(`_RGM_Sample_Psi`, Phi, a_psi, b_psi)
 }
 
 Sample_Tau <- function(a, gamma, tau, nu_1) {
-    .Call(`_ReciprocalGraphicalModels_Sample_Tau`, a, gamma, tau, nu_1)
+    .Call(`_RGM_Sample_Tau`, a, gamma, tau, nu_1)
 }
 
 Sample_Eta <- function(b, phi, eta, nu_2) {
-    .Call(`_ReciprocalGraphicalModels_Sample_Eta`, b, phi, eta, nu_2)
+    .Call(`_RGM_Sample_Eta`, b, phi, eta, nu_2)
 }
 
 Sample_Gamma <- function(a, tau, rho, nu_1) {
-    .Call(`_ReciprocalGraphicalModels_Sample_Gamma`, a, tau, rho, nu_1)
+    .Call(`_RGM_Sample_Gamma`, a, tau, rho, nu_1)
 }
 
 Sample_Phi <- function(b, eta, psi, nu_2) {
-    .Call(`_ReciprocalGraphicalModels_Sample_Phi`, b, eta, psi, nu_2)
+    .Call(`_RGM_Sample_Phi`, b, eta, psi, nu_2)
 }
 
 Sample_Sigma <- function(n, z_sum, a_sigma, b_sigma) {
-    .Call(`_ReciprocalGraphicalModels_Sample_Sigma`, n, z_sum, a_sigma, b_sigma)
+    .Call(`_RGM_Sample_Sigma`, n, z_sum, a_sigma, b_sigma)
 }
 
 Target_A <- function(S_YY, S_YX, A, a, N, Sigma_Inv, p, B, gamma, tau, nu_1) {
-    .Call(`_ReciprocalGraphicalModels_Target_A`, S_YY, S_YX, A, a, N, Sigma_Inv, p, B, gamma, tau, nu_1)
+    .Call(`_RGM_Target_A`, S_YY, S_YX, A, a, N, Sigma_Inv, p, B, gamma, tau, nu_1)
 }
 
 Sample_A <- function(S_YY, S_YX, A, A_Pseudo, i, j, Sigma_Inv, N, p, B, gamma, tau, nu_1, prop_var1, tA) {
-    .Call(`_ReciprocalGraphicalModels_Sample_A`, S_YY, S_YX, A, A_Pseudo, i, j, Sigma_Inv, N, p, B, gamma, tau, nu_1, prop_var1, tA)
+    .Call(`_RGM_Sample_A`, S_YY, S_YX, A, A_Pseudo, i, j, Sigma_Inv, N, p, B, gamma, tau, nu_1, prop_var1, tA)
 }
 
 Target_B <- function(S_YX, S_XX, B, Sigma_Inv, MultMat, N, b, phi, eta, nu_2) {
-    .Call(`_ReciprocalGraphicalModels_Target_B`, S_YX, S_XX, B, Sigma_Inv, MultMat, N, b, phi, eta, nu_2)
+    .Call(`_RGM_Target_B`, S_YX, S_XX, B, Sigma_Inv, MultMat, N, b, phi, eta, nu_2)
 }
 
 Sample_B <- function(S_YX, S_XX, B, B_Pseudo, i, j, Sigma_Inv, MultMat, N, phi, eta, nu_2, prop_var2, tB) {
-    .Call(`_ReciprocalGraphicalModels_Sample_B`, S_YX, S_XX, B, B_Pseudo, i, j, Sigma_Inv, MultMat, N, phi, eta, nu_2, prop_var2, tB)
+    .Call(`_RGM_Sample_B`, S_YX, S_XX, B, B_Pseudo, i, j, Sigma_Inv, MultMat, N, phi, eta, nu_2, prop_var2, tB)
 }
 
 Sample_tn <- function(mu, sigma, a, b) {
-    .Call(`_ReciprocalGraphicalModels_Sample_tn`, mu, sigma, a, b)
+    .Call(`_RGM_Sample_tn`, mu, sigma, a, b)
 }
 
 tn_pdf <- function(x, mu, sigma, a, b) {
-    .Call(`_ReciprocalGraphicalModels_tn_pdf`, x, mu, sigma, a, b)
+    .Call(`_RGM_tn_pdf`, x, mu, sigma, a, b)
 }
 
 LL <- function(A, B, S_YY, S_YX, S_XX, Sigma_Inv, p, N) {
-    .Call(`_ReciprocalGraphicalModels_LL`, A, B, S_YY, S_YX, S_XX, Sigma_Inv, p, N)
+    .Call(`_RGM_LL`, A, B, S_YY, S_YX, S_XX, Sigma_Inv, p, N)
 }
 
 RGM_Threshold <- function(S_YY, S_YX, S_XX, D, n, nIter, nBurnin, Thin, nu_1 = 0.0001, nu_2 = 0.0001, a_sigma = 0.01, b_sigma = 0.01, Prop_VarA = 0.01, Prop_VarB = 0.01) {
-    .Call(`_ReciprocalGraphicalModels_RGM_Threshold`, S_YY, S_YX, S_XX, D, n, nIter, nBurnin, Thin, nu_1, nu_2, a_sigma, b_sigma, Prop_VarA, Prop_VarB)
+    .Call(`_RGM_RGM_Threshold`, S_YY, S_YX, S_XX, D, n, nIter, nBurnin, Thin, nu_1, nu_2, a_sigma, b_sigma, Prop_VarA, Prop_VarB)
 }
 
 RGM_SpikeSlab <- function(S_YY, S_YX, S_XX, D, n, nIter, nBurnin, Thin, a_tau = 0.01, b_tau = 0.01, a_rho = 0.5, b_rho = 0.5, nu_1 = 0.0001, a_eta = 0.01, b_eta = 0.01, a_psi = 0.5, b_psi = 0.5, nu_2 = 0.0001, a_sigma = 0.01, b_sigma = 0.01, Prop_VarA = 0.01, Prop_VarB = 0.01) {
-    .Call(`_ReciprocalGraphicalModels_RGM_SpikeSlab`, S_YY, S_YX, S_XX, D, n, nIter, nBurnin, Thin, a_tau, b_tau, a_rho, b_rho, nu_1, a_eta, b_eta, a_psi, b_psi, nu_2, a_sigma, b_sigma, Prop_VarA, Prop_VarB)
+    .Call(`_RGM_RGM_SpikeSlab`, S_YY, S_YX, S_XX, D, n, nIter, nBurnin, Thin, a_tau, b_tau, a_rho, b_rho, nu_1, a_eta, b_eta, a_psi, b_psi, nu_2, a_sigma, b_sigma, Prop_VarA, Prop_VarB)
 }
 

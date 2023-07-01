@@ -1,4 +1,4 @@
-Package: ReciprocalGraphicalModels
+Package: RGM
 Title: Reciprocal Graphical Models for Integrative Gene Regulatory Network Analysis
 Version: 1.0.0.9000
 Authors@R: 
