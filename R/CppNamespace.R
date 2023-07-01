@@ -1,5 +1,5 @@
 ## usethis namespace: start
-#' @useDynLib ReciprocalGraphicalModels, .registration = TRUE
+#' @useDynLib RGM, .registration = TRUE
 #' @importFrom Rcpp sourceCpp
 ## usethis namespace: end
 NULL

@@ -2,7 +2,7 @@
 % Please edit documentation in R/RGM.R
 \name{RGM}
 \alias{RGM}
-\title{Title Fitting Reciprocal Graphical Models for Integrative Gene Regulatory Network}
+\title{Fitting Reciprocal Graphical Models for Integrative Gene Regulatory Network}
 \usage{
 RGM(
   X = NULL,
@@ -49,7 +49,7 @@ RGM(
 
 \item{Sigma_Hat}{p * k matrix data input, where each row corresponds to a particular protein and each column corresponds to a particular DNA. Each entry is the mean square error for regressing the particular protein on the particular DNA. If you want to use Sigma_Hat as an input first centralize each column of Y and X and then calculate Beta, S_XX and Sigma_Hat.}
 
-\item{d}{Vector input of length p. Each element is a non-negative integer corresponds to number of covariates affecting a particular protein, sum of which should be k.}
+\item{d}{Vector input of length p. Each element is a positive integer corresponds to number of DNA affecting a particular protein, sum of which should be k.}
 
 \item{n}{Positive integer input corresponding to number of datapoints.}
 
@@ -90,42 +90,42 @@ RGM(
 \item{Prop_VarB}{positive scalar input. It corresponds to the variance of the normal distribution for proposing B matrix terms. Default value is 0.01.}
 }
 \value{
-\item{A_Est}{p * p matrix output of Protein-Protein interactions.}
-\item{B_Est}{p * k matrix output of Protein-DNA interactions.}
+\item{A_Est}{p * p matrix output of protein-protein interactions.}
+\item{B_Est}{p * k matrix output of protein-DNA interactions.}
 \item{zA_Est}{p * p matrix output of the graph structure between the proteins.}
 \item{zB_Est}{p * k matrix output of the graph structure between the proteins and the DNAs.}
-\item{A0_Est}{p * p matrix output of Protein-Protein interactions before thresholding for Threshold prior.}
-\item{B0_Est}{p * k matrix output of Protein-DNA interactions before thresholding for Threshold prior.}
-\item{Gamma_Est}{p * p matrix output of probabilities of Protein-Protein interactions.}
-\item{Tau_Est}{p * p matrix output of variances of Protein-Protein interactions.}
-\item{Phi_Est}{p * k matrix output of probabilities of Protein-DNA interactions.}
-\item{Eta_Est}{p * k matrix output of variances of Protein-DNA interactions.}
-\item{tA_Est}{Scalar output of thresholding value of Protein-Protein interactions for Threshold prior.}
-\item{tB_Est}{Scalar output of thresholding value of Protein-DNA interactions for Threshold prior.}
+\item{A0_Est}{p * p matrix output of protein-protein interactions before thresholding for Threshold prior.}
+\item{B0_Est}{p * k matrix output of protein-DNA interactions before thresholding for Threshold prior.}
+\item{Gamma_Est}{p * p matrix output of probabilities of protein-protein interactions.}
+\item{Tau_Est}{p * p matrix output of variances of protein-protein interactions.}
+\item{Phi_Est}{p * k matrix output of probabilities of protein-DNA interactions.}
+\item{Eta_Est}{p * k matrix output of variances of protein-DNA interactions.}
+\item{tA_Est}{Scalar output of thresholding value of protein-protein interactions for Threshold prior.}
+\item{tB_Est}{Scalar output of thresholding value of protein-DNA interactions for Threshold prior.}
 \item{Sigma_Est}{Vector output of length p corresponding to variances of each protein.}
-\item{A_Pst}{Array ouput of posterior samples of Protein-Protein interactions.}
-\item{B_Pst}{Array ouput of posterior samples of Protein-DNA interactions.}
-\item{A0_Pst}{Array ouput of posterior samples of Protein-Protein interactions before thresholding for Threshold prior.}
-\item{B0_Pst}{Array ouput of posterior samples of Protein-DNA interactions before thresholding for Threshold prior.}
-\item{Gamma_Pst}{Array ouput of posterior samples of probabilities of Protein-Protein interactions.}
-\item{Tau_Pst}{Array ouput of posterior samples of variances of Protein-Protein interactions.}
-\item{Phi_Pst}{Array ouput of posterior samples of probabilities of Protein-DNA interactions.}
-\item{Eta_Pst}{Array ouput of posterior samples of variances of Protein-DNA interactions.}
-\item{tA_Pst}{Vector ouput of posterior samples of thresholding value of Protein-Protein interactions for Threshold prior.}
-\item{tB_Pst}{Vector ouput of posterior samples of thresholding value of Protein-DNA interactions for Threshold prior.}
+\item{A_Pst}{Array ouput of posterior samples of protein-protein interactions.}
+\item{B_Pst}{Array ouput of posterior samples of protein-DNA interactions.}
+\item{A0_Pst}{Array ouput of posterior samples of protein-protein interactions before thresholding for Threshold prior.}
+\item{B0_Pst}{Array ouput of posterior samples of protein-DNA interactions before thresholding for Threshold prior.}
+\item{Gamma_Pst}{Array ouput of posterior samples of probabilities of protein-protein interactions.}
+\item{Tau_Pst}{Array ouput of posterior samples of variances of protein-protein interactions.}
+\item{Phi_Pst}{Array ouput of posterior samples of probabilities of protein-DNA interactions.}
+\item{Eta_Pst}{Array ouput of posterior samples of variances of protein-DNA interactions.}
+\item{tA_Pst}{Vector ouput of posterior samples of thresholding value of protein-protein interactions for Threshold prior.}
+\item{tB_Pst}{Vector ouput of posterior samples of thresholding value of protein-DNA interactions for Threshold prior.}
 \item{Sigma_Pst}{Array ouput of posterior samples of variances of each protein.}
-\item{AccptA}{Percentage acceptance of entries of A matrix i.e. Protein-Protein interactions.}
-\item{AccptB}{Percentage acceptance of entries of B matrix i.e. Protein-DNA interactions.}
-\item{Accpt_tA}{Percentage acceptance of the thresholding value for Protein-Protein interactions for Threshold prior.}
-\item{Accpt_tB}{Percentage acceptance of the thresholding value for Protein-DNA interactions for Threshold prior.}
+\item{AccptA}{Percentage acceptance of entries of A matrix i.e. protein-protein interactions.}
+\item{AccptB}{Percentage acceptance of entries of B matrix i.e. protein-DNA interactions.}
+\item{Accpt_tA}{Percentage acceptance of the thresholding value for protein-protein interactions for Threshold prior.}
+\item{Accpt_tB}{Percentage acceptance of the thresholding value for protein-DNA interactions for Threshold prior.}
 \item{LL_Pst}{Vector ouput of posterior log-likelihoods of the model.}
-\item{Rho_Est}{p * p matrix output of bernoulli success probabilities of Protein-Protein interactions for Spike and Slab prior.}
-\item{Psi_Est}{p * k matrix output of bernoulli success probabilities of Protein-DNA interactions for Spike and Slab prior.}
-\item{Rho_Pst}{Array ouput of posterior samples of bernoulli success probabilities of Protein-Protein interactions for Spike and Slab prior.}
-\item{Psi_Pst}{Array ouput of posterior samples of bernoulli success probabilities of Protein-DNA interactions for Spike and Slab prior.}
+\item{Rho_Est}{p * p matrix output of bernoulli success probabilities of protein-protein interactions for Spike and Slab prior.}
+\item{Psi_Est}{p * k matrix output of bernoulli success probabilities of protein-DNA interactions for Spike and Slab prior.}
+\item{Rho_Pst}{Array ouput of posterior samples of bernoulli success probabilities of protein-protein interactions for Spike and Slab prior.}
+\item{Psi_Pst}{Array ouput of posterior samples of bernoulli success probabilities of protein-DNA interactions for Spike and Slab prior.}
 }
 \description{
-RGM can be used to fit Reciprocal Graphical Models on gene expression data and DNA level measurements to find the relationship between different genes and the relationship between genes and DNA.
+RGM can be used to fit Reciprocal Graphical Models on protein expression data and DNA level measurements to find the relationship between different proteins and the relationship between proteins and DNA.
 }
 \examples{
 
@@ -289,7 +289,7 @@ A
 B
 
 
-# Apply RGM on the generated data for Threshold Prior
+# Apply RGM on summary level data for Spike and Slab Prior
 Output = RGM(S_YY = S_YY, S_YX = S_YX, S_XX = S_XX,
           d = c(2, 1, 1, 1, 1), n = 10000, prior = "Spike and Slab")
 
@@ -404,9 +404,9 @@ A
 B
 
 
-# Apply RGM on the generated data for Threshold Prior
+# Apply RGM based on S_XX, Beta adn Sigma_Hat for Threshold Prior
 Output = RGM(S_XX = S_XX, Beta = Beta, Sigma_Hat = Sigma_Hat,
-          d = c(2, 1, 1, 1, 1), n = 10000, prior = "Spike and Slab")
+          d = c(2, 1, 1, 1, 1), n = 10000, prior = "Threshold")
 
 # Get the graph structure between the proteins
 Output$zA_Est

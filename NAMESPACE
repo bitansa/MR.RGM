@@ -2,4 +2,4 @@
 
 export(RGM)
 importFrom(Rcpp,sourceCpp)
-useDynLib(ReciprocalGraphicalModels, .registration = TRUE)
+useDynLib(RGM, .registration = TRUE)
