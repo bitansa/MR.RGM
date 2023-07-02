@@ -8,6 +8,7 @@
 
 ## Intended use of the package
 
+<<<<<<< HEAD
 This R-package will estimate the protein-protein interactions and the
 protein-DNA interactions for a given dataset of protein and DNA
 expressions and then make a graph connecting them. The package can
@@ -18,6 +19,20 @@ functions to generate posterior samples. It has a single primary
 function that, based on these posterior samples, will give estimations
 of protein-protein interactions, protein-DNA interactions, and the graph
 structure between them.
+=======
+For a given dataset of gene expressions and DNA expressions, this
+R-package will estimate the gene-gene interactions and the gene-DNA
+interactions and then create a graph connecting them. A spike and slab
+prior is assumed for each interaction parameter based on our prior
+knowledge to calculate posterior estimates of the interactions. The
+package includes various helper functions that generate gibbs samples of
+the parameter values for the prior distributions and interaction
+parameter values based on other parameter values. The package have two
+main functions that, using the gibbs estimates of these parameters
+produced by the helper functions at each iteration, will provide
+estimates of the values of gene-gene interactions and gene-DNA
+interactions.
+>>>>>>> ea10e2cb849308c33dc2b2f7c3f69e1e3a56145d
 
 ## Installation instructions
 
@@ -39,10 +54,19 @@ Once the RGM package is installed load the library in the R workspace.
 
 ## Example
 
+<<<<<<< HEAD
 We will give a small example to show the functionality of the function
 RGM available in this package to calculate protein-protein interactions
 and protein-DNA interactions for a given protein expressions and DNA
 expressions dataset. First we simulate the dataset.
+=======
+We will give a small example to show the functionality of the two
+functions RGM and RGM_cpp available in this package to calculate
+gene-gene interactions and gene-DNA interactions for a given gene
+expressions and DNA expressions dataset. RGM_cpp function is a bit
+faster as it is written in Rcpp, but the functionality of both the
+functions are same. First we simulate the dataset.
+>>>>>>> ea10e2cb849308c33dc2b2f7c3f69e1e3a56145d
 
 ``` r
 
@@ -168,7 +192,11 @@ Output3 = RGM(S_XX = S_XX, Beta = Beta, Sigma_Hat = Sigma_Hat,
            d = c(2, 1, 1, 1, 1), n = 10000, prior = "Threshold")
 ```
 
+<<<<<<< HEAD
 We get the protein-protein interactions from the outputs in the
+=======
+We get the Protein-Protein interactions from the outputs in the
+>>>>>>> ea10e2cb849308c33dc2b2f7c3f69e1e3a56145d
 following way:
 
 ``` r
@@ -224,7 +252,11 @@ Output3$zA_Est
 #> [5,]    0    1    1    0    0
 ```
 
+<<<<<<< HEAD
 We get the protein-DNA interactions from the outputs in the following
+=======
+We get the Protein-DNA interactions from the outputs in the following
+>>>>>>> ea10e2cb849308c33dc2b2f7c3f69e1e3a56145d
 way:
 
 ``` r
