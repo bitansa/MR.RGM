@@ -195,7 +195,7 @@ for (i in 1:n) {
 A
 B
 
-# Apply RGM on the generated data for Threshold Prior
+# Apply RGM on individual level data for Threshold Prior
 Output = RGM(X = X, Y = Y, d = c(2, 1, 1, 1, 1), n = 10000, prior = "Threshold")
 
 # Get the graph structure between the proteins

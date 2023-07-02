@@ -144,7 +144,7 @@
 #' A
 #' B
 #'
-#' # Apply RGM on the generated data for Threshold Prior
+#' # Apply RGM on individual level data for Threshold Prior
 #' Output = RGM(X = X, Y = Y, d = c(2, 1, 1, 1, 1), n = 10000, prior = "Threshold")
 #'
 #' # Get the graph structure between the proteins
@@ -238,11 +238,7 @@
 #' B
 #'
 #'
-<<<<<<< HEAD
 #' # Apply RGM on summary level data for Spike and Slab Prior
-=======
-#' # Apply RGM on the generated data for Spike and Slab Prior
->>>>>>> ea10e2cb849308c33dc2b2f7c3f69e1e3a56145d
 #' Output = RGM(S_YY = S_YY, S_YX = S_YX, S_XX = S_XX,
 #'           d = c(2, 1, 1, 1, 1), n = 10000, prior = "Spike and Slab")
 #'
