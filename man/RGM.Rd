@@ -103,17 +103,6 @@ RGM(
 \item{tA_Est}{Scalar output of thresholding value of protein-protein interactions for Threshold prior.}
 \item{tB_Est}{Scalar output of thresholding value of protein-DNA interactions for Threshold prior.}
 \item{Sigma_Est}{Vector output of length p corresponding to variances of each protein.}
-\item{A_Pst}{Array ouput of posterior samples of protein-protein interactions.}
-\item{B_Pst}{Array ouput of posterior samples of protein-DNA interactions.}
-\item{A0_Pst}{Array ouput of posterior samples of protein-protein interactions before thresholding for Threshold prior.}
-\item{B0_Pst}{Array ouput of posterior samples of protein-DNA interactions before thresholding for Threshold prior.}
-\item{Gamma_Pst}{Array ouput of posterior samples of probabilities of protein-protein interactions.}
-\item{Tau_Pst}{Array ouput of posterior samples of variances of protein-protein interactions.}
-\item{Phi_Pst}{Array ouput of posterior samples of probabilities of protein-DNA interactions.}
-\item{Eta_Pst}{Array ouput of posterior samples of variances of protein-DNA interactions.}
-\item{tA_Pst}{Vector ouput of posterior samples of thresholding value of protein-protein interactions for Threshold prior.}
-\item{tB_Pst}{Vector ouput of posterior samples of thresholding value of protein-DNA interactions for Threshold prior.}
-\item{Sigma_Pst}{Array ouput of posterior samples of variances of each protein.}
 \item{AccptA}{Percentage acceptance of entries of A matrix i.e. protein-protein interactions.}
 \item{AccptB}{Percentage acceptance of entries of B matrix i.e. protein-DNA interactions.}
 \item{Accpt_tA}{Percentage acceptance of the thresholding value for protein-protein interactions for Threshold prior.}
@@ -121,8 +110,6 @@ RGM(
 \item{LL_Pst}{Vector ouput of posterior log-likelihoods of the model.}
 \item{Rho_Est}{p * p matrix output of bernoulli success probabilities of protein-protein interactions for Spike and Slab prior.}
 \item{Psi_Est}{p * k matrix output of bernoulli success probabilities of protein-DNA interactions for Spike and Slab prior.}
-\item{Rho_Pst}{Array ouput of posterior samples of bernoulli success probabilities of protein-protein interactions for Spike and Slab prior.}
-\item{Psi_Pst}{Array ouput of posterior samples of bernoulli success probabilities of protein-DNA interactions for Spike and Slab prior.}
 }
 \description{
 RGM can be used to fit Reciprocal Graphical Models on protein expression data and DNA level measurements to find the relationship between different proteins and the relationship between proteins and DNA.

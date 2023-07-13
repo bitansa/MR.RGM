@@ -542,13 +542,34 @@ Rcpp::List RGM_Threshold(const arma::mat& S_YY, const arma::mat& S_YX, const arm
 
   }
 
+  // Calculate estimates based on posterior samples
+  arma::mat A_Est = mean(A_Pst, 2);
+  arma::mat B_Est = mean(B_Pst, 2);
+  arma::mat A0_Est = mean(A0_Pst, 2);
+  arma::mat B0_Est = mean(B0_Pst, 2);
+  arma::mat Gamma_Est = mean(Gamma_Pst, 2);
+  arma::mat Tau_Est = mean(Tau_Pst, 2);
+  arma::mat Phi_Est = mean(Phi_Pst, 2);
+  arma::mat Eta_Est = mean(Eta_Pst, 2);
+  double tA_Est = mean(tA_Pst);
+  double tB_Est = mean(tB_Pst);
+  arma::mat Sigma_Est = mean(Sigma_Pst, 2);
 
-  return Rcpp::List::create(Rcpp::Named("A_Pst") = A_Pst, Rcpp::Named("B_Pst") = B_Pst,
-                            Rcpp::Named("A0_Pst") = A0_Pst, Rcpp::Named("B0_Pst") = B0_Pst,
-                            Rcpp::Named("Gamma_Pst") = Gamma_Pst, Rcpp::Named("Tau_Pst") = Tau_Pst,
-                            Rcpp::Named("Phi_Pst") = Phi_Pst, Rcpp::Named("Eta_Pst") = Eta_Pst,
-                            Rcpp::Named("tA_Pst") = tA_Pst, Rcpp::Named("tB_Pst") = tB_Pst,
-                            Rcpp::Named("Sigma_Pst") = Sigma_Pst,
+  // Construct the graph structures
+  arma::umat logicalGraph_A = (Gamma_Est > 0.5);
+  arma::umat logicalGraph_B = (Phi_Est > 0.5);
+  arma::mat zA_Est = arma::conv_to<arma::mat>::from(logicalGraph_A);
+  arma::mat zB_Est = arma::conv_to<arma::mat>::from(logicalGraph_B);
+
+
+
+  return Rcpp::List::create(Rcpp::Named("A_Est") = A_Est, Rcpp::Named("B_Est") = B_Est,
+                            Rcpp::Named("zA_Est") = zA_Est, Rcpp::Named("zB_Est") = zB_Est,
+                            Rcpp::Named("A0_Est") = A0_Est, Rcpp::Named("B0_Est") = B0_Est,
+                            Rcpp::Named("Gamma_Est") = Gamma_Est, Rcpp::Named("Tau_Est") = Tau_Est,
+                            Rcpp::Named("Phi_Est") = Phi_Est, Rcpp::Named("Eta_Est") = Eta_Est,
+                            Rcpp::Named("tA_Est") = tA_Est, Rcpp::Named("tB_Est") = tB_Est,
+                            Rcpp::Named("Sigma_Est") = Sigma_Est,
                             Rcpp::Named("AccptA") = AccptA / (p * (p - 1) * nIter) * 100, Rcpp::Named("AccptB") = AccptB / (arma::accu(D) * nIter) * 100,
                             Rcpp::Named("Accpt_tA") = Accpt_tA / (nIter) * 100, Rcpp::Named("Accpt_tB") = Accpt_tB / (nIter) * 100,
                             Rcpp::Named("LL_Pst") = LL_Pst);
@@ -740,11 +761,29 @@ Rcpp::List RGM_SpikeSlab(const arma::mat& S_YY, const arma::mat& S_YX, const arm
 
   }
 
-  return Rcpp::List::create(Rcpp::Named("A_Pst") = A_Pst, Rcpp::Named("B_Pst") = B_Pst,
-                            Rcpp::Named("Gamma_Pst") = Gamma_Pst, Rcpp::Named("Tau_Pst") = Tau_Pst,
-                            Rcpp::Named("Rho_Pst") = Rho_Pst, Rcpp::Named("Phi_Pst") = Phi_Pst,
-                            Rcpp::Named("Eta_Pst") = Eta_Pst, Rcpp::Named("Psi_Pst") = Psi_Pst,
-                            Rcpp::Named("Sigma_Pst") = Sigma_Pst,
+  // Calculate estimates based on posterior samples
+  arma::mat A_Est = mean(A_Pst, 2);
+  arma::mat B_Est = mean(B_Pst, 2);
+  arma::mat Gamma_Est = mean(Gamma_Pst, 2);
+  arma::mat Tau_Est = mean(Tau_Pst, 2);
+  arma::mat Rho_Est = mean(Rho_Pst, 2);
+  arma::mat Phi_Est = mean(Phi_Pst, 2);
+  arma::mat Eta_Est = mean(Eta_Pst, 2);
+  arma::mat Psi_Est = mean(Psi_Pst, 2);
+  arma::mat Sigma_Est = mean(Sigma_Pst, 2);
+
+  // Construct the graph structures
+  arma::umat logicalGraph_A = (Gamma_Est > 0.5);
+  arma::umat logicalGraph_B = (Phi_Est > 0.5);
+  arma::mat zA_Est = arma::conv_to<arma::mat>::from(logicalGraph_A);
+  arma::mat zB_Est = arma::conv_to<arma::mat>::from(logicalGraph_B);
+
+  return Rcpp::List::create(Rcpp::Named("A_Est") = A_Est, Rcpp::Named("B_Est") = B_Est,
+                            Rcpp::Named("zA_Est") = zA_Est, Rcpp::Named("zB_Est") = zB_Est,
+                            Rcpp::Named("Gamma_Est") = Gamma_Est, Rcpp::Named("Tau_Est") = Tau_Est,
+                            Rcpp::Named("Rho_Est") = Rho_Est, Rcpp::Named("Phi_Est") = Phi_Est,
+                            Rcpp::Named("Eta_Est") = Eta_Est, Rcpp::Named("Psi_Est") = Psi_Est,
+                            Rcpp::Named("Sigma_Est") = Sigma_Est,
                             Rcpp::Named("AccptA") = AccptA / (p * (p - 1) * nIter) * 100, Rcpp::Named("AccptB") = AccptB / (arma::accu(D) * nIter) * 100,
                             Rcpp::Named("LL_Pst") = LL_Pst);
 

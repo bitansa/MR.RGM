@@ -46,17 +46,6 @@
 #' \item{tA_Est}{Scalar output of thresholding value of protein-protein interactions for Threshold prior.}
 #' \item{tB_Est}{Scalar output of thresholding value of protein-DNA interactions for Threshold prior.}
 #' \item{Sigma_Est}{Vector output of length p corresponding to variances of each protein.}
-#' \item{A_Pst}{Array ouput of posterior samples of protein-protein interactions.}
-#' \item{B_Pst}{Array ouput of posterior samples of protein-DNA interactions.}
-#' \item{A0_Pst}{Array ouput of posterior samples of protein-protein interactions before thresholding for Threshold prior.}
-#' \item{B0_Pst}{Array ouput of posterior samples of protein-DNA interactions before thresholding for Threshold prior.}
-#' \item{Gamma_Pst}{Array ouput of posterior samples of probabilities of protein-protein interactions.}
-#' \item{Tau_Pst}{Array ouput of posterior samples of variances of protein-protein interactions.}
-#' \item{Phi_Pst}{Array ouput of posterior samples of probabilities of protein-DNA interactions.}
-#' \item{Eta_Pst}{Array ouput of posterior samples of variances of protein-DNA interactions.}
-#' \item{tA_Pst}{Vector ouput of posterior samples of thresholding value of protein-protein interactions for Threshold prior.}
-#' \item{tB_Pst}{Vector ouput of posterior samples of thresholding value of protein-DNA interactions for Threshold prior.}
-#' \item{Sigma_Pst}{Array ouput of posterior samples of variances of each protein.}
 #' \item{AccptA}{Percentage acceptance of entries of A matrix i.e. protein-protein interactions.}
 #' \item{AccptB}{Percentage acceptance of entries of B matrix i.e. protein-DNA interactions.}
 #' \item{Accpt_tA}{Percentage acceptance of the thresholding value for protein-protein interactions for Threshold prior.}
@@ -64,8 +53,6 @@
 #' \item{LL_Pst}{Vector ouput of posterior log-likelihoods of the model.}
 #' \item{Rho_Est}{p * p matrix output of bernoulli success probabilities of protein-protein interactions for Spike and Slab prior.}
 #' \item{Psi_Est}{p * k matrix output of bernoulli success probabilities of protein-DNA interactions for Spike and Slab prior.}
-#' \item{Rho_Pst}{Array ouput of posterior samples of bernoulli success probabilities of protein-protein interactions for Spike and Slab prior.}
-#' \item{Psi_Pst}{Array ouput of posterior samples of bernoulli success probabilities of protein-DNA interactions for Spike and Slab prior.}
 #'
 #'
 #'
@@ -670,30 +657,12 @@ RGM = function(X = NULL, Y = NULL, S_YY = NULL, S_YX = NULL, S_XX = NULL, Beta =
     Output = RGM_Threshold(S_YY, S_YX, S_XX, D, n, nIter = nIter, nBurnin = nBurnin, Thin = Thin, nu_1 = nu_1, nu_2 = nu_2,
                            a_sigma = a_sigma, b_sigma = b_sigma, Prop_VarA = Prop_VarA, Prop_VarB = Prop_VarB)
 
-    # Calculate estimates from the output
-    A_Est = apply(Output$A_Pst, MARGIN = c(1, 2), FUN = mean)
-    B_Est = apply(Output$B_Pst, MARGIN = c(1, 2), FUN = mean)
-    A0_Est = apply(Output$A0_Pst, MARGIN = c(1, 2), FUN = mean)
-    B0_Est = apply(Output$B0_Pst, MARGIN = c(1, 2), FUN = mean)
-    Gamma_Est = apply(Output$Gamma_Pst, MARGIN = c(1, 2), FUN = mean)
-    Tau_Est = apply(Output$Tau_Pst, MARGIN = c(1, 2), FUN = mean)
-    Phi_Est = apply(Output$Phi_Pst, MARGIN = c(1, 2), FUN = mean)
-    Eta_Est = apply(Output$Eta_Pst, MARGIN = c(1, 2), FUN = mean)
-    tA_Est = mean(Output$tA_Pst)
-    tB_Est = mean(Output$tB_Pst)
-    Sigma_Est = apply(Output$Sigma_Pst, MARGIN = c(1, 2), FUN = mean)
-    zA_Est = (Gamma_Est > 0.5) * 1
-    zB_Est = (Phi_Est > 0.5) * 1
 
     # Return outputs
-    return(list(A_Est = A_Est, B_Est = B_Est, zA_Est = zA_Est, zB_Est = zB_Est,
-                A0_Est = A0_Est, B0_Est = B0_Est, Gamma_Est = Gamma_Est, Tau_Est = Tau_Est,
-                Phi_Est = Phi_Est, Eta_Est = Eta_Est, tA_Est = tA_Est, tB_Est = tB_Est,
-                Sigma_Est = Sigma_Est,
-                A_Pst = Output$A_Pst, B_Pst = Output$B_Pst,
-                A0_Pst = Output$A0_Pst, B0_Pst = Output$B0_Pst, Gamma_Pst = Output$Gamma_Pst, Tau_Pst = Output$Tau_Pst,
-                Phi_Pst = Output$Phi_Pst, Eta_Pst = Output$Eta_Pst, tA_Pst = Output$tA_Pst, tB_Pst = Output$tB_Pst,
-                Sigma_Pst = Output$Sigma_Pst,
+    return(list(A_Est = Output$A_Est, B_Est = Output$B_Est, zA_Est = Output$zA_Est, zB_Est = Output$zB_Est,
+                A0_Est = Output$A0_Est, B0_Est = Output$B0_Est, Gamma_Est = Output$Gamma_Est, Tau_Est = Output$Tau_Est,
+                Phi_Est = Output$Phi_Est, Eta_Est = Output$Eta_Est, tA_Est = Output$tA_Est, tB_Est = Output$tB_Est,
+                Sigma_Est = Output$Sigma_Est,
                 AccptA = Output$AccptA, AccptB = Output$AccptB, Accpt_tA = Output$Accpt_tA, Accpt_tB = Output$Accpt_tB,
                 LL_Pst = Output$LL_Pst))
 
@@ -710,28 +679,11 @@ RGM = function(X = NULL, Y = NULL, S_YY = NULL, S_YX = NULL, S_XX = NULL, Beta =
 
 
 
-    # Calculate estimates from the output
-    A_Est = apply(Output$A_Pst, MARGIN = c(1, 2), FUN = mean)
-    B_Est = apply(Output$B_Pst, MARGIN = c(1, 2), FUN = mean)
-    Gamma_Est = apply(Output$Gamma_Pst, MARGIN = c(1, 2), FUN = mean)
-    Rho_Est = apply(Output$Rho_Pst, MARGIN = c(1, 2), FUN = mean)
-    Tau_Est = apply(Output$Tau_Pst, MARGIN = c(1, 2), FUN = mean)
-    Phi_Est = apply(Output$Phi_Pst, MARGIN = c(1, 2), FUN = mean)
-    Eta_Est = apply(Output$Eta_Pst, MARGIN = c(1, 2), FUN = mean)
-    Psi_Est = apply(Output$Psi_Pst, MARGIN = c(1, 2), FUN = mean)
-    Sigma_Est = apply(Output$Sigma_Pst, MARGIN = c(1, 2), FUN = mean)
-    zA_Est = (Gamma_Est > 0.5) * 1
-    zB_Est = (Phi_Est > 0.5) * 1
-
     # Return outputs
-    return(list(A_Est = A_Est, B_Est = B_Est, zA_Est = zA_Est, zB_Est = zB_Est,
-                Gamma_Est = Gamma_Est, Tau_Est = Tau_Est, Rho_Est = Rho_Est,
-                Phi_Est = Phi_Est, Eta_Est = Eta_Est, Psi_Est = Psi_Est,
-                Sigma_Est = Sigma_Est,
-                A_Pst = Output$A_Pst, B_Pst = Output$B_Pst,
-                Gamma_Pst = Output$Gamma_Pst, Tau_Pst = Output$Tau_Pst, Rho_Pst = Output$Rho_Pst,
-                Phi_Pst = Output$Phi_Pst, Eta_Pst = Output$Eta_Pst, Psi_Pst = Output$Psi_Pst,
-                Sigma_Pst = Output$Sigma_Pst,
+    return(list(A_Est = Output$A_Est, B_Est = Output$B_Est, zA_Est = Output$zA_Est, zB_Est = Output$zB_Est,
+                Gamma_Est = Output$Gamma_Est, Tau_Est = Output$Tau_Est, Rho_Est = Output$Rho_Est,
+                Phi_Est = Output$Phi_Est, Eta_Est = Output$Eta_Est, Psi_Est = Output$Psi_Est,
+                Sigma_Est = Output$Sigma_Est,
                 AccptA = Output$AccptA, AccptB = Output$AccptB,
                 LL_Pst = Output$LL_Pst))
 
