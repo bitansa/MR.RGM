@@ -1,16 +1,17 @@
-#' Fitting Reciprocal Graphical Models for Integrative Gene Regulatory Network
+#' Fitting Multivariate Bidirectional Mendelian Randomization Models for Causal Gene Regulatory Network
 #'
-#' @description RGM can be used to fit Reciprocal Graphical Models on protein expression data and DNA level measurements to find the relationship between different proteins and the relationship between proteins and DNA.
+#' @description Using DNA or SNPs as the instrument and protein or gene expression data as the response, RGM may be used to design Multivariate Bidirectional Mendelian Randomization Models (Reciprocal Graphical Models) for Causal Gene Regulatory Network. Three input formats are supported by RGM: (i) The protein or gene expression data matrix Y and the DNA or SNP data matrix X; (ii) S_YY(t(Y)%*% Y / n), S_YX(t(Y)%*% X / n), and S_XX(t(X)%*% X / n) are summary level data; (iii) S_XX, Beta, and Sigma_Hat. If the user wishes to utilise (iii) as input, then compute these after centralising the data matrices.
+#'              The graph structures between the response variables and between the response variables and the instruments will be returned by RGM as output. Additionally, the user must supply d, a vector input whose length is equal to that of the proteins or genes, and whose elements are individually positive integers representing the number of DNA or SNPs that impact a certain protein or gene, the total of which must match the number of DNA or SNPs. Additionally, the total number of observations, n, must also be given as input. The prior assumption on the model may either be "Threshold" or "Spike & Slab",
+#'              with the former being the default. The user can also specify this assumption.
 #'
-#'
-#' @param X n * k matrix data input, each row denotes a particular observation and each column denotes a particular DNA. Default value is NULL.
-#' @param Y n * p matrix data input, each row denotes a particular observation and each column denotes a particular protein. Default value is NULL.
-#' @param S_YY p * p matrix data input, where p denotes number of proteins. It is obtained by t(Y) %*% Y / n.
-#' @param S_YX p * k matrix data input, where p denotes number of proteins and k denotes number of DNAs. It is obtained by t(Y) %*% X / n.
-#' @param S_XX k * k matrix data input, where k denotes number of DNAs. It is obtained by t(X) %*% X / n.
-#' @param Beta p * k matrix data input, where each row corresponds to a particular protein and each column corresponds to a particular DNA. Each entry is the regression coefficient of the particular protein on the particular DNA. If you want to use Beta as an input first centralize each column of Y and X and then calculate Beta, S_XX and Sigma_Hat.
-#' @param Sigma_Hat p * k matrix data input, where each row corresponds to a particular protein and each column corresponds to a particular DNA. Each entry is the mean square error for regressing the particular protein on the particular DNA. If you want to use Sigma_Hat as an input first centralize each column of Y and X and then calculate Beta, S_XX and Sigma_Hat.
-#' @param d Vector input of length p. Each element is a positive integer corresponds to number of DNA affecting a particular protein, sum of which should be k.
+#' @param X n * k matrix data input, each row denotes a particular observation and each column denotes a particular DNA or SNP. Default value is NULL.
+#' @param Y n * p matrix data input, each row denotes a particular observation and each column denotes a particular protein or gene. Default value is NULL.
+#' @param S_YY p * p matrix data input, where p denotes number of proteins or genes. It is obtained by t(Y) %*% Y / n.
+#' @param S_YX p * k matrix data input, where p denotes number of proteins or genes and k denotes number of DNAs or SNPs. It is obtained by t(Y) %*% X / n.
+#' @param S_XX k * k matrix data input, where k denotes number of DNAs or SNPs. It is obtained by t(X) %*% X / n.
+#' @param Beta p * k matrix data input, where each row corresponds to a particular protein or gene and each column corresponds to a particular DNA or SNP. Each entry is the regression coefficient of the particular protein or gene on the particular DNA or SNP. If you want to use Beta as an input first centralize each column of Y and X and then calculate Beta, S_XX and Sigma_Hat.
+#' @param Sigma_Hat p * k matrix data input, where each row corresponds to a particular protein or gene and each column corresponds to a particular DNA or SNP. Each entry is the mean square error for regressing the particular protein or gene on the particular DNA or SNP. If you want to use Sigma_Hat as an input first centralize each column of Y and X and then calculate Beta, S_XX and Sigma_Hat.
+#' @param d Vector input of length p. Each element is a positive integer corresponds to number of DNA or SNP affecting a particular protein or gene, sum of which should be k.
 #' @param n Positive integer input corresponding to number of datapoints.
 #' @param nIter Positive integer input corresponding to number of MCMC sampling. Default value is 10,000.
 #' @param nBurnin Non-negative integer input corresponding to number of samples to be discarded. nBurnin should be less than nIter. Default value is 2000.
@@ -33,10 +34,10 @@
 #'
 #' @return
 #'
-#' \item{A_Est}{p * p matrix output of protein-protein interactions.}
-#' \item{B_Est}{p * k matrix output of protein-DNA interactions.}
-#' \item{zA_Est}{p * p matrix output of the graph structure between the proteins.}
-#' \item{zB_Est}{p * k matrix output of the graph structure between the proteins and the DNAs.}
+#' \item{A_Est}{p * p matrix output of causal effect or strength between the proteins or the genes.}
+#' \item{B_Est}{p * k matrix output of causal effect or strength between the proteins or the genes and the DNAs or SNPs.}
+#' \item{zA_Est}{p * p binary adjacency matrix representing the graph structure between the proteins or the genes.}
+#' \item{zB_Est}{p * k binary adjacency matrix representing the graph structure between the proteins or the genes and the DNAs or SNPs.}
 #' \item{A0_Est}{p * p matrix output of protein-protein interactions before thresholding for Threshold prior.}
 #' \item{B0_Est}{p * k matrix output of protein-DNA interactions before thresholding for Threshold prior.}
 #' \item{Gamma_Est}{p * p matrix output of probabilities of protein-protein interactions.}
