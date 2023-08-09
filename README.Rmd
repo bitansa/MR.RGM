@@ -21,10 +21,7 @@ knitr::opts_chunk$set(
 
 ## Intended use of the package
 
-This R-package will estimate the protein-protein interactions and the protein-DNA interactions for a given dataset of protein and DNA expressions and then make a graph connecting them. 
-The package can estimate the graph structure for both individual level data and summary level data
-both when Spike and Slab or Threshold priors are assumed on the interaction parameters. The package includes various helper functions to generate posterior samples.  It has a single primary function that, 
-based on these posterior samples, will give estimations of protein-protein interactions, protein-DNA interactions, and the graph structure between them.
+The RGM R package offers a comprehensive solution to a fundamental challenge in Mendelian randomization (MR) studies. While MR has proven valuable in establishing causal relationships between exposures and outcomes, it traditionally focuses on single exposures' effects on specific outcomes. However, complex biological systems often involve interdependent outcomes influenced by a myriad of factors. RGM's intended use addresses this limitation by adopting a network-based approach that explores the broader causal landscape. By leveraging the network structure, RGM provides a versatile platform to construct causal graphs capturing interactions between response variables and between responses and instrument variables. Notably, RGM supports three input formats, accommodating individual level data and two types of summary level data. This adaptability allows researchers to work with various data availability scenarios. The package's outputs include estimates of causal effects, adjacency matrices, and other valuable parameters, collectively contributing to a more comprehensive understanding of intricate relationships within complex biological networks.
 
 
 ## Installation instructions
@@ -51,32 +48,34 @@ Once the RGM package is installed load the library in the R workspace.
 ## Example
 
 
-We will give a small example to show the functionality of the function RGM available in this package to calculate protein-protein interactions and protein-DNA interactions for a given protein expressions and DNA expressions dataset. First we simulate the dataset. 
+We provide a concise illustration of the RGM function's capabilities within the package by demonstrating its use in calculating causal interactions between response variables and between response and instrument variables using simulated datasets. To initiate the example, we generate a synthetic dataset that mimics response variable expressions and instrument variable expressions. This serves as a generalizable example of the functionality of the RGM function, which allows researchers to explore and infer relationships between different response and instrument variables, contributing to a deeper understanding of the underlying biological interactions.
 
 
 ```{r}
 
+# Set seed
 set.seed(9154)
 
 # Number of datapoints
 n = 10000
 
-# Number of Genes and number of DNAs
+# Number of response variables and number of instrument variables
 p = 5
 k = 6
 
-# Indicator of which DNA affacts which gene
+# Create d vector
 d = c(2, 1, 1, 1, 1)
 
-# Initialize Protein-Protein interaction matrix
+# Initialize causal interaction matrix between response variables
 A = matrix(sample(c(-0.1, 0.1), p^2, replace = TRUE), p, p)
 
+# Diagonal entries of A matrix will always be 0
 diag(A) = 0
 
 # Make the network sparse
 A[sample(which(A!=0), length(which(A!=0))/2)] = 0
 
-# Initialize Protein-DNA interaction matrix
+# Initialize causal interaction matrix between response and instrument variables
 B = matrix(0, p, k)
 
 # Initialize m
@@ -100,26 +99,27 @@ Mult_Mat = solve(diag(p) - A)
 
 Variance = Mult_Mat %*% Sigma %*% t(Mult_Mat)
 
-# Generate DNA expressions
+# Generate instrument data matrix
 X = matrix(runif(n * k, 0, 5), nrow = n, ncol = k)
 
+# Initialize response data matrix
 Y = matrix(0, nrow = n, ncol = p)
 
-# Generate Protein expressions data based on DNA data
+# Generate response data matrix based on instrument data matrix
 for (i in 1:n) {
 
  Y[i, ] = MASS::mvrnorm(n = 1, Mult_Mat %*% B %*% X[i, ], Variance)
 
 }
 
-# Print protein-protein interactions and protein-DNA interactions
+# Print true causal interaction matrices between response variables and between response and instrument variables
 A
 B
 
 
 ```
 
-We will now apply RGM based on individual level data, summary level data and beta matrix to show its functionality.
+We will now apply RGM based on individual level data, summary level data and Beta, Sigma_Hat matrices to show its functionality.
 
 ```{r}
 
@@ -159,7 +159,7 @@ for (i in 1:p) {
 
         }
 
-}
+ }
 
 
 # Apply RGM on S_XX, Beta and Sigma_Hat for Threshold Prior
@@ -169,7 +169,7 @@ Output3 = RGM(S_XX = S_XX, Beta = Beta, Sigma_Hat = Sigma_Hat,
 ```
 
 
-We get the protein-protein interactions from the outputs in the following way:
+We get the estimated causal interaction matrix between response variables in the following way:
 
 ```{r}
 
@@ -179,7 +179,7 @@ Output3$A_Est
 
 
 ```
-We get the graph structure between the proteins from the outputs in the following way:
+We get the estimated graph structure between the response variables in the following way:
 
 ```{r}
 
@@ -191,7 +191,7 @@ Output3$zA_Est
 ```
 
 
-We get the protein-DNA interactions from the outputs in the following way:
+We get the estimated causal interaction matrix between the response and the instrument variables from the outputs in the following way:
 
 ```{r}
 
@@ -201,7 +201,7 @@ Output3$B_Est
 
 
 ```
-We get the graph structure between the proteins and the DNAs from the outputs in the following way:
+We get the estimated graph structure between the response and the instrument variables from the outputs in the following way:
 
 ```{r}
 

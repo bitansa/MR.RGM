@@ -2,7 +2,7 @@
 % Please edit documentation in R/RGM.R
 \name{RGM}
 \alias{RGM}
-\title{Fitting Multivariate Bidirectional Mendelian Randomization Models for Causal Gene Regulatory Network}
+\title{Fitting Multivariate Bidirectional Mendelian Randomization}
 \usage{
 RGM(
   X = NULL,
@@ -35,86 +35,86 @@ RGM(
 )
 }
 \arguments{
-\item{X}{n * k matrix data input, each row denotes a particular observation and each column denotes a particular DNA or SNP. Default value is NULL.}
+\item{X}{A matrix of dimension n * k. In this matrix, each row signifies a distinct observation, while each column represents a specific instrument variable. The default value is set to NULL.}
 
-\item{Y}{n * p matrix data input, each row denotes a particular observation and each column denotes a particular protein or gene. Default value is NULL.}
+\item{Y}{A matrix of dimension n * p. In this matrix, each row corresponds to a specific observation, and each column pertains to a particular response variable. The default value is set to NULL.}
 
-\item{S_YY}{p * p matrix data input, where p denotes number of proteins or genes. It is obtained by t(Y) \%*\% Y / n.}
+\item{S_YY}{A matrix of dimensions p * p. Here, "p" signifies the count of response variables. This matrix is derived through the operation t(Y) \%*\% Y / n, where "Y" denotes the response data matrix and "n" stands for the total number of observations.}
 
-\item{S_YX}{p * k matrix data input, where p denotes number of proteins or genes and k denotes number of DNAs or SNPs. It is obtained by t(Y) \%*\% X / n.}
+\item{S_YX}{A matrix of dimensions p * k. Here, "p" signifies the number of response variables, and "k" represents the count of instrument variables. This matrix is calculated using the operation t(Y) \%*\% X / n, where "Y" is the response data matrix, "X" is the instrument data matrix and "n" is the total number of observations.}
 
-\item{S_XX}{k * k matrix data input, where k denotes number of DNAs or SNPs. It is obtained by t(X) \%*\% X / n.}
+\item{S_XX}{A matrix of dimensions k * k. Here, "k" signifies the count of instrument variables. This matrix is derived through the operation t(X) \%*\% X / n, where "X" denotes the instrument data matrix and "n" stands for the total number of observations.}
 
-\item{Beta}{p * k matrix data input, where each row corresponds to a particular protein or gene and each column corresponds to a particular DNA or SNP. Each entry is the regression coefficient of the particular protein or gene on the particular DNA or SNP. If you want to use Beta as an input first centralize each column of Y and X and then calculate Beta, S_XX and Sigma_Hat.}
+\item{Beta}{A matrix of dimensions p * k. In this matrix, each row corresponds to a specific response variable, and each column pertains to a distinct instrument variable. Each entry within the matrix represents the regression coefficient of the individual response variable on the specific instrument variable. To use Beta as an input, ensure you centralize each column of Y i.e. response data matrix and X i.e. instrument data matrix before calculating Beta, S_XX, and Sigma_Hat.}
 
-\item{Sigma_Hat}{p * k matrix data input, where each row corresponds to a particular protein or gene and each column corresponds to a particular DNA or SNP. Each entry is the mean square error for regressing the particular protein or gene on the particular DNA or SNP. If you want to use Sigma_Hat as an input first centralize each column of Y and X and then calculate Beta, S_XX and Sigma_Hat.}
+\item{Sigma_Hat}{A matrix of dimensions p * k. In this matrix, each row corresponds to a specific response variable, and each column pertains to an individual instrument variable. Each entry in this matrix represents the mean square error associated with regressing the particular response on the specific instrument variable. To employ Sigma_Hat as an input, ensure that you centralize each column of Y i.e. response data matrix and X i.e. instrument data matrix before calculating Beta, S_XX, and Sigma_Hat.}
 
-\item{d}{Vector input of length p. Each element is a positive integer corresponds to number of DNA or SNP affecting a particular protein or gene, sum of which should be k.}
+\item{d}{A vector input with a length of p i.e. number of response variables. Each element within this vector is a positive integer denoting the count of instrument variables influencing a specific response variable. The sum of all elements in the vector should be equal to the total count of instrument variables, represented as k.}
 
-\item{n}{Positive integer input corresponding to number of datapoints.}
+\item{n}{A positive integer input representing the count of data points or observations in the dataset.}
 
-\item{nIter}{Positive integer input corresponding to number of MCMC sampling. Default value is 10,000.}
+\item{nIter}{A positive integer input representing the number of MCMC (Markov Chain Monte Carlo) sampling iterations. The default value is set to 10,000.}
 
-\item{nBurnin}{Non-negative integer input corresponding to number of samples to be discarded. nBurnin should be less than nIter. Default value is 2000.}
+\item{nBurnin}{A non-negative integer input representing the number of samples to be discarded during the burn-in phase of MCMC sampling. It's important that nBurnin is less than nIter. The default value is set to 2000.}
 
-\item{Thin}{Positive integer input corresponding to thinning of posterior samples. Thin should be less than or equal to (nIter - nBurnin). Default value is 1.}
+\item{Thin}{A positive integer input denoting the thinning factor applied to posterior samples. Thinning reduces the number of samples retained from the MCMC process for efficiency. Thin should not exceed (nIter - nBurnin). The default value is set to 1.}
 
-\item{prior}{Prior assumption on the graph structure. It can either be "Threshold" or "Spike and Slab". Default is "Threshold".}
+\item{prior}{A parameter representing the prior assumption on the graph structure. It offers two options: "Threshold" or "Spike and Slab". The default value is "Threshold".}
 
-\item{a_tau}{Positive scalar input. It corresponds to the first parameter of an Inverse Gamma distribution. Default value is 0.01.}
+\item{a_tau}{A positive scalar input representing the first parameter of an Inverse Gamma distribution. The default value is set to 0.01.}
 
-\item{b_tau}{Positive scalar input. It corresponds to the second parameter of an Inverse Gamma distribution. Default value is 0.01.}
+\item{b_tau}{A positive scalar input representing the second parameter of an Inverse Gamma distribution. The default value is set to 0.01.}
 
-\item{a_rho}{Positive scalar input. It corresponds to the first parameter of a Beta distribution. Default value is 0.5.}
+\item{a_rho}{A positive scalar input representing the first parameter of a Beta distribution. The default value is set to 0.5.}
 
-\item{b_rho}{Positive scalar input. It corresponds to the second parameter of a Beta distribution. Default value is 0.5.}
+\item{b_rho}{A positive scalar input representing the second parameter of a Beta distribution. The default value is set to 0.5.}
 
-\item{nu_1}{Positive scalar input. It corresponds to the variance of slab part of spike and slab distribution of A. Default value is 0.0001.}
+\item{nu_1}{A positive scalar input representing the multiplication factor in the variance of the spike part in the spike and slab distribution of matrix A. The default value is set to 0.0001.}
 
-\item{a_eta}{Positive scalar input. It corresponds to the first parameter of an Inverse Gamma distribution. Default value is 0.01.}
+\item{a_eta}{A positive scalar input corresponding to the first parameter of an Inverse Gamma distribution. The default value is set to 0.01.}
 
-\item{b_eta}{Positive scalar input. It corresponds to the second parameter of an Inverse Gamma distribution. Default value is 0.01.}
+\item{b_eta}{A positive scalar input corresponding to the second parameter of an Inverse Gamma distribution. The default value is set to 0.01.}
 
-\item{a_psi}{Positive scalar input. It corresponds to the first parameter of a Beta distribution. Default value is 0.5.}
+\item{a_psi}{A positive scalar input corresponding to the first parameter of a Beta distribution. The default value is set to 0.5.}
 
-\item{b_psi}{Positive scalar input. It corresponds to the second parameter of a Beta distribution. Default value is 0.5.}
+\item{b_psi}{A positive scalar input corresponding to the second parameter of a Beta distribution. The default value is set to 0.5.}
 
-\item{nu_2}{Positive scalar input. It corresponds to the variance of slab part of spike and slab distribution of B. Default value is 0.0001.}
+\item{nu_2}{A positive scalar input corresponding to the multiplication factor in the variance of the spike part in the spike and slab distribution of matrix B. The default value is set to 0.0001.}
 
-\item{a_sigma}{Positive scalar input. It corresponds to the first parameter of an Inverse Gamma distribution corresponding to the variance of the model. Default value is 0.01.}
+\item{a_sigma}{A positive scalar input corresponding to the first parameter of an Inverse Gamma distribution, which is associated with the variance of the model. The default value is set to 0.01.}
 
-\item{b_sigma}{positive scalar input. It corresponds to the second parameter of an Inverse Gamma distribution corresponding to the variance of the model. Default value is 0.01.}
+\item{b_sigma}{A positive scalar input corresponding to the second parameter of an Inverse Gamma distribution, which is associated with the variance of the model. The default value is set to 0.01.}
 
-\item{Prop_VarA}{positive scalar input. It corresponds to the variance of the normal distribution for proposing A matrix terms. Default value is 0.01.}
+\item{Prop_VarA}{A positive scalar input representing the variance of the normal distribution used for proposing terms within the A matrix. The default value is set to 0.01.}
 
-\item{Prop_VarB}{positive scalar input. It corresponds to the variance of the normal distribution for proposing B matrix terms. Default value is 0.01.}
+\item{Prop_VarB}{A positive scalar input representing the variance of the normal distribution used for proposing terms within the B matrix. The default value is set to 0.01.}
 }
 \value{
-\item{A_Est}{p * p matrix output of causal effect or strength between the proteins or the genes.}
-\item{B_Est}{p * k matrix output of causal effect or strength between the proteins or the genes and the DNAs or SNPs.}
-\item{zA_Est}{p * p binary adjacency matrix representing the graph structure between the proteins or the genes.}
-\item{zB_Est}{p * k binary adjacency matrix representing the graph structure between the proteins or the genes and the DNAs or SNPs.}
-\item{A0_Est}{p * p matrix output of protein-protein interactions before thresholding for Threshold prior.}
-\item{B0_Est}{p * k matrix output of protein-DNA interactions before thresholding for Threshold prior.}
-\item{Gamma_Est}{p * p matrix output of probabilities of protein-protein interactions.}
-\item{Tau_Est}{p * p matrix output of variances of protein-protein interactions.}
-\item{Phi_Est}{p * k matrix output of probabilities of protein-DNA interactions.}
-\item{Eta_Est}{p * k matrix output of variances of protein-DNA interactions.}
-\item{tA_Est}{Scalar output of thresholding value of protein-protein interactions for Threshold prior.}
-\item{tB_Est}{Scalar output of thresholding value of protein-DNA interactions for Threshold prior.}
-\item{Sigma_Est}{Vector output of length p corresponding to variances of each protein.}
-\item{AccptA}{Percentage acceptance of entries of A matrix i.e. protein-protein interactions.}
-\item{AccptB}{Percentage acceptance of entries of B matrix i.e. protein-DNA interactions.}
-\item{Accpt_tA}{Percentage acceptance of the thresholding value for protein-protein interactions for Threshold prior.}
-\item{Accpt_tB}{Percentage acceptance of the thresholding value for protein-DNA interactions for Threshold prior.}
-\item{LL_Pst}{Vector ouput of posterior log-likelihoods of the model.}
-\item{Rho_Est}{p * p matrix output of bernoulli success probabilities of protein-protein interactions for Spike and Slab prior.}
-\item{Psi_Est}{p * k matrix output of bernoulli success probabilities of protein-DNA interactions for Spike and Slab prior.}
+\item{A_Est}{A matrix of dimensions p * p, representing the estimated causal effects or strengths between the response variables.}
+\item{B_Est}{A matrix of dimensions p * k, representing the estimated causal effects or strengths between the response variables and the instrument variables. Each row corresponds to a specific response variable, and each column corresponds to a particular instrument variable.}
+\item{zA_Est}{A binary adjacency matrix of dimensions p * p, indicating the graph structure between the response variables. Each entry in the matrix represents the presence (1) or absence (0) of a causal link between the corresponding response variables.}
+\item{zB_Est}{A binary adjacency matrix of dimensions p * k, illustrating the graph structure between the response variables and the instrument variables. Each row corresponds to a specific response variable, and each column corresponds to a particular instrument variable. The presence of a causal link is denoted by 1, while the absence is denoted by 0.}
+\item{A0_Est}{A matrix of dimensions p * p, representing the estimated causal effects or strengths between response variables before thresholding. This output is particularly relevant for cases where the "Threshold" prior assumption is utilized.}
+\item{B0_Est}{A matrix of dimensions p * k, representing the estimated causal effects or strengths between the response variables and the instrument variables before thresholding. This output is particularly relevant for cases where the "Threshold" prior assumption is utilized. Each row corresponds to a specific response variable, and each column corresponds to a particular instrument variable.}
+\item{Gamma_Est}{A matrix of dimensions p * p, representing the estimated probabilities of edges between response variables in the graph structure. Each entry in the matrix indicates the probability of a causal link between the corresponding response variables.}
+\item{Tau_Est}{A matrix of dimensions p * p, representing the estimated variances of causal interactions between response variables. Each entry in the matrix corresponds to the variance of the causal effect between the corresponding response variables.}
+\item{Phi_Est}{A matrix of dimensions p * k, representing the estimated probabilities of edges between response and instrument variables in the graph structure. Each row corresponds to a specific response variable, and each column corresponds to a particular instrument variable.}
+\item{Eta_Est}{A matrix of dimensions p * k, representing the estimated variances of causal interactions between response and instrument variables. Each row corresponds to a specific response variable, and each column corresponds to a particular instrument variable.}
+\item{tA_Est}{A scalar value representing the estimated thresholding value of causal interactions between response variables. This output is relevant when using the "Threshold" prior assumption.}
+\item{tB_Est}{A scalar value representing the estimated thresholding value of causal interactions between response and instrument variables. This output is applicable when using the "Threshold" prior assumption.}
+\item{Sigma_Est}{A vector of length p, representing the estimated variances of each response variable. Each element in the vector corresponds to the variance of a specific response variable.}
+\item{AccptA}{The percentage of accepted entries in the A matrix, which represents the causal interactions between response variables. This metric indicates the proportion of proposed changes that were accepted during the sampling process.}
+\item{AccptB}{The percentage of accepted entries in the B matrix, which represents the causal interactions between response and instrument variables. This metric indicates the proportion of proposed changes that were accepted during the sampling process.}
+\item{Accpt_tA}{The percentage of accepted thresholding values for causal interactions between response variables when using the "Threshold" prior assumption. This metric indicates the proportion of proposed thresholding values that were accepted during the sampling process.}
+\item{Accpt_tB}{The percentage of accepted thresholding values for causal interactions between response and instrument variables when using the "Threshold" prior assumption. This metric indicates the proportion of proposed thresholding values that were accepted during the sampling process.}
+\item{LL_Pst}{A vector containing the posterior log-likelihoods of the model. Each element in the vector represents the log-likelihood of the model given the observed data and the estimated parameters.}
+\item{Rho_Est}{A matrix of dimensions p * p, representing the estimated Bernoulli success probabilities of causal interactions between response variables when using the "Spike and Slab" prior assumption. Each entry in the matrix corresponds to the success probability of a causal interaction between the corresponding response variables.}
+\item{Psi_Est}{A matrix of dimensions p * k, representing the estimated Bernoulli success probabilities of causal interactions between response and instrument variables when using the "Spike and Slab" prior assumption. Each row in the matrix corresponds to a specific response variable, and each column corresponds to a particular instrument variable.}
 }
 \description{
-Using DNA or SNPs as the instrument and protein or gene expression data as the response, RGM may be used to design Multivariate Bidirectional Mendelian Randomization Models (Reciprocal Graphical Models) for Causal Gene Regulatory Network. Three input formats are supported by RGM: (i) The protein or gene expression data matrix Y and the DNA or SNP data matrix X; (ii) S_YY(t(Y)\%\emph{\% Y / n), S_YX(t(Y)\%}\% X / n), and S_XX(t(X)\%*\% X / n) are summary level data; (iii) S_XX, Beta, and Sigma_Hat. If the user wishes to utilise (iii) as input, then compute these after centralising the data matrices.
-The graph structures between the response variables and between the response variables and the instruments will be returned by RGM as output. Additionally, the user must supply d, a vector input whose length is equal to that of the proteins or genes, and whose elements are individually positive integers representing the number of DNA or SNPs that impact a certain protein or gene, the total of which must match the number of DNA or SNPs. Additionally, the total number of observations, n, must also be given as input. The prior assumption on the model may either be "Threshold" or "Spike & Slab",
-with the former being the default. The user can also specify this assumption.
+The "RGM" R package transforms causal inference by merging Mendelian randomization and network-based methods, enabling the creation of comprehensive causal graphs within complex biological systems. RGM accommodates varied data contexts with three input options: individual-level data (X, Y matrices), summary-level data including S_YY, S_YX, and S_XX matrices, and intricate data with challenging cross-correlations, utilizing S_XX, Beta, and Sigma_Hat matrices.
+For the latter input, data centralization is necessary. Crucial inputs encompass "d" (instrument count per response) and "n" (total observations), amplified by customizable parameters that refine analysis. Additionally, users can tailor the analysis by setting parameters such as "nIter" (number of MCMC iterations), "nBurnin" (number of discarded samples during burn-in for convergence), and "Thin" (thinning of posterior samples). These customizable parameters enhance the precision and relevance of the analysis.
+RGM provides essential causal effect/strength estimates between response variables and between response and instrument variables. Moreover, it furnishes adjacency matrices, visually mapping causal graph structures. These outputs empower researchers to untangle intricate relationships within biological networks, fostering a holistic understanding of complex systems.
 }
 \examples{
 
@@ -129,11 +129,11 @@ set.seed(9154)
 # Number of datapoints
 n = 10000
 
-# Number of Genes and number of DNAs
-p = 5
-k = 6
+# Number of response variables and number of instrument variables
+p = 3
+k = 4
 
-# Initialize gene-gene interaction matrix
+# Initialize causal interaction matrix between response variables
 A = matrix(sample(c(-0.1, 0.1), p^2, replace = TRUE), p, p)
 
 # Diagonal entries of A matrix will always be 0
@@ -142,11 +142,11 @@ diag(A) = 0
 # Make the network sparse
 A[sample(which(A!=0), length(which(A!=0))/2)] = 0
 
-# Initialize gene-DNA interaction matrix
+# Initialize causal interaction matrix between response and instrument variables
 B = matrix(0, p, k)
 
 # Create d vector
-d = c(2, 1, 1, 1, 1)
+d = c(2, 1, 1)
 
 
 # Initialize m
@@ -169,34 +169,36 @@ Mult_Mat = solve(diag(p) - A)
 
 Variance = Mult_Mat \%*\% Sigma \%*\% t(Mult_Mat)
 
-# Generate DNA expressions
+# Generate instrument data matrix
 X = matrix(rnorm(n * k, 0, 1), nrow = n, ncol = k)
 
+# Initialize response data matrix
 Y = matrix(0, nrow = n, ncol = p)
 
+# Generate response data matrix based on instrument data matrix
 for (i in 1:n) {
 
     Y[i, ] = MASS::mvrnorm(n = 1, Mult_Mat \%*\% B \%*\% X[i, ], Variance)
 
 }
 
-# Print true Protein-Protein interaction matrix and Protein-DNA interaction matrix
+# Print true causal interaction matrices between response variables and between response and instrument variables
 A
 B
 
 # Apply RGM on individual level data for Threshold Prior
 Output = RGM(X = X, Y = Y, d = c(2, 1, 1, 1, 1), n = 10000, prior = "Threshold")
 
-# Get the graph structure between the proteins
+# Get the graph structure between response variables
 Output$zA_Est
 
-# Get Protein-Protein interactions
+# Get the estimated causal strength matrix between response variables
 Output$A_Est
 
-# Get the graph structure between the proteins and the DNAs
+# Get the graph structure between response and instrument variables
 Output$zB_Est
 
-# Get Protein-DNA interactions
+# Get the estimated causal strength matrix between response and instrument variables
 Output$B_Est
 
 # Plot posterior log-likelihood
@@ -215,11 +217,11 @@ set.seed(9154)
 # Number of datapoints
 n = 10000
 
-# Number of Genes and number of DNAs
-p = 5
-k = 6
+# Number of response variables and number of instrument variables
+p = 3
+k = 4
 
-# Initialize gene-gene interaction matrix
+# Initialize causal interaction matrix between response variables
 A = matrix(sample(c(-0.1, 0.1), p^2, replace = TRUE), p, p)
 
 # Diagonal entries of A matrix will always be 0
@@ -228,11 +230,11 @@ diag(A) = 0
 # Make the network sparse
 A[sample(which(A!=0), length(which(A!=0))/2)] = 0
 
-# Initialize gene-DNA interaction matrix
+# Initialize causal interaction matrix between response and instrument variables
 B = matrix(0, p, k)
 
 # Create d vector
-d = c(2, 1, 1, 1, 1)
+d = c(2, 1, 1)
 
 
 # Initialize m
@@ -255,11 +257,13 @@ Mult_Mat = solve(diag(p) - A)
 
 Variance = Mult_Mat \%*\% Sigma \%*\% t(Mult_Mat)
 
-# Generate DNA expressions
+# Generate instrument data matrix
 X = matrix(rnorm(n * k, 0, 1), nrow = n, ncol = k)
 
+# Initialize response data matrix
 Y = matrix(0, nrow = n, ncol = p)
 
+# Generate response data matrix based on instrument data matrix
 for (i in 1:n) {
 
     Y[i, ] = MASS::mvrnorm(n = 1, Mult_Mat \%*\% B \%*\% X[i, ], Variance)
@@ -273,7 +277,7 @@ S_YX = t(Y) \%*\% X / n
 S_XX = t(X) \%*\% X / n
 
 
-# Print true Protein-Protein interaction matrix and Protein-DNA interaction matrix
+# Print true causal interaction matrices between response variables and between response and instrument variables
 A
 B
 
@@ -282,16 +286,16 @@ B
 Output = RGM(S_YY = S_YY, S_YX = S_YX, S_XX = S_XX,
           d = c(2, 1, 1, 1, 1), n = 10000, prior = "Spike and Slab")
 
-# Get the graph structure between the proteins
+# Get the graph structure between response variables
 Output$zA_Est
 
-# Get Protein-Protein interactions
+# Get the estimated causal strength matrix between response variables
 Output$A_Est
 
-# Get the graph structure between the proteins and the DNAs
+# Get the graph structure between response and instrument variables
 Output$zB_Est
 
-# Get Protein-DNA interactions
+# Get the estimated causal strength matrix between response and instrument variables
 Output$B_Est
 
 # Plot posterior log-likelihood
@@ -310,11 +314,11 @@ set.seed(9154)
 # Number of datapoints
 n = 10000
 
-# Number of Genes and number of DNAs
-p = 5
-k = 6
+# Number of response variables and number of instrument variables
+p = 3
+k = 4
 
-# Initialize gene-gene interaction matrix
+# Initialize causal interaction matrix between response variables
 A = matrix(sample(c(-0.1, 0.1), p^2, replace = TRUE), p, p)
 
 # Diagonal entries of A matrix will always be 0
@@ -323,11 +327,11 @@ diag(A) = 0
 # Make the network sparse
 A[sample(which(A!=0), length(which(A!=0))/2)] = 0
 
-# Initialize gene-DNA interaction matrix
+# Initialize causal interaction matrix between response and instrument variables
 B = matrix(0, p, k)
 
 # Create d vector
-d = c(2, 1, 1, 1, 1)
+d = c(2, 1, 1)
 
 
 # Initialize m
@@ -353,8 +357,10 @@ Variance = Mult_Mat \%*\% Sigma \%*\% t(Mult_Mat)
 # Generate DNA expressions
 X = matrix(rnorm(n * k, 0, 1), nrow = n, ncol = k)
 
+# Initialize response data matrix
 Y = matrix(0, nrow = n, ncol = p)
 
+# Generate response data matrix based on instrument data matrix
 for (i in 1:n) {
 
     Y[i, ] = MASS::mvrnorm(n = 1, Mult_Mat \%*\% B \%*\% X[i, ], Variance)
@@ -388,25 +394,25 @@ for (i in 1:p) {
    }
 
 
-# Print true Protein-Protein interaction matrix and Protein-DNA interaction matrix
+# Print true causal interaction matrices between response variables and between response and instrument variables
 A
 B
 
 
-# Apply RGM based on S_XX, Beta adn Sigma_Hat for Threshold Prior
+# Apply RGM based on S_XX, Beta and Sigma_Hat for Threshold Prior
 Output = RGM(S_XX = S_XX, Beta = Beta, Sigma_Hat = Sigma_Hat,
           d = c(2, 1, 1, 1, 1), n = 10000, prior = "Threshold")
 
-# Get the graph structure between the proteins
+# Get the graph structure between response variables
 Output$zA_Est
 
-# Get Protein-Protein interactions
+# Get the estimated causal strength matrix between response variables
 Output$A_Est
 
-# Get the graph structure between the proteins and the DNAs
+# Get the graph structure between response and instrument variables
 Output$zB_Est
 
-# Get Protein-DNA interactions
+# Get the estimated causal strength matrix between response and instrument variables
 Output$B_Est
 
 # Plot posterior log-likelihood
