@@ -182,12 +182,13 @@ for (i in 1:n) {
 
 }
 
-# Print true causal interaction matrices between response variables and between response and instrument variables
+# Print true causal interaction matrices between response variables
+# and between response and instrument variables
 A
 B
 
 # Apply RGM on individual level data for Threshold Prior
-Output = RGM(X = X, Y = Y, d = c(2, 1, 1, 1, 1), n = 10000, prior = "Threshold")
+Output = RGM(X = X, Y = Y, d = c(2, 1, 1), n = 10000, prior = "Threshold")
 
 # Get the graph structure between response variables
 Output$zA_Est
@@ -277,14 +278,15 @@ S_YX = t(Y) \%*\% X / n
 S_XX = t(X) \%*\% X / n
 
 
-# Print true causal interaction matrices between response variables and between response and instrument variables
+# Print true causal interaction matrices between response variables
+# and between response and instrument variables
 A
 B
 
 
 # Apply RGM on summary level data for Spike and Slab Prior
 Output = RGM(S_YY = S_YY, S_YX = S_YX, S_XX = S_XX,
-          d = c(2, 1, 1, 1, 1), n = 10000, prior = "Spike and Slab")
+          d = c(2, 1, 1), n = 10000, prior = "Spike and Slab")
 
 # Get the graph structure between response variables
 Output$zA_Est
@@ -394,14 +396,15 @@ for (i in 1:p) {
    }
 
 
-# Print true causal interaction matrices between response variables and between response and instrument variables
+# Print true causal interaction matrices between response variables
+# and between response and instrument variables
 A
 B
 
 
 # Apply RGM based on S_XX, Beta and Sigma_Hat for Threshold Prior
 Output = RGM(S_XX = S_XX, Beta = Beta, Sigma_Hat = Sigma_Hat,
-          d = c(2, 1, 1, 1, 1), n = 10000, prior = "Threshold")
+          d = c(2, 1, 1), n = 10000, prior = "Threshold")
 
 # Get the graph structure between response variables
 Output$zA_Est
