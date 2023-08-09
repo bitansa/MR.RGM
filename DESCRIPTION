@@ -1,9 +1,9 @@
 Package: RGM
-Title: Reciprocal Graphical Models for Integrative Gene Regulatory Network Analysis
+Title: Reciprocal Graphical Models for Fitting Multivariate Bidirectional Mendelian Randomization
 Version: 1.0.0.9000
 Authors@R: 
     c(person("Bitan", "Sarkar", email = "bitan@stat.tamu.edu", role = c("aut", "cre")), person("Yang", "Ni", email = "yni@stat.tamu.edu", role = "aut"))
-Description: This R-package will estimate the protein-protein interactions and the protein-DNA interactions for a given dataset of protein and DNA expressions and then make a graph connecting them. The package can estimate the graph structure for both individual level data and summary level data both when Spike and Slab or Threshold priors are assumed on the interaction parameters. The package includes various helper functions to generate posterior samples. It has a single primary function that, based on these posterior samples, will give estimations of protein-protein interactions, protein-DNA interactions, and the graph structure between them.
+Description: The RGM R package offers a comprehensive solution to a fundamental challenge in Mendelian randomization (MR) studies. While MR has proven valuable in establishing causal relationships between exposures and outcomes, it traditionally focuses on single exposures' effects on specific outcomes. However, complex biological systems often involve interdependent outcomes influenced by a myriad of factors. RGM's intended use addresses this limitation by adopting a network-based approach that explores the broader causal landscape. By leveraging the network structure, RGM provides a versatile platform to construct causal graphs capturing interactions between response variables and between responses and instrument variables. Notably, RGM supports three input formats, accommodating individual level data and two types of summary level data. This adaptability allows researchers to work with various data availability scenarios. The package's outputs include estimates of causal effects, adjacency matrices, and other valuable parameters, collectively contributing to a more comprehensive understanding of intricate relationships within complex biological networks.
 License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

@@ -33,21 +33,21 @@ double Sample_Psi(double Phi, double a_psi, double b_psi) {
 // [[Rcpp::export]]
 double Sample_Tau(double a, double gamma, double tau, double nu_1) {
 
-  // Propose epsilon based on Old Tau
+  // Sample Epsilon based on old tau
   double Epsilon = 1 / Rcpp::rgamma(1, 1, 1 / (1 + 1 / tau))(0);
 
-  // Generate Tau based on Inverse Gamma distribution
+  // Sample Tau from inverse gamma distribution
   double Tau;
 
   // Check whether gamma is 0 or 1
   if (gamma == 1) {
 
-    // Propose Tau based on a
+    // Sample Tau based on a and Epsilon
     Tau = 1 / Rcpp::rgamma(1, 1, 1 / (a * a / 2 + 1 / Epsilon))(0);
 
   } else {
 
-    // Propose Tau based on a
+    // Sample Tau based on a and Epsilon
     Tau = 1 / Rcpp::rgamma(1, 1, 1 / (a * a / (2 * nu_1) + 1 / Epsilon))(0);
 
   }
@@ -63,21 +63,21 @@ double Sample_Tau(double a, double gamma, double tau, double nu_1) {
 // [[Rcpp::export]]
 double Sample_Eta(double b, double phi, double eta, double nu_2) {
 
-  // Propose epsilon based on Old Eta
+  // Sample Epsilon based on old eta
   double Epsilon = 1 / Rcpp::rgamma(1, 1, 1 / (1 + 1 / eta))(0);
 
-  // Generate Eta based on Inverse Gamma distribution
+  // Sample Eta from inverse gamma distribution
   double Eta;
 
   // Check whether phi is 0 or 1
   if (phi == 1) {
 
-    // Propose Eta based on b
+    // Sample Eta based on b and Epsilon
     Eta = 1 / Rcpp::rgamma(1, 1, 1 / (b * b / 2 + 1 / Epsilon))(0);
 
   } else {
 
-    // Propose Eta based on b
+    // Sample Eta based on b and Epsilon
     Eta = 1 / Rcpp::rgamma(1, 1, 1 / (b * b / (2 * nu_2) + 1 / Epsilon))(0);
 
   }
@@ -93,10 +93,10 @@ double Sample_Eta(double b, double phi, double eta, double nu_2) {
 // [[Rcpp::export]]
 double Sample_Gamma(double a, double tau, double rho, double nu_1) {
 
-  // Calculate probability
+  // Calculate acceptance probability
   double p = exp(-0.5 * (a * a / tau)) * rho / (exp(-0.5 * (a * a / tau)) * rho + 1 / sqrt(nu_1) * exp(-0.5 * (a * a / (nu_1 * tau))) * (1 - rho));
 
-  // Generate Gamma from binomial distribution
+  // Sample Gamma from binomial distribution
   double Gamma = Rcpp::rbinom(1, 1, p)(0);
 
   // Return Gamma
@@ -110,10 +110,10 @@ double Sample_Gamma(double a, double tau, double rho, double nu_1) {
 // [[Rcpp::export]]
 double Sample_Phi(double b, double eta, double psi, double nu_2) {
 
-  // Calculate probability
+  // Calculate acceptance probability
   double p = exp(-0.5 * (b * b / eta)) * psi / (exp(-0.5 * (b * b / eta)) * psi + 1 / sqrt(nu_2) * exp(-0.5 * (b * b / (nu_2 * eta))) * (1 - psi));
 
-  // Generate Phi from binomial distribution
+  // Sample Phi from binomial distribution
   double Phi = Rcpp::rbinom(1, 1, p)(0);
 
   // Return Phi
@@ -126,10 +126,10 @@ double Sample_Phi(double b, double eta, double psi, double nu_2) {
 // [[Rcpp::export]]
 double Sample_Sigma(double n, double z_sum, double a_sigma, double b_sigma) {
 
-  // Generate sigma based on Inverse gamma distribution
+  // Sample Sigma from inverse gamma distribution
   double Sigma = 1.0 / Rcpp::rgamma(1, n / 2.0 + a_sigma, 1.0 / (z_sum / 2.0 + b_sigma))(0);
 
-  // Return sigma
+  // Return Sigma
   return Sigma;
 
 }
@@ -145,7 +145,7 @@ double Target_A(const arma::mat& S_YY, const arma::mat& S_YX, const arma::mat& A
   // Calculate Sum term inside exponential in likelihood
   double Sum = N * arma::trace(S_YY * Mult_Mat.t() * arma::diagmat(Sigma_Inv) * Mult_Mat) - 2 * N * arma::trace(S_YX * B.t() * arma::diagmat(Sigma_Inv) * Mult_Mat);
 
-  // Calculate target value
+  // Calculate Target value
   double Target = N * real(arma::log_det(Mult_Mat)) - Sum / 2 - gamma * (a * a / (2 * tau)) - (1 - gamma) * (0.5 * log(nu_1) + a * a / (2 * nu_1 * tau));
 
   // Return Target
@@ -154,7 +154,7 @@ double Target_A(const arma::mat& S_YY, const arma::mat& S_YX, const arma::mat& A
 }
 
 
-// Sample a prticular entry of A
+// Sample a particular entry of matrix A
 // [[Rcpp::export]]
 double Sample_A(const arma::mat& S_YY, const arma::mat& S_YX, const arma::mat& A, const arma::mat& A_Pseudo, double i, double j, const arma::colvec& Sigma_Inv, double N, double p, const arma::mat& B, double gamma, double tau, double nu_1, double prop_var1, double tA) {
 
@@ -164,19 +164,20 @@ double Sample_A(const arma::mat& S_YY, const arma::mat& S_YX, const arma::mat& A
   // Proposed value
   double a_new = Rcpp::rnorm(1, a, sqrt(prop_var1))(0);
 
-  // New A matrix with proposed a value
+  // Create a copy of matrix A
   arma::mat A_new = A;
 
+  // Modify the copy with the proposed a value
   A_new(i, j) = (fabs(a_new) > tA) * a_new;
 
   // Calculate target values with a and a_new
   double Target1 = Target_A(S_YY, S_YX, A_new, a_new, N, Sigma_Inv, p, B, gamma, tau, nu_1);
   double Target2 = Target_A(S_YY, S_YX, A, a, N, Sigma_Inv, p, B, gamma, tau, nu_1);
 
-  // Calculate r
+  // Calculate r i.e. the differnce between two target values
   double r = Target1 - Target2;
 
-  // Generate uniform u
+  // Sample u from Uniform(0, 1)
   double u = Rcpp::runif(1, 0, 1)(0);
 
   // Compare u and r
@@ -206,10 +207,11 @@ double Target_B(const arma::mat& S_YX, const arma::mat& S_XX, const arma::mat& B
 
   // Return Target value
   return Target;
+
 }
 
 
-// Sample a prticular entry of B
+// Sample a prticular entry of matrix B
 // [[Rcpp::export]]
 double Sample_B(const arma::mat& S_YX, const arma::mat& S_XX, const arma::mat& B, const arma::mat& B_Pseudo, double i, double j, const arma::colvec& Sigma_Inv, const arma::mat& MultMat, double N, double phi, double eta, double nu_2, double prop_var2, double tB) {
 
@@ -229,10 +231,10 @@ double Sample_B(const arma::mat& S_YX, const arma::mat& S_XX, const arma::mat& B
   double Target1 = Target_B(S_YX, S_XX, B_new, Sigma_Inv, MultMat, N, b_new, phi, eta, nu_2);
   double Target2 = Target_B(S_YX, S_XX, B, Sigma_Inv, MultMat, N, b, phi, eta, nu_2);
 
-  // Calculate r
+  // Calculate r i.e. the difference between two target values
   double r = Target1 - Target2;
 
-  // Generate uniform u
+  // Sample u from Uniform(0, 1)
   double u = Rcpp::runif(1, 0, 1)(0);
 
   // Compare u and r
@@ -262,7 +264,7 @@ double Sample_tn(double mu, double sigma, double a, double b) {
   double cdf_alpha = arma::normcdf(alpha, 0.0, 1.0);
   double cdf_beta = arma::normcdf(beta, 0.0, 1.0);
 
-  // Generate from truncated normal
+  // Sample from truncated normal with mean mu and sd sigma
   double u = Rcpp::runif(1, cdf_alpha, cdf_beta)(0);
   double x = R::qnorm(u, 0.0, 1.0, true, false) * sigma + mu;
 
@@ -303,7 +305,7 @@ double LL(const arma::mat& A, const arma::mat& B, const arma::mat& S_YY, const a
   // Calculate log-likelihood
   double LL = N * real(arma::log_det(Mult_Mat)) - N / 2 * accu(log(1/Sigma_Inv)) - Sum / 2 - N / 2 * log(2 * arma::datum::pi);
 
-  // Return LL
+  // Return log-likelihood
   return LL;
 
 }
@@ -313,7 +315,7 @@ double LL(const arma::mat& A, const arma::mat& B, const arma::mat& S_YY, const a
 
 
 
-// Do MCMC sampling for threshold prior
+// Do MCMC sampling with threshold prior
 // [[Rcpp::export]]
 Rcpp::List RGM_Threshold(const arma::mat& S_YY, const arma::mat& S_YX, const arma::mat& S_XX, const arma::mat& D, double n, int nIter, int nBurnin, int Thin, double nu_1 = 0.0001, double nu_2 = 0.0001, double a_sigma = 0.01, double b_sigma = 0.01, double Prop_VarA = 0.01, double Prop_VarB = 0.01){
 
@@ -324,13 +326,13 @@ Rcpp::List RGM_Threshold(const arma::mat& S_YY, const arma::mat& S_YX, const arm
   // Calculate number of columns of S_XX
   int k = S_XX.n_cols;
 
-  // Initiate matrix A, B, A_Pseudo and B_Pseudo
+  // Initialize A, B, A_Pseudo and B_Pseudo matrix
   arma::mat A = arma::zeros(p, p);
   arma::mat B = arma::zeros(p, k);
   arma::mat A_Pseudo = arma::zeros(p, p);
   arma::mat B_Pseudo = arma::zeros(p, k);
 
-  // Initiate Sigma_Inv
+  // Initialize Sigma_Inv
   arma::colvec Sigma_Inv = Rcpp::rgamma(p, a_sigma, 1 / b_sigma);
 
 
@@ -348,7 +350,7 @@ Rcpp::List RGM_Threshold(const arma::mat& S_YY, const arma::mat& S_YX, const arm
   Phi = Phi % D;
   Eta = Eta % D;
 
-  // Initiate tA and tB
+  // Initialize tA, tB, t0 and t_sd
   double tA = 0;
   double tB = 0;
   double t0 = 1;
@@ -412,7 +414,7 @@ Rcpp::List RGM_Threshold(const arma::mat& S_YY, const arma::mat& S_YX, const arm
 
           }
 
-          // Update B_Pseudo, B, Phi, B_Update and Phi_Update
+          // Update B_Pseudo, B and Phi
           B_Pseudo(j, l) = b;
 
           B(j, l) = (std::abs(B_Pseudo(j, l)) > tB) * B_Pseudo(j, l);
@@ -434,10 +436,10 @@ Rcpp::List RGM_Threshold(const arma::mat& S_YY, const arma::mat& S_YX, const arm
     // Calculate difference
     double Diff = LL(A, B_new, S_YY, S_YX, S_XX, Sigma_Inv, p, n) - LL(A, B, S_YY, S_YX, S_XX, Sigma_Inv, p, n) + log(tn_pdf(tB, tB_new, t_sd, 0, t0)) - log(tn_pdf(tB_new, tB, t_sd, 0, t0));
 
-    // COmpare Diff with log of a random number from unif(0, 1)
+    // COmpare Diff with log of a random number from Uniform(0, 1)
     if (Diff > log(Rcpp::runif(1, 0, 1)(0))) {
 
-      // Update B, tB, Accpt_tB
+      // Update B, tB and Accpt_tB
       B = B_new;
 
       tB = tB_new;
@@ -483,7 +485,7 @@ Rcpp::List RGM_Threshold(const arma::mat& S_YY, const arma::mat& S_YX, const arm
 
           }
 
-          // Update A_Pseudo, A, Gamma, A_Update and Gamma_Update
+          // Update A_Pseudo, A and Gamma
           A_Pseudo(j, l) = a;
 
           A(j, l) = (std::abs(A_Pseudo(j, l)) > tA) * A_Pseudo(j, l);
@@ -505,10 +507,10 @@ Rcpp::List RGM_Threshold(const arma::mat& S_YY, const arma::mat& S_YX, const arm
     // Calculate Difference
     double Diff_A = LL(A_new, B, S_YY, S_YX, S_XX, Sigma_Inv, p, n) - LL(A, B, S_YY, S_YX, S_XX, Sigma_Inv, p, n) + log(tn_pdf(tA, tA_new, t_sd, 0, t0)) - log(tn_pdf(tA_new, tA, t_sd, 0, t0));
 
-    // Compare Diff with log of a random number from unif(0, 1)
+    // Compare Diff with log of a random number from uniform(0, 1)
     if (Diff_A > log(Rcpp::runif(1, 0, 1)(0))) {
 
-      // Update A, tA, Accpt_tA
+      // Update A, tA and Accpt_tA
       A = A_new;
 
       tA = tA_new;
@@ -562,7 +564,7 @@ Rcpp::List RGM_Threshold(const arma::mat& S_YY, const arma::mat& S_YX, const arm
   arma::mat zB_Est = arma::conv_to<arma::mat>::from(logicalGraph_B);
 
 
-
+  // Return outputs
   return Rcpp::List::create(Rcpp::Named("A_Est") = A_Est, Rcpp::Named("B_Est") = B_Est,
                             Rcpp::Named("zA_Est") = zA_Est, Rcpp::Named("zB_Est") = zB_Est,
                             Rcpp::Named("A0_Est") = A0_Est, Rcpp::Named("B0_Est") = B0_Est,
@@ -576,12 +578,12 @@ Rcpp::List RGM_Threshold(const arma::mat& S_YY, const arma::mat& S_YX, const arm
 
 
 
-  }
+ }
 
 
 
 
-// Do MCMC sampling for Spike and Slab Prior
+// Do MCMC sampling with Spike and Slab Prior
 // [[Rcpp::export]]
 Rcpp::List RGM_SpikeSlab(const arma::mat& S_YY, const arma::mat& S_YX, const arma::mat& S_XX, const arma::mat& D, double n, int nIter, int nBurnin, int Thin, double a_tau = 0.01, double b_tau = 0.01, double a_rho = 0.5, double b_rho = 0.5, double nu_1 = 0.0001, double a_eta = 0.01, double b_eta = 0.01, double a_psi = 0.5, double b_psi = 0.5, double nu_2 = 0.0001, double a_sigma = 0.01, double b_sigma = 0.01, double Prop_VarA = 0.01, double Prop_VarB = 0.01){
 
@@ -592,11 +594,11 @@ Rcpp::List RGM_SpikeSlab(const arma::mat& S_YY, const arma::mat& S_YX, const arm
   // Calculate number of columns of S_XX
   int k = S_XX.n_cols;
 
-  // Initiate matrix A, B
+  // Initialize matrix A, B
   arma::mat A = arma::zeros(p, p);
   arma::mat B = arma::zeros(p, k);
 
-  // Initiate Sigma_Inv
+  // Initialize Sigma_Inv
   arma::colvec Sigma_Inv = Rcpp::rgamma(p, a_sigma, 1 / b_sigma);
 
   // Initialize Rho, Psi, Gamma, Phi, Tau and Eta matrix
@@ -622,7 +624,7 @@ Rcpp::List RGM_SpikeSlab(const arma::mat& S_YY, const arma::mat& S_YX, const arm
   // Calculate number of posterior samples
   int nPst = std::floor((nIter - nBurnin) / Thin);
 
-  // Initiate Itr to index the posterior samples
+  // Initialize Itr to index the posterior samples
   int Itr = 0;
 
   // Initialize posterior arrays and matrices
@@ -721,7 +723,7 @@ Rcpp::List RGM_SpikeSlab(const arma::mat& S_YY, const arma::mat& S_YX, const arm
           // Sample a
           double a = Sample_A(S_YY, S_YX, A, A, j, l, Sigma_Inv, n, p, B, Gamma(j, l), Tau(j, l), nu_1, Prop_VarA, -1);
 
-          // Update Acceptance counter
+          // Update acceptance counter
           if (A(j, l) != a) {
 
             // Increase AccptA
@@ -778,6 +780,7 @@ Rcpp::List RGM_SpikeSlab(const arma::mat& S_YY, const arma::mat& S_YX, const arm
   arma::mat zA_Est = arma::conv_to<arma::mat>::from(logicalGraph_A);
   arma::mat zB_Est = arma::conv_to<arma::mat>::from(logicalGraph_B);
 
+  // Return outputs
   return Rcpp::List::create(Rcpp::Named("A_Est") = A_Est, Rcpp::Named("B_Est") = B_Est,
                             Rcpp::Named("zA_Est") = zA_Est, Rcpp::Named("zB_Est") = zB_Est,
                             Rcpp::Named("Gamma_Est") = Gamma_Est, Rcpp::Named("Tau_Est") = Tau_Est,
