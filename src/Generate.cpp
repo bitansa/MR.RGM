@@ -47,7 +47,7 @@ double Sample_Tau(double a, double gamma, double tau, double nu_1) {
 
   } else {
 
-    // Sample Tau based on a and Epsilon
+    // Sample Tau based on a, nu_1 and Epsilon
     Tau = 1 / Rcpp::rgamma(1, 1, 1 / (a * a / (2 * nu_1) + 1 / Epsilon))(0);
 
   }
@@ -77,7 +77,7 @@ double Sample_Eta(double b, double phi, double eta, double nu_2) {
 
   } else {
 
-    // Sample Eta based on b and Epsilon
+    // Sample Eta based on b, nu_2 and Epsilon
     Eta = 1 / Rcpp::rgamma(1, 1, 1 / (b * b / (2 * nu_2) + 1 / Epsilon))(0);
 
   }
@@ -137,16 +137,13 @@ double Sample_Sigma(double n, double z_sum, double a_sigma, double b_sigma) {
 
 // Calculate target value for a particular A
 // [[Rcpp::export]]
-double Target_A(const arma::mat& S_YY, const arma::mat& S_YX, const arma::mat& A, double a, double N, const arma::colvec& Sigma_Inv, double p, const arma::mat& B, double gamma, double tau, double nu_1) {
-
-  // Calculate (I_p - A)
-  const arma::mat& Mult_Mat = arma::eye(p, p) - A;
+double Target_A(double a, double N, double gamma, double tau, double nu_1, double Trace3, double Trace4, double Trace5, double Trace6, double logdet) {
 
   // Calculate Sum term inside exponential in likelihood
-  double Sum = N * arma::trace(S_YY * Mult_Mat.t() * arma::diagmat(Sigma_Inv) * Mult_Mat) - 2 * N * arma::trace(S_YX * B.t() * arma::diagmat(Sigma_Inv) * Mult_Mat);
+  double Sum = Trace3 + Trace4 + Trace5 + Trace6;
 
   // Calculate Target value
-  double Target = N * real(arma::log_det(Mult_Mat)) - Sum / 2 - gamma * (a * a / (2 * tau)) - (1 - gamma) * (0.5 * log(nu_1) + a * a / (2 * nu_1 * tau));
+  double Target = N * logdet - Sum / 2 - gamma * (a * a / (2 * tau)) - (1 - gamma) * (0.5 * log(nu_1) + a * a / (2 * nu_1 * tau));
 
   // Return Target
   return Target;
@@ -156,7 +153,7 @@ double Target_A(const arma::mat& S_YY, const arma::mat& S_YX, const arma::mat& A
 
 // Sample a particular entry of matrix A
 // [[Rcpp::export]]
-double Sample_A(const arma::mat& S_YY, const arma::mat& S_YX, const arma::mat& A, const arma::mat& A_Pseudo, double i, double j, const arma::colvec& Sigma_Inv, double N, double p, const arma::mat& B, double gamma, double tau, double nu_1, double prop_var1, double tA) {
+Rcpp::List Sample_A(const arma::mat& S_YY, const arma::mat& S_YX, const arma::mat& A, const arma::mat& A_Pseudo, double i, double j, const arma::colvec& Sigma_Inv, double N, double p, const arma::mat& B, double gamma, double tau, double nu_1, double prop_var1, double tA, double Trace3, double Trace4, double Trace5, double Trace6, arma::mat InvMat, double logdet) {
 
   // Value to update
   double a = A_Pseudo(i, j);
@@ -170,9 +167,19 @@ double Sample_A(const arma::mat& S_YY, const arma::mat& S_YX, const arma::mat& A
   // Modify the copy with the proposed a value
   A_new(i, j) = (fabs(a_new) > tA) * a_new;
 
+  // Modify logdet
+  double logdet_new = logdet + log(fabs(1 + ((fabs(a) > tA) * a - (fabs(a_new) > tA) * a_new) * InvMat(j, i)));
+
+
+  // Calculate new trace values
+  double Trace3_New = Trace3 - N * ((fabs(a_new) > tA) * a_new - (fabs(a) > tA) * a) * Sigma_Inv(i) * S_YY(i, j);
+  double Trace4_New = Trace4 - N * ((fabs(a_new) > tA) * a_new - (fabs(a) > tA) * a) * Sigma_Inv(i) * S_YY(i, j);
+  double Trace5_New = Trace5 + N * ((fabs(a_new) > tA) * a_new - (fabs(a) > tA) * a) * Sigma_Inv(i) * arma::trace(A.row(i) * S_YY.col(j) + S_YY.row(j) * A_new.row(i).t());
+  double Trace6_New = Trace6 + 2 * N * ((fabs(a_new) > tA) * a_new - (fabs(a) > tA) * a) * Sigma_Inv(i) * arma::trace(B.row(i) * S_YX.row(j).t());
+
   // Calculate target values with a and a_new
-  double Target1 = Target_A(S_YY, S_YX, A_new, a_new, N, Sigma_Inv, p, B, gamma, tau, nu_1);
-  double Target2 = Target_A(S_YY, S_YX, A, a, N, Sigma_Inv, p, B, gamma, tau, nu_1);
+  double Target1 = Target_A(a_new, N, gamma, tau, nu_1, Trace3_New, Trace4_New, Trace5_New, Trace6_New, logdet_new);
+  double Target2 = Target_A(a, N, gamma, tau, nu_1, Trace3, Trace4, Trace5, Trace6, logdet);
 
   // Calculate r i.e. the differnce between two target values
   double r = Target1 - Target2;
@@ -183,13 +190,25 @@ double Sample_A(const arma::mat& S_YY, const arma::mat& S_YX, const arma::mat& A
   // Compare u and r
   if (r >= log(u)) {
 
-    // Update a
+    // Update a, trace values, logdet and InvMat
     a = a_new;
+
+    Trace3 = Trace3_New;
+    Trace4 = Trace4_New;
+    Trace5 = Trace5_New;
+    Trace6 = Trace6_New;
+
+    logdet = logdet_new;
+
+    InvMat = InvMat - (((fabs(a) > tA) * a - (fabs(a_new) > tA) * a_new) / (1 + ((fabs(a) > tA) * a - (fabs(a_new) > tA) * a_new) * InvMat(j, i))) * (InvMat.col(i) * InvMat.row(j));
 
   }
 
-  // Return a
-  return a;
+  // Return a, trace values, logdet and InvMat
+  return Rcpp::List::create(Rcpp::Named("a") = a, Rcpp::Named("Trace3") = Trace3,
+                            Rcpp::Named("Trace4") = Trace4, Rcpp::Named("Trace5") = Trace5,
+                            Rcpp::Named("Trace6") = Trace6, Rcpp::Named("logdet") = logdet,
+                            Rcpp::Named("InvMat") = InvMat);
 
 }
 
@@ -197,10 +216,10 @@ double Sample_A(const arma::mat& S_YY, const arma::mat& S_YX, const arma::mat& A
 
 // Calculate target value for a particular B
 // [[Rcpp::export]]
-double Target_B(const arma::mat& S_YX, const arma::mat& S_XX, const arma::mat& B, const arma::colvec& Sigma_Inv, const arma::mat& MultMat, double N, double b, double phi, double eta, double nu_2) {
+double Target_B(double b, double phi, double eta, double nu_2, double Trace1, double Trace2) {
 
   // Calculate Sum
-  double Sum = -2 * N * arma::trace(S_YX * B.t() * arma::diagmat(Sigma_Inv) * MultMat) + N * arma::trace(S_XX * B.t() * arma::diagmat(Sigma_Inv) * B);
+  double Sum = Trace1 + Trace2;
 
   // Calculate Target value
   double Target = - Sum / 2 - phi * (b * b / (2 * eta)) - (1 - phi) * (0.5 * log(nu_2) + b * b / (2 * nu_2 * eta));
@@ -211,9 +230,9 @@ double Target_B(const arma::mat& S_YX, const arma::mat& S_XX, const arma::mat& B
 }
 
 
-// Sample a prticular entry of matrix B
+// Sample a particular entry of matrix B
 // [[Rcpp::export]]
-double Sample_B(const arma::mat& S_YX, const arma::mat& S_XX, const arma::mat& B, const arma::mat& B_Pseudo, double i, double j, const arma::colvec& Sigma_Inv, const arma::mat& MultMat, double N, double phi, double eta, double nu_2, double prop_var2, double tB) {
+Rcpp::List Sample_B(const arma::mat& S_YX, const arma::mat& S_XX, const arma::mat& B, const arma::mat& B_Pseudo, double i, double j, const arma::colvec& Sigma_Inv, const arma::mat& MultMat, double N, double phi, double eta, double nu_2, double prop_var2, double tB, double Trace1, double Trace2) {
 
   // Value to update
   double b = B_Pseudo(i, j);
@@ -227,9 +246,13 @@ double Sample_B(const arma::mat& S_YX, const arma::mat& S_XX, const arma::mat& B
   // Modify the copy with the proposed b value
   B_new(i, j) = (fabs(b_new) > tB) * b_new;
 
+  // Calculate new trace values
+  double Trace1_New = Trace1 - 2 * N * arma::trace(Sigma_Inv(i) * ((fabs(b_new) > tB) * b_new - (fabs(b) > tB) * b) * (MultMat.row(i) * S_YX.col(j)));
+  double Trace2_New = Trace2 + N * arma::trace(Sigma_Inv(i) * ((fabs(b_new) > tB) * b_new - (fabs(b) > tB) * b) * (B.row(i) * S_XX.col(j) + S_XX.row(j) * B_new.row(i).t()));
+
   // Calculate target values with b and b_new
-  double Target1 = Target_B(S_YX, S_XX, B_new, Sigma_Inv, MultMat, N, b_new, phi, eta, nu_2);
-  double Target2 = Target_B(S_YX, S_XX, B, Sigma_Inv, MultMat, N, b, phi, eta, nu_2);
+  double Target1 = Target_B(b_new, phi, eta, nu_2, Trace1_New, Trace2_New);
+  double Target2 = Target_B(b, phi, eta, nu_2, Trace1, Trace2);
 
   // Calculate r i.e. the difference between two target values
   double r = Target1 - Target2;
@@ -240,13 +263,17 @@ double Sample_B(const arma::mat& S_YX, const arma::mat& S_XX, const arma::mat& B
   // Compare u and r
   if (r >= log(u)) {
 
-    // Update b
+    // Update b and trace values
     b = b_new;
+
+    Trace1 = Trace1_New;
+    Trace2 = Trace2_New;
 
   }
 
-  // Return b
-  return b;
+  // Return b and trace values
+  return Rcpp::List::create(Rcpp::Named("b") = b, Rcpp::Named("Trace1") = Trace1,
+                            Rcpp::Named("Trace2") = Trace2);
 
 }
 
@@ -309,6 +336,7 @@ double LL(const arma::mat& A, const arma::mat& B, const arma::mat& S_YY, const a
   return LL;
 
 }
+
 
 
 
@@ -390,7 +418,11 @@ Rcpp::List RGM_Threshold(const arma::mat& S_YY, const arma::mat& S_YX, const arm
 
     // Update B
     // Calculate I_p - A
-    const arma::mat& MultMat = arma::eye(p, p) - A;
+    arma::mat MultMat = arma::eye(p, p) - A;
+
+    // Calculate Trace
+    double Trace1 = - 2 * n * arma::trace(S_YX * B.t() * arma::diagmat(Sigma_Inv) * MultMat);
+    double Trace2 = n * arma::trace(S_XX * B.t() * arma::diagmat(Sigma_Inv) * B);
 
     // Update Eta based on corresponding b  and then Update b based on the corresponding eta
     for (int j = 0; j < p; j++) {
@@ -401,16 +433,21 @@ Rcpp::List RGM_Threshold(const arma::mat& S_YY, const arma::mat& S_YX, const arm
         if (D(j, l) != 0) {
 
           // Sample Eta
-          Eta(j, l) = Sample_Eta(B(j, l), 1, Eta(j, l), nu_2);
+          Eta(j, l) = Sample_Eta(B_Pseudo(j, l), 1, Eta(j, l), nu_2);
 
           // Sample b
-          double b = Sample_B(S_YX, S_XX, B, B_Pseudo, j, l, Sigma_Inv, MultMat, n, 1, Eta(j, l), nu_2, Prop_VarB, tB);
+          Rcpp::List Output1 = Sample_B(S_YX, S_XX, B, B_Pseudo, j, l, Sigma_Inv, MultMat, n, 1, Eta(j, l), nu_2, Prop_VarB, tB, Trace1, Trace2);
+          double b = Output1[0];
 
           // Update acceptance counter
           if (B_Pseudo(j, l) != b) {
 
             // Increase AccptB
             AccptB = AccptB + 1;
+
+            // Update Trace Values
+            Trace1 = Output1[1];
+            Trace2 = Output1[2];
 
           }
 
@@ -436,7 +473,7 @@ Rcpp::List RGM_Threshold(const arma::mat& S_YY, const arma::mat& S_YX, const arm
     // Calculate difference
     double Diff = LL(A, B_new, S_YY, S_YX, S_XX, Sigma_Inv, p, n) - LL(A, B, S_YY, S_YX, S_XX, Sigma_Inv, p, n) + log(tn_pdf(tB, tB_new, t_sd, 0, t0)) - log(tn_pdf(tB_new, tB, t_sd, 0, t0));
 
-    // COmpare Diff with log of a random number from Uniform(0, 1)
+    // Compare Diff with log of a random number from Uniform(0, 1)
     if (Diff > log(Rcpp::runif(1, 0, 1)(0))) {
 
       // Update B, tB and Accpt_tB
@@ -464,6 +501,17 @@ Rcpp::List RGM_Threshold(const arma::mat& S_YY, const arma::mat& S_YX, const arm
 
     ////////////////////
     // Update A
+    // Calculate trace values
+    double Trace3 = - n * arma::trace(S_YY * A.t() * arma::diagmat(Sigma_Inv));
+    double Trace4 = - n * arma::trace(S_YY * arma::diagmat(Sigma_Inv) * A);
+    double Trace5 = n * arma::trace(S_YY * A.t() * arma::diagmat(Sigma_Inv) * A);
+    double Trace6 = 2 * n * arma::trace(S_YX * B.t() * arma::diagmat(Sigma_Inv) * A);
+
+    // Calculate det(I - A) and (I - A)^(-1)
+    double logdet = real(arma::log_det(MultMat));
+    arma::mat InvMat = arma::inv(MultMat);
+
+    // Update Tau based on a and then update a based on Tau
     for (int j = 0; j < p; j++) {
 
       for (int l = 0; l < p; l++) {
@@ -475,13 +523,25 @@ Rcpp::List RGM_Threshold(const arma::mat& S_YY, const arma::mat& S_YX, const arm
           Tau(j, l) = Sample_Tau(A_Pseudo(j, l), 1, Tau(j, l), nu_1);
 
           // Sample a
-          double a = Sample_A(S_YY, S_YX, A, A_Pseudo, j, l, Sigma_Inv, n, p, B, 1, Tau(j, l), nu_1, Prop_VarA, tA);
+          Rcpp::List Output2 = Sample_A(S_YY, S_YX, A, A_Pseudo, j, l, Sigma_Inv, n, p, B, 1, Tau(j, l), nu_1, Prop_VarA, tA, Trace3, Trace4, Trace5, Trace6, InvMat, logdet);
+          double a = Output2[0];
 
           // Update Acceptance counter
           if (A_Pseudo(j, l) != a) {
 
             // Increase AccptA
             AccptA = AccptA + 1;
+
+            // Update Trace values
+            Trace3 = Output2[1];
+            Trace4 = Output2[2];
+            Trace5 = Output2[3];
+            Trace6 = Output2[4];
+
+            // Update logdet and (I - A)^(-1)
+            logdet = Output2[5];
+            InvMat = Rcpp::as<arma::mat>(Output2[6]);
+
 
           }
 
@@ -578,14 +638,16 @@ Rcpp::List RGM_Threshold(const arma::mat& S_YY, const arma::mat& S_YX, const arm
 
 
 
- }
+}
+
+
 
 
 
 
 // Do MCMC sampling with Spike and Slab Prior
 // [[Rcpp::export]]
-Rcpp::List RGM_SpikeSlab(const arma::mat& S_YY, const arma::mat& S_YX, const arma::mat& S_XX, const arma::mat& D, double n, int nIter, int nBurnin, int Thin, double a_tau = 0.01, double b_tau = 0.01, double a_rho = 0.5, double b_rho = 0.5, double nu_1 = 0.0001, double a_eta = 0.01, double b_eta = 0.01, double a_psi = 0.5, double b_psi = 0.5, double nu_2 = 0.0001, double a_sigma = 0.01, double b_sigma = 0.01, double Prop_VarA = 0.01, double Prop_VarB = 0.01){
+Rcpp::List RGM_SpikeSlab(const arma::mat& S_YY, const arma::mat& S_YX, const arma::mat& S_XX, const arma::mat& D, double n, int nIter, int nBurnin, int Thin, double a_rho = 3.0, double b_rho = 1.0, double nu_1 = 0.001, double a_psi = 0.5, double b_psi = 0.5, double nu_2 = 0.0001, double a_sigma = 0.01, double b_sigma = 0.01, double Prop_VarA = 0.01, double Prop_VarB = 0.01){
 
 
   // Calculate number of nodes from S_YY matrix
@@ -647,9 +709,13 @@ Rcpp::List RGM_SpikeSlab(const arma::mat& S_YY, const arma::mat& S_YX, const arm
 
     // Update B
     // Calculate I_p - A
-    const arma::mat& MultMat = arma::eye(p, p) - A;
+    arma::mat MultMat = arma::eye(p, p) - A;
 
-    // Update Eta based on corresponding b  and then Update b based on the corresponding eta
+    // Calculate trace values
+    double Trace1 = -2 * n * arma::trace(S_YX * B.t() * arma::diagmat(Sigma_Inv) * MultMat);
+    double Trace2 = n * arma::trace(S_XX * B.t() * arma::diagmat(Sigma_Inv) * B);
+
+    // Update Psi, Eta, Phi and b
     for (int j = 0; j < p; j++) {
 
       for (int l = 0; l < k; l++) {
@@ -667,13 +733,18 @@ Rcpp::List RGM_SpikeSlab(const arma::mat& S_YY, const arma::mat& S_YX, const arm
           Phi(j, l) = Sample_Phi(B(j, l), Eta(j, l), Psi(j, l), nu_2);
 
           // Sample b
-          double b = Sample_B(S_YX, S_XX, B, B, j, l, Sigma_Inv, MultMat, n, Phi(j, l), Eta(j, l), nu_2, Prop_VarB, -1);
+          Rcpp::List Output1 = Sample_B(S_YX, S_XX, B, B, j, l, Sigma_Inv, MultMat, n, Phi(j, l), Eta(j, l), nu_2, Prop_VarB, -1, Trace1, Trace2);
+          double b = Output1[0];
 
           // Update acceptance counter
           if (B(j, l) != b) {
 
             // Increase AccptB
             AccptB = AccptB + 1;
+
+            // Update Trace Values
+            Trace1 = Output1[1];
+            Trace2 = Output1[2];
 
           }
 
@@ -704,6 +775,17 @@ Rcpp::List RGM_SpikeSlab(const arma::mat& S_YY, const arma::mat& S_YX, const arm
 
     ////////////////////
     // Update A
+    // Calculate trace values
+    double Trace3 = - n * arma::trace(S_YY * A.t() * arma::diagmat(Sigma_Inv));
+    double Trace4 = - n * arma::trace(S_YY * arma::diagmat(Sigma_Inv) * A);
+    double Trace5 = n * arma::trace(S_YY * A.t() * arma::diagmat(Sigma_Inv) * A);
+    double Trace6 = 2 * n * arma::trace(S_YX * B.t() * arma::diagmat(Sigma_Inv) * A);
+
+    // Calculate logdet and (I - A)^(-1)
+    double logdet = real(arma::log_det(MultMat));
+    arma::mat InvMat = arma::inv(MultMat);
+
+    // Update Rho, Tau, Gamma and a
     for (int j = 0; j < p; j++) {
 
       for (int l = 0; l < p; l++) {
@@ -721,13 +803,24 @@ Rcpp::List RGM_SpikeSlab(const arma::mat& S_YY, const arma::mat& S_YX, const arm
           Gamma(j, l) = Sample_Gamma(A(j, l), Tau(j, l), Rho(j, l), nu_1);
 
           // Sample a
-          double a = Sample_A(S_YY, S_YX, A, A, j, l, Sigma_Inv, n, p, B, Gamma(j, l), Tau(j, l), nu_1, Prop_VarA, -1);
+          Rcpp::List Output2 = Sample_A(S_YY, S_YX, A, A, j, l, Sigma_Inv, n, p, B, Gamma(j, l), Tau(j, l), nu_1, Prop_VarA, -1, Trace3, Trace4, Trace5, Trace6, InvMat, logdet);
+          double a = Output2[0];
 
           // Update acceptance counter
           if (A(j, l) != a) {
 
             // Increase AccptA
             AccptA = AccptA + 1;
+
+            // Update trace values
+            Trace3 = Output2[1];
+            Trace4 = Output2[2];
+            Trace5 = Output2[3];
+            Trace6 = Output2[4];
+
+            // Update logdet and (I - A)^(-1)
+            logdet = Output2[5];
+            InvMat = Rcpp::as<arma::mat>(Output2[6]);
 
           }
 
@@ -791,9 +884,4 @@ Rcpp::List RGM_SpikeSlab(const arma::mat& S_YY, const arma::mat& S_YX, const arm
                             Rcpp::Named("LL_Pst") = LL_Pst);
 
 
- }
-
-
-
-
-
+}

@@ -108,29 +108,28 @@ BEGIN_RCPP
 END_RCPP
 }
 // Target_A
-double Target_A(const arma::mat& S_YY, const arma::mat& S_YX, const arma::mat& A, double a, double N, const arma::colvec& Sigma_Inv, double p, const arma::mat& B, double gamma, double tau, double nu_1);
-RcppExport SEXP _RGM_Target_A(SEXP S_YYSEXP, SEXP S_YXSEXP, SEXP ASEXP, SEXP aSEXP, SEXP NSEXP, SEXP Sigma_InvSEXP, SEXP pSEXP, SEXP BSEXP, SEXP gammaSEXP, SEXP tauSEXP, SEXP nu_1SEXP) {
+double Target_A(double a, double N, double gamma, double tau, double nu_1, double Trace3, double Trace4, double Trace5, double Trace6, double logdet);
+RcppExport SEXP _RGM_Target_A(SEXP aSEXP, SEXP NSEXP, SEXP gammaSEXP, SEXP tauSEXP, SEXP nu_1SEXP, SEXP Trace3SEXP, SEXP Trace4SEXP, SEXP Trace5SEXP, SEXP Trace6SEXP, SEXP logdetSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type S_YY(S_YYSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type S_YX(S_YXSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type A(ASEXP);
     Rcpp::traits::input_parameter< double >::type a(aSEXP);
     Rcpp::traits::input_parameter< double >::type N(NSEXP);
-    Rcpp::traits::input_parameter< const arma::colvec& >::type Sigma_Inv(Sigma_InvSEXP);
-    Rcpp::traits::input_parameter< double >::type p(pSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type B(BSEXP);
     Rcpp::traits::input_parameter< double >::type gamma(gammaSEXP);
     Rcpp::traits::input_parameter< double >::type tau(tauSEXP);
     Rcpp::traits::input_parameter< double >::type nu_1(nu_1SEXP);
-    rcpp_result_gen = Rcpp::wrap(Target_A(S_YY, S_YX, A, a, N, Sigma_Inv, p, B, gamma, tau, nu_1));
+    Rcpp::traits::input_parameter< double >::type Trace3(Trace3SEXP);
+    Rcpp::traits::input_parameter< double >::type Trace4(Trace4SEXP);
+    Rcpp::traits::input_parameter< double >::type Trace5(Trace5SEXP);
+    Rcpp::traits::input_parameter< double >::type Trace6(Trace6SEXP);
+    Rcpp::traits::input_parameter< double >::type logdet(logdetSEXP);
+    rcpp_result_gen = Rcpp::wrap(Target_A(a, N, gamma, tau, nu_1, Trace3, Trace4, Trace5, Trace6, logdet));
     return rcpp_result_gen;
 END_RCPP
 }
 // Sample_A
-double Sample_A(const arma::mat& S_YY, const arma::mat& S_YX, const arma::mat& A, const arma::mat& A_Pseudo, double i, double j, const arma::colvec& Sigma_Inv, double N, double p, const arma::mat& B, double gamma, double tau, double nu_1, double prop_var1, double tA);
-RcppExport SEXP _RGM_Sample_A(SEXP S_YYSEXP, SEXP S_YXSEXP, SEXP ASEXP, SEXP A_PseudoSEXP, SEXP iSEXP, SEXP jSEXP, SEXP Sigma_InvSEXP, SEXP NSEXP, SEXP pSEXP, SEXP BSEXP, SEXP gammaSEXP, SEXP tauSEXP, SEXP nu_1SEXP, SEXP prop_var1SEXP, SEXP tASEXP) {
+Rcpp::List Sample_A(const arma::mat& S_YY, const arma::mat& S_YX, const arma::mat& A, const arma::mat& A_Pseudo, double i, double j, const arma::colvec& Sigma_Inv, double N, double p, const arma::mat& B, double gamma, double tau, double nu_1, double prop_var1, double tA, double Trace3, double Trace4, double Trace5, double Trace6, arma::mat InvMat, double logdet);
+RcppExport SEXP _RGM_Sample_A(SEXP S_YYSEXP, SEXP S_YXSEXP, SEXP ASEXP, SEXP A_PseudoSEXP, SEXP iSEXP, SEXP jSEXP, SEXP Sigma_InvSEXP, SEXP NSEXP, SEXP pSEXP, SEXP BSEXP, SEXP gammaSEXP, SEXP tauSEXP, SEXP nu_1SEXP, SEXP prop_var1SEXP, SEXP tASEXP, SEXP Trace3SEXP, SEXP Trace4SEXP, SEXP Trace5SEXP, SEXP Trace6SEXP, SEXP InvMatSEXP, SEXP logdetSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -149,33 +148,35 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type nu_1(nu_1SEXP);
     Rcpp::traits::input_parameter< double >::type prop_var1(prop_var1SEXP);
     Rcpp::traits::input_parameter< double >::type tA(tASEXP);
-    rcpp_result_gen = Rcpp::wrap(Sample_A(S_YY, S_YX, A, A_Pseudo, i, j, Sigma_Inv, N, p, B, gamma, tau, nu_1, prop_var1, tA));
+    Rcpp::traits::input_parameter< double >::type Trace3(Trace3SEXP);
+    Rcpp::traits::input_parameter< double >::type Trace4(Trace4SEXP);
+    Rcpp::traits::input_parameter< double >::type Trace5(Trace5SEXP);
+    Rcpp::traits::input_parameter< double >::type Trace6(Trace6SEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type InvMat(InvMatSEXP);
+    Rcpp::traits::input_parameter< double >::type logdet(logdetSEXP);
+    rcpp_result_gen = Rcpp::wrap(Sample_A(S_YY, S_YX, A, A_Pseudo, i, j, Sigma_Inv, N, p, B, gamma, tau, nu_1, prop_var1, tA, Trace3, Trace4, Trace5, Trace6, InvMat, logdet));
     return rcpp_result_gen;
 END_RCPP
 }
 // Target_B
-double Target_B(const arma::mat& S_YX, const arma::mat& S_XX, const arma::mat& B, const arma::colvec& Sigma_Inv, const arma::mat& MultMat, double N, double b, double phi, double eta, double nu_2);
-RcppExport SEXP _RGM_Target_B(SEXP S_YXSEXP, SEXP S_XXSEXP, SEXP BSEXP, SEXP Sigma_InvSEXP, SEXP MultMatSEXP, SEXP NSEXP, SEXP bSEXP, SEXP phiSEXP, SEXP etaSEXP, SEXP nu_2SEXP) {
+double Target_B(double b, double phi, double eta, double nu_2, double Trace1, double Trace2);
+RcppExport SEXP _RGM_Target_B(SEXP bSEXP, SEXP phiSEXP, SEXP etaSEXP, SEXP nu_2SEXP, SEXP Trace1SEXP, SEXP Trace2SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type S_YX(S_YXSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type S_XX(S_XXSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type B(BSEXP);
-    Rcpp::traits::input_parameter< const arma::colvec& >::type Sigma_Inv(Sigma_InvSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type MultMat(MultMatSEXP);
-    Rcpp::traits::input_parameter< double >::type N(NSEXP);
     Rcpp::traits::input_parameter< double >::type b(bSEXP);
     Rcpp::traits::input_parameter< double >::type phi(phiSEXP);
     Rcpp::traits::input_parameter< double >::type eta(etaSEXP);
     Rcpp::traits::input_parameter< double >::type nu_2(nu_2SEXP);
-    rcpp_result_gen = Rcpp::wrap(Target_B(S_YX, S_XX, B, Sigma_Inv, MultMat, N, b, phi, eta, nu_2));
+    Rcpp::traits::input_parameter< double >::type Trace1(Trace1SEXP);
+    Rcpp::traits::input_parameter< double >::type Trace2(Trace2SEXP);
+    rcpp_result_gen = Rcpp::wrap(Target_B(b, phi, eta, nu_2, Trace1, Trace2));
     return rcpp_result_gen;
 END_RCPP
 }
 // Sample_B
-double Sample_B(const arma::mat& S_YX, const arma::mat& S_XX, const arma::mat& B, const arma::mat& B_Pseudo, double i, double j, const arma::colvec& Sigma_Inv, const arma::mat& MultMat, double N, double phi, double eta, double nu_2, double prop_var2, double tB);
-RcppExport SEXP _RGM_Sample_B(SEXP S_YXSEXP, SEXP S_XXSEXP, SEXP BSEXP, SEXP B_PseudoSEXP, SEXP iSEXP, SEXP jSEXP, SEXP Sigma_InvSEXP, SEXP MultMatSEXP, SEXP NSEXP, SEXP phiSEXP, SEXP etaSEXP, SEXP nu_2SEXP, SEXP prop_var2SEXP, SEXP tBSEXP) {
+Rcpp::List Sample_B(const arma::mat& S_YX, const arma::mat& S_XX, const arma::mat& B, const arma::mat& B_Pseudo, double i, double j, const arma::colvec& Sigma_Inv, const arma::mat& MultMat, double N, double phi, double eta, double nu_2, double prop_var2, double tB, double Trace1, double Trace2);
+RcppExport SEXP _RGM_Sample_B(SEXP S_YXSEXP, SEXP S_XXSEXP, SEXP BSEXP, SEXP B_PseudoSEXP, SEXP iSEXP, SEXP jSEXP, SEXP Sigma_InvSEXP, SEXP MultMatSEXP, SEXP NSEXP, SEXP phiSEXP, SEXP etaSEXP, SEXP nu_2SEXP, SEXP prop_var2SEXP, SEXP tBSEXP, SEXP Trace1SEXP, SEXP Trace2SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -193,7 +194,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type nu_2(nu_2SEXP);
     Rcpp::traits::input_parameter< double >::type prop_var2(prop_var2SEXP);
     Rcpp::traits::input_parameter< double >::type tB(tBSEXP);
-    rcpp_result_gen = Rcpp::wrap(Sample_B(S_YX, S_XX, B, B_Pseudo, i, j, Sigma_Inv, MultMat, N, phi, eta, nu_2, prop_var2, tB));
+    Rcpp::traits::input_parameter< double >::type Trace1(Trace1SEXP);
+    Rcpp::traits::input_parameter< double >::type Trace2(Trace2SEXP);
+    rcpp_result_gen = Rcpp::wrap(Sample_B(S_YX, S_XX, B, B_Pseudo, i, j, Sigma_Inv, MultMat, N, phi, eta, nu_2, prop_var2, tB, Trace1, Trace2));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -269,8 +272,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // RGM_SpikeSlab
-Rcpp::List RGM_SpikeSlab(const arma::mat& S_YY, const arma::mat& S_YX, const arma::mat& S_XX, const arma::mat& D, double n, int nIter, int nBurnin, int Thin, double a_tau, double b_tau, double a_rho, double b_rho, double nu_1, double a_eta, double b_eta, double a_psi, double b_psi, double nu_2, double a_sigma, double b_sigma, double Prop_VarA, double Prop_VarB);
-RcppExport SEXP _RGM_RGM_SpikeSlab(SEXP S_YYSEXP, SEXP S_YXSEXP, SEXP S_XXSEXP, SEXP DSEXP, SEXP nSEXP, SEXP nIterSEXP, SEXP nBurninSEXP, SEXP ThinSEXP, SEXP a_tauSEXP, SEXP b_tauSEXP, SEXP a_rhoSEXP, SEXP b_rhoSEXP, SEXP nu_1SEXP, SEXP a_etaSEXP, SEXP b_etaSEXP, SEXP a_psiSEXP, SEXP b_psiSEXP, SEXP nu_2SEXP, SEXP a_sigmaSEXP, SEXP b_sigmaSEXP, SEXP Prop_VarASEXP, SEXP Prop_VarBSEXP) {
+Rcpp::List RGM_SpikeSlab(const arma::mat& S_YY, const arma::mat& S_YX, const arma::mat& S_XX, const arma::mat& D, double n, int nIter, int nBurnin, int Thin, double a_rho, double b_rho, double nu_1, double a_psi, double b_psi, double nu_2, double a_sigma, double b_sigma, double Prop_VarA, double Prop_VarB);
+RcppExport SEXP _RGM_RGM_SpikeSlab(SEXP S_YYSEXP, SEXP S_YXSEXP, SEXP S_XXSEXP, SEXP DSEXP, SEXP nSEXP, SEXP nIterSEXP, SEXP nBurninSEXP, SEXP ThinSEXP, SEXP a_rhoSEXP, SEXP b_rhoSEXP, SEXP nu_1SEXP, SEXP a_psiSEXP, SEXP b_psiSEXP, SEXP nu_2SEXP, SEXP a_sigmaSEXP, SEXP b_sigmaSEXP, SEXP Prop_VarASEXP, SEXP Prop_VarBSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -282,13 +285,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type nIter(nIterSEXP);
     Rcpp::traits::input_parameter< int >::type nBurnin(nBurninSEXP);
     Rcpp::traits::input_parameter< int >::type Thin(ThinSEXP);
-    Rcpp::traits::input_parameter< double >::type a_tau(a_tauSEXP);
-    Rcpp::traits::input_parameter< double >::type b_tau(b_tauSEXP);
     Rcpp::traits::input_parameter< double >::type a_rho(a_rhoSEXP);
     Rcpp::traits::input_parameter< double >::type b_rho(b_rhoSEXP);
     Rcpp::traits::input_parameter< double >::type nu_1(nu_1SEXP);
-    Rcpp::traits::input_parameter< double >::type a_eta(a_etaSEXP);
-    Rcpp::traits::input_parameter< double >::type b_eta(b_etaSEXP);
     Rcpp::traits::input_parameter< double >::type a_psi(a_psiSEXP);
     Rcpp::traits::input_parameter< double >::type b_psi(b_psiSEXP);
     Rcpp::traits::input_parameter< double >::type nu_2(nu_2SEXP);
@@ -296,7 +295,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type b_sigma(b_sigmaSEXP);
     Rcpp::traits::input_parameter< double >::type Prop_VarA(Prop_VarASEXP);
     Rcpp::traits::input_parameter< double >::type Prop_VarB(Prop_VarBSEXP);
-    rcpp_result_gen = Rcpp::wrap(RGM_SpikeSlab(S_YY, S_YX, S_XX, D, n, nIter, nBurnin, Thin, a_tau, b_tau, a_rho, b_rho, nu_1, a_eta, b_eta, a_psi, b_psi, nu_2, a_sigma, b_sigma, Prop_VarA, Prop_VarB));
+    rcpp_result_gen = Rcpp::wrap(RGM_SpikeSlab(S_YY, S_YX, S_XX, D, n, nIter, nBurnin, Thin, a_rho, b_rho, nu_1, a_psi, b_psi, nu_2, a_sigma, b_sigma, Prop_VarA, Prop_VarB));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -309,15 +308,15 @@ static const R_CallMethodDef CallEntries[] = {
     {"_RGM_Sample_Gamma", (DL_FUNC) &_RGM_Sample_Gamma, 4},
     {"_RGM_Sample_Phi", (DL_FUNC) &_RGM_Sample_Phi, 4},
     {"_RGM_Sample_Sigma", (DL_FUNC) &_RGM_Sample_Sigma, 4},
-    {"_RGM_Target_A", (DL_FUNC) &_RGM_Target_A, 11},
-    {"_RGM_Sample_A", (DL_FUNC) &_RGM_Sample_A, 15},
-    {"_RGM_Target_B", (DL_FUNC) &_RGM_Target_B, 10},
-    {"_RGM_Sample_B", (DL_FUNC) &_RGM_Sample_B, 14},
+    {"_RGM_Target_A", (DL_FUNC) &_RGM_Target_A, 10},
+    {"_RGM_Sample_A", (DL_FUNC) &_RGM_Sample_A, 21},
+    {"_RGM_Target_B", (DL_FUNC) &_RGM_Target_B, 6},
+    {"_RGM_Sample_B", (DL_FUNC) &_RGM_Sample_B, 16},
     {"_RGM_Sample_tn", (DL_FUNC) &_RGM_Sample_tn, 4},
     {"_RGM_tn_pdf", (DL_FUNC) &_RGM_tn_pdf, 5},
     {"_RGM_LL", (DL_FUNC) &_RGM_LL, 8},
     {"_RGM_RGM_Threshold", (DL_FUNC) &_RGM_RGM_Threshold, 14},
-    {"_RGM_RGM_SpikeSlab", (DL_FUNC) &_RGM_RGM_SpikeSlab, 22},
+    {"_RGM_RGM_SpikeSlab", (DL_FUNC) &_RGM_RGM_SpikeSlab, 18},
     {NULL, NULL, 0}
 };
 

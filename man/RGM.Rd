@@ -18,13 +18,9 @@ RGM(
   nBurnin = 2000,
   Thin = 1,
   prior = c("Threshold", "Spike and Slab"),
-  a_tau = 0.01,
-  b_tau = 0.01,
-  a_rho = 0.5,
-  b_rho = 0.5,
-  nu_1 = 1e-04,
-  a_eta = 0.01,
-  b_eta = 0.01,
+  a_rho = 3,
+  b_rho = 1,
+  nu_1 = 0.001,
   a_psi = 0.5,
   b_psi = 0.5,
   nu_2 = 1e-04,
@@ -61,19 +57,11 @@ RGM(
 
 \item{prior}{A parameter representing the prior assumption on the graph structure. It offers two options: "Threshold" or "Spike and Slab". The default value is "Threshold".}
 
-\item{a_tau}{A positive scalar input representing the first parameter of an Inverse Gamma distribution. The default value is set to 0.01.}
-
-\item{b_tau}{A positive scalar input representing the second parameter of an Inverse Gamma distribution. The default value is set to 0.01.}
-
 \item{a_rho}{A positive scalar input representing the first parameter of a Beta distribution. The default value is set to 0.5.}
 
 \item{b_rho}{A positive scalar input representing the second parameter of a Beta distribution. The default value is set to 0.5.}
 
 \item{nu_1}{A positive scalar input representing the multiplication factor in the variance of the spike part in the spike and slab distribution of matrix A. The default value is set to 0.0001.}
-
-\item{a_eta}{A positive scalar input corresponding to the first parameter of an Inverse Gamma distribution. The default value is set to 0.01.}
-
-\item{b_eta}{A positive scalar input corresponding to the second parameter of an Inverse Gamma distribution. The default value is set to 0.01.}
 
 \item{a_psi}{A positive scalar input corresponding to the first parameter of a Beta distribution. The default value is set to 0.5.}
 
@@ -113,7 +101,7 @@ RGM(
 }
 \description{
 The "RGM" R package transforms causal inference by merging Mendelian randomization and network-based methods, enabling the creation of comprehensive causal graphs within complex biological systems. RGM accommodates varied data contexts with three input options: individual-level data (X, Y matrices), summary-level data including S_YY, S_YX, and S_XX matrices, and intricate data with challenging cross-correlations, utilizing S_XX, Beta, and Sigma_Hat matrices.
-For the latter input, data centralization is necessary. Crucial inputs encompass "d" (instrument count per response) and "n" (total observations), amplified by customizable parameters that refine analysis. Additionally, users can tailor the analysis by setting parameters such as "nIter" (number of MCMC iterations), "nBurnin" (number of discarded samples during burn-in for convergence), and "Thin" (thinning of posterior samples). These customizable parameters enhance the precision and relevance of the analysis.
+For the latter input, data centralization is necessary.Users can select any of these data formats to suit their needs and don’t have to specify all of them, allowing flexibility based on data availability. Crucial inputs encompass "d" (instrument count per response) and "n" (total observations), amplified by customizable parameters that refine analysis. Additionally, users can tailor the analysis by setting parameters such as "nIter" (number of MCMC iterations), "nBurnin" (number of discarded samples during burn-in for convergence), and "Thin" (thinning of posterior samples). These customizable parameters enhance the precision and relevance of the analysis.
 RGM provides essential causal effect/strength estimates between response variables and between response and instrument variables. Moreover, it furnishes adjacency matrices, visually mapping causal graph structures. These outputs empower researchers to untangle intricate relationships within biological networks, fostering a holistic understanding of complex systems.
 }
 \examples{
