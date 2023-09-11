@@ -1,7 +1,7 @@
 #' Fitting Multivariate Bidirectional Mendelian Randomization
 #'
 #' @description The "RGM" R package transforms causal inference by merging Mendelian randomization and network-based methods, enabling the creation of comprehensive causal graphs within complex biological systems. RGM accommodates varied data contexts with three input options: individual-level data (X, Y matrices), summary-level data including S_YY, S_YX, and S_XX matrices, and intricate data with challenging cross-correlations, utilizing S_XX, Beta, and Sigma_Hat matrices.
-#'              For the latter input, data centralization is necessary. Crucial inputs encompass "d" (instrument count per response) and "n" (total observations), amplified by customizable parameters that refine analysis. Additionally, users can tailor the analysis by setting parameters such as "nIter" (number of MCMC iterations), "nBurnin" (number of discarded samples during burn-in for convergence), and "Thin" (thinning of posterior samples). These customizable parameters enhance the precision and relevance of the analysis.
+#'              For the latter input, data centralization is necessary.Users can select any of these data formats to suit their needs and don’t have to specify all of them, allowing flexibility based on data availability. Crucial inputs encompass "d" (instrument count per response) and "n" (total observations), amplified by customizable parameters that refine analysis. Additionally, users can tailor the analysis by setting parameters such as "nIter" (number of MCMC iterations), "nBurnin" (number of discarded samples during burn-in for convergence), and "Thin" (thinning of posterior samples). These customizable parameters enhance the precision and relevance of the analysis.
 #'              RGM provides essential causal effect/strength estimates between response variables and between response and instrument variables. Moreover, it furnishes adjacency matrices, visually mapping causal graph structures. These outputs empower researchers to untangle intricate relationships within biological networks, fostering a holistic understanding of complex systems.
 #'
 #' @param X A matrix of dimension n * k. In this matrix, each row signifies a distinct observation, while each column represents a specific instrument variable. The default value is set to NULL.
@@ -17,13 +17,9 @@
 #' @param nBurnin A non-negative integer input representing the number of samples to be discarded during the burn-in phase of MCMC sampling. It's important that nBurnin is less than nIter. The default value is set to 2000.
 #' @param Thin A positive integer input denoting the thinning factor applied to posterior samples. Thinning reduces the number of samples retained from the MCMC process for efficiency. Thin should not exceed (nIter - nBurnin). The default value is set to 1.
 #' @param prior A parameter representing the prior assumption on the graph structure. It offers two options: "Threshold" or "Spike and Slab". The default value is "Threshold".
-#' @param a_tau A positive scalar input representing the first parameter of an Inverse Gamma distribution. The default value is set to 0.01.
-#' @param b_tau A positive scalar input representing the second parameter of an Inverse Gamma distribution. The default value is set to 0.01.
 #' @param a_rho A positive scalar input representing the first parameter of a Beta distribution. The default value is set to 0.5.
 #' @param b_rho A positive scalar input representing the second parameter of a Beta distribution. The default value is set to 0.5.
 #' @param nu_1 A positive scalar input representing the multiplication factor in the variance of the spike part in the spike and slab distribution of matrix A. The default value is set to 0.0001.
-#' @param a_eta A positive scalar input corresponding to the first parameter of an Inverse Gamma distribution. The default value is set to 0.01.
-#' @param b_eta A positive scalar input corresponding to the second parameter of an Inverse Gamma distribution. The default value is set to 0.01.
 #' @param a_psi A positive scalar input corresponding to the first parameter of a Beta distribution. The default value is set to 0.5.
 #' @param b_psi  A positive scalar input corresponding to the second parameter of a Beta distribution. The default value is set to 0.5.
 #' @param nu_2 A positive scalar input corresponding to the multiplication factor in the variance of the spike part in the spike and slab distribution of matrix B. The default value is set to 0.0001.
@@ -380,7 +376,7 @@
 #' \emph{Bayesian Analysis},
 #' \strong{13(4)}, 1095-1110.
 #' \doi{10.1214/17-BA1087}.
-RGM = function(X = NULL, Y = NULL, S_YY = NULL, S_YX = NULL, S_XX = NULL, Beta = NULL, Sigma_Hat = NULL, d, n, nIter = 10000, nBurnin = 2000, Thin = 1, prior = c("Threshold", "Spike and Slab"), a_tau = 0.01, b_tau = 0.01, a_rho = 0.5, b_rho = 0.5, nu_1 = 0.0001, a_eta = 0.01, b_eta = 0.01, a_psi = 0.5, b_psi = 0.5, nu_2 = 0.0001, a_sigma = 0.01, b_sigma = 0.01, Prop_VarA = 0.01, Prop_VarB = 0.01){
+RGM = function(X = NULL, Y = NULL, S_YY = NULL, S_YX = NULL, S_XX = NULL, Beta = NULL, Sigma_Hat = NULL, d, n, nIter = 10000, nBurnin = 2000, Thin = 1, prior = c("Threshold", "Spike and Slab"), a_rho = 3, b_rho = 1, nu_1 = 0.001, a_psi = 0.5, b_psi = 0.5, nu_2 = 0.0001, a_sigma = 0.01, b_sigma = 0.01, Prop_VarA = 0.01, Prop_VarB = 0.01){
 
   # Check whether n is a positive integer
   if(!is.numeric(n) || n != round(n) || n <= 0){
@@ -618,10 +614,10 @@ RGM = function(X = NULL, Y = NULL, S_YY = NULL, S_YX = NULL, S_XX = NULL, Beta =
 
 
   # Check whether the inverse gamma parameters are positive or not
-  if(!is.numeric(a_tau) || a_tau < 0 || !is.numeric(b_tau) || b_tau < 0 || !is.numeric(a_rho) || a_rho < 0 || !is.numeric(b_rho) || b_rho < 0 || !is.numeric(a_eta) || a_eta < 0 || !is.numeric(b_eta) || b_eta < 0 || !is.numeric(a_psi) || a_psi < 0 || !is.numeric(b_psi) || b_psi < 0 || !is.numeric(a_sigma) || a_sigma < 0 || !is.numeric(b_sigma) || b_sigma < 0){
+  if(!is.numeric(a_rho) || a_rho < 0 || !is.numeric(b_rho) || b_rho < 0 || !is.numeric(a_psi) || a_psi < 0 || !is.numeric(b_psi) || b_psi < 0 || !is.numeric(a_sigma) || a_sigma < 0 || !is.numeric(b_sigma) || b_sigma < 0){
 
     # Print an error message
-    stop("All the inverse gamma parameters should be positive")
+    stop("All the beta and inverse gamma parameters should be positive")
 
   }
 
@@ -683,8 +679,8 @@ RGM = function(X = NULL, Y = NULL, S_YY = NULL, S_YX = NULL, S_XX = NULL, Beta =
   } else if ("Spike and Slab" %in% prior){
 
     # Run the algorithm for Threshold prior
-    Output = RGM_SpikeSlab(S_YY, S_YX, S_XX, D, n, nIter = nIter, nBurnin = nBurnin, Thin = Thin, a_tau = a_tau, b_tau = b_tau,
-                           a_rho = a_rho, b_rho = b_rho, nu_1 = nu_1, a_eta = a_eta, b_eta = b_eta, a_psi = a_psi, b_psi = b_psi,
+    Output = RGM_SpikeSlab(S_YY, S_YX, S_XX, D, n, nIter = nIter, nBurnin = nBurnin, Thin = Thin,
+                           a_rho = a_rho, b_rho = b_rho, nu_1 = nu_1, a_psi = a_psi, b_psi = b_psi,
                            nu_2 = nu_2, a_sigma = a_sigma, b_sigma = b_sigma, Prop_VarA = Prop_VarA, Prop_VarB = Prop_VarB)
 
 

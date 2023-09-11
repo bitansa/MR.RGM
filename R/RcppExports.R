@@ -29,20 +29,20 @@ Sample_Sigma <- function(n, z_sum, a_sigma, b_sigma) {
     .Call(`_RGM_Sample_Sigma`, n, z_sum, a_sigma, b_sigma)
 }
 
-Target_A <- function(S_YY, S_YX, A, a, N, Sigma_Inv, p, B, gamma, tau, nu_1) {
-    .Call(`_RGM_Target_A`, S_YY, S_YX, A, a, N, Sigma_Inv, p, B, gamma, tau, nu_1)
+Target_A <- function(a, N, gamma, tau, nu_1, Trace3, Trace4, Trace5, Trace6, logdet) {
+    .Call(`_RGM_Target_A`, a, N, gamma, tau, nu_1, Trace3, Trace4, Trace5, Trace6, logdet)
 }
 
-Sample_A <- function(S_YY, S_YX, A, A_Pseudo, i, j, Sigma_Inv, N, p, B, gamma, tau, nu_1, prop_var1, tA) {
-    .Call(`_RGM_Sample_A`, S_YY, S_YX, A, A_Pseudo, i, j, Sigma_Inv, N, p, B, gamma, tau, nu_1, prop_var1, tA)
+Sample_A <- function(S_YY, S_YX, A, A_Pseudo, i, j, Sigma_Inv, N, p, B, gamma, tau, nu_1, prop_var1, tA, Trace3, Trace4, Trace5, Trace6, InvMat, logdet) {
+    .Call(`_RGM_Sample_A`, S_YY, S_YX, A, A_Pseudo, i, j, Sigma_Inv, N, p, B, gamma, tau, nu_1, prop_var1, tA, Trace3, Trace4, Trace5, Trace6, InvMat, logdet)
 }
 
-Target_B <- function(S_YX, S_XX, B, Sigma_Inv, MultMat, N, b, phi, eta, nu_2) {
-    .Call(`_RGM_Target_B`, S_YX, S_XX, B, Sigma_Inv, MultMat, N, b, phi, eta, nu_2)
+Target_B <- function(b, phi, eta, nu_2, Trace1, Trace2) {
+    .Call(`_RGM_Target_B`, b, phi, eta, nu_2, Trace1, Trace2)
 }
 
-Sample_B <- function(S_YX, S_XX, B, B_Pseudo, i, j, Sigma_Inv, MultMat, N, phi, eta, nu_2, prop_var2, tB) {
-    .Call(`_RGM_Sample_B`, S_YX, S_XX, B, B_Pseudo, i, j, Sigma_Inv, MultMat, N, phi, eta, nu_2, prop_var2, tB)
+Sample_B <- function(S_YX, S_XX, B, B_Pseudo, i, j, Sigma_Inv, MultMat, N, phi, eta, nu_2, prop_var2, tB, Trace1, Trace2) {
+    .Call(`_RGM_Sample_B`, S_YX, S_XX, B, B_Pseudo, i, j, Sigma_Inv, MultMat, N, phi, eta, nu_2, prop_var2, tB, Trace1, Trace2)
 }
 
 Sample_tn <- function(mu, sigma, a, b) {
@@ -61,7 +61,7 @@ RGM_Threshold <- function(S_YY, S_YX, S_XX, D, n, nIter, nBurnin, Thin, nu_1 = 0
     .Call(`_RGM_RGM_Threshold`, S_YY, S_YX, S_XX, D, n, nIter, nBurnin, Thin, nu_1, nu_2, a_sigma, b_sigma, Prop_VarA, Prop_VarB)
 }
 
-RGM_SpikeSlab <- function(S_YY, S_YX, S_XX, D, n, nIter, nBurnin, Thin, a_tau = 0.01, b_tau = 0.01, a_rho = 0.5, b_rho = 0.5, nu_1 = 0.0001, a_eta = 0.01, b_eta = 0.01, a_psi = 0.5, b_psi = 0.5, nu_2 = 0.0001, a_sigma = 0.01, b_sigma = 0.01, Prop_VarA = 0.01, Prop_VarB = 0.01) {
-    .Call(`_RGM_RGM_SpikeSlab`, S_YY, S_YX, S_XX, D, n, nIter, nBurnin, Thin, a_tau, b_tau, a_rho, b_rho, nu_1, a_eta, b_eta, a_psi, b_psi, nu_2, a_sigma, b_sigma, Prop_VarA, Prop_VarB)
+RGM_SpikeSlab <- function(S_YY, S_YX, S_XX, D, n, nIter, nBurnin, Thin, a_rho = 3.0, b_rho = 1.0, nu_1 = 0.001, a_psi = 0.5, b_psi = 0.5, nu_2 = 0.0001, a_sigma = 0.01, b_sigma = 0.01, Prop_VarA = 0.01, Prop_VarB = 0.01) {
+    .Call(`_RGM_RGM_SpikeSlab`, S_YY, S_YX, S_XX, D, n, nIter, nBurnin, Thin, a_rho, b_rho, nu_1, a_psi, b_psi, nu_2, a_sigma, b_sigma, Prop_VarA, Prop_VarB)
 }
 
