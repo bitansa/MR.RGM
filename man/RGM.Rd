@@ -57,11 +57,11 @@ RGM(
 
 \item{prior}{A parameter representing the prior assumption on the graph structure. It offers two options: "Threshold" or "Spike and Slab". The default value is "Threshold".}
 
-\item{a_rho}{A positive scalar input representing the first parameter of a Beta distribution. The default value is set to 0.5.}
+\item{a_rho}{A positive scalar input representing the first parameter of a Beta distribution. The default value is set to 3.}
 
-\item{b_rho}{A positive scalar input representing the second parameter of a Beta distribution. The default value is set to 0.5.}
+\item{b_rho}{A positive scalar input representing the second parameter of a Beta distribution. The default value is set to 1.}
 
-\item{nu_1}{A positive scalar input representing the multiplication factor in the variance of the spike part in the spike and slab distribution of matrix A. The default value is set to 0.0001.}
+\item{nu_1}{A positive scalar input representing the multiplication factor in the variance of the spike part in the spike and slab distribution of matrix A. The default value is set to 0.001.}
 
 \item{a_psi}{A positive scalar input corresponding to the first parameter of a Beta distribution. The default value is set to 0.5.}
 

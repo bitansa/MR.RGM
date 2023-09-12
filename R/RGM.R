@@ -17,9 +17,9 @@
 #' @param nBurnin A non-negative integer input representing the number of samples to be discarded during the burn-in phase of MCMC sampling. It's important that nBurnin is less than nIter. The default value is set to 2000.
 #' @param Thin A positive integer input denoting the thinning factor applied to posterior samples. Thinning reduces the number of samples retained from the MCMC process for efficiency. Thin should not exceed (nIter - nBurnin). The default value is set to 1.
 #' @param prior A parameter representing the prior assumption on the graph structure. It offers two options: "Threshold" or "Spike and Slab". The default value is "Threshold".
-#' @param a_rho A positive scalar input representing the first parameter of a Beta distribution. The default value is set to 0.5.
-#' @param b_rho A positive scalar input representing the second parameter of a Beta distribution. The default value is set to 0.5.
-#' @param nu_1 A positive scalar input representing the multiplication factor in the variance of the spike part in the spike and slab distribution of matrix A. The default value is set to 0.0001.
+#' @param a_rho A positive scalar input representing the first parameter of a Beta distribution. The default value is set to 3.
+#' @param b_rho A positive scalar input representing the second parameter of a Beta distribution. The default value is set to 1.
+#' @param nu_1 A positive scalar input representing the multiplication factor in the variance of the spike part in the spike and slab distribution of matrix A. The default value is set to 0.001.
 #' @param a_psi A positive scalar input corresponding to the first parameter of a Beta distribution. The default value is set to 0.5.
 #' @param b_psi  A positive scalar input corresponding to the second parameter of a Beta distribution. The default value is set to 0.5.
 #' @param nu_2 A positive scalar input corresponding to the multiplication factor in the variance of the spike part in the spike and slab distribution of matrix B. The default value is set to 0.0001.
