@@ -5,6 +5,7 @@
 \title{Fitting Multivariate Bidirectional Mendelian Randomization}
 \usage{
 RGM(
+  Model = c("Model 1", "Model 2"),
   X = NULL,
   Y = NULL,
   S_YY = NULL,
@@ -31,6 +32,8 @@ RGM(
 )
 }
 \arguments{
+\item{Model}{The model assumption parameter offers two options: "Model 1" and "Model 2", with a default value of "Model 1". "Model 1" assumes the model Y = AY + E, while "Model 2" assumes the model Y = AY + BX + E. If the user selects "Model 1", they must specify either Y or S_YY, along with n. Alternatively, if the user chooses "Model 2", they must specify either (X, Y) or (S_YY, S_YX and S_XX) or (S_XX, Beta, Sigma_Hat), along with d and n.}
+
 \item{X}{A matrix of dimension n * k. In this matrix, each row signifies a distinct observation, while each column represents a specific instrument variable. The default value is set to NULL.}
 
 \item{Y}{A matrix of dimension n * p. In this matrix, each row corresponds to a specific observation, and each column pertains to a particular response variable. The default value is set to NULL.}
@@ -98,6 +101,7 @@ RGM(
 \item{LL_Pst}{A vector containing the posterior log-likelihoods of the model. Each element in the vector represents the log-likelihood of the model given the observed data and the estimated parameters.}
 \item{Rho_Est}{A matrix of dimensions p * p, representing the estimated Bernoulli success probabilities of causal interactions between response variables when using the "Spike and Slab" prior assumption. Each entry in the matrix corresponds to the success probability of a causal interaction between the corresponding response variables.}
 \item{Psi_Est}{A matrix of dimensions p * k, representing the estimated Bernoulli success probabilities of causal interactions between response and instrument variables when using the "Spike and Slab" prior assumption. Each row in the matrix corresponds to a specific response variable, and each column corresponds to a particular instrument variable.}
+\item{Gamma_Pst}{An array containing the posterior samples of probabilities of edges between response variables in the graph structure.}
 }
 \description{
 The "RGM" R package transforms causal inference by merging Mendelian randomization and network-based methods, enabling the creation of comprehensive causal graphs within complex biological systems. RGM accommodates varied data contexts with three input options: individual-level data (X, Y matrices), summary-level data including S_YY, S_YX, and S_XX matrices, and intricate data with challenging cross-correlations, utilizing S_XX, Beta, and Sigma_Hat matrices.
@@ -107,9 +111,132 @@ RGM provides essential causal effect/strength estimates between response variabl
 \examples{
 
 
-# -----------------------------------------------------------------
+#' # -----------------------------------------------------------------
 # Example 1:
-# Run RGM based on individual level data with Threshold prior
+# Run RGM based on individual level data with Threshold prior based on the model Y = AY + E
+
+# Data Generation
+set.seed(9154)
+
+# Number of datapoints
+n = 10000
+
+# Number of response variables
+p = 3
+
+# Initialize causal interaction matrix between response variables
+A = matrix(sample(c(-0.1, 0.1), p^2, replace = TRUE), p, p)
+
+# Diagonal entries of A matrix will always be 0
+diag(A) = 0
+
+# Make the network sparse
+A[sample(which(A!=0), length(which(A!=0))/2)] = 0
+
+
+Sigma = diag(p)
+
+Mult_Mat = solve(diag(p) - A)
+
+Variance = Mult_Mat \%*\% Sigma \%*\% t(Mult_Mat)
+
+
+# Initialize response data matrix
+Y = matrix(0, nrow = n, ncol = p)
+
+# Generate response data matrix
+for (i in 1:n) {
+
+    Y[i, ] = MASS::mvrnorm(n = 1, rep(0, p), Variance)
+
+}
+
+# Print true causal interaction matrices between response variables
+A
+
+# Apply RGM on individual level data for Threshold Prior
+Output = RGM(Model = "Model 1", Y = Y, n = 10000, prior = "Threshold")
+
+# Get the graph structure between response variables
+Output$zA_Est
+
+# Get the estimated causal strength matrix between response variables
+Output$A_Est
+
+# Plot posterior log-likelihood
+plot(Output$LL_Pst, type = 'l', xlab = "Number of Iterations", ylab = "Log-likelihood")
+
+
+
+
+# -----------------------------------------------------------------
+# Example 2:
+# Run RGM based on summary level data with Spike and Slab prior based on the model Y = AY + E
+
+# Data Generation
+set.seed(9154)
+
+# Number of datapoints
+n = 10000
+
+# Number of response variables
+p = 3
+
+# Initialize causal interaction matrix between response variables
+A = matrix(sample(c(-0.1, 0.1), p^2, replace = TRUE), p, p)
+
+# Diagonal entries of A matrix will always be 0
+diag(A) = 0
+
+# Make the network sparse
+A[sample(which(A!=0), length(which(A!=0))/2)] = 0
+
+
+Sigma = diag(p)
+
+Mult_Mat = solve(diag(p) - A)
+
+Variance = Mult_Mat \%*\% Sigma \%*\% t(Mult_Mat)
+
+# Initialize response data matrix
+Y = matrix(0, nrow = n, ncol = p)
+
+# Generate response data matrix
+for (i in 1:n) {
+
+    Y[i, ] = MASS::mvrnorm(n = 1, rep(0, p), Variance)
+
+}
+
+
+# Calculate summary level data
+S_YY = t(Y) \%*\% Y / n
+
+# Print true causal interaction matrices between response variables
+A
+
+
+# Apply RGM on summary level data for Spike and Slab Prior
+Output = RGM(Model = "Model 1", S_YY = S_YY,
+          n = 10000, prior = "Spike and Slab")
+
+# Get the graph structure between response variables
+Output$zA_Est
+
+# Get the estimated causal strength matrix between response variables
+Output$A_Est
+
+
+# Plot posterior log-likelihood
+plot(Output$LL_Pst, type = 'l', xlab = "Number of Iterations", ylab = "Log-likelihood")
+
+
+
+
+
+# -----------------------------------------------------------------
+# Example 3:
+# Run RGM based on individual level data with Threshold prior based on the model Y = AY + BX + E
 
 # Data Generation
 set.seed(9154)
@@ -176,7 +303,7 @@ A
 B
 
 # Apply RGM on individual level data for Threshold Prior
-Output = RGM(X = X, Y = Y, d = c(2, 1, 1), n = 10000, prior = "Threshold")
+Output = RGM(Model = "Model 2", X = X, Y = Y, d = c(2, 1, 1), n = 10000, prior = "Threshold")
 
 # Get the graph structure between response variables
 Output$zA_Est
@@ -197,8 +324,8 @@ plot(Output$LL_Pst, type = 'l', xlab = "Number of Iterations", ylab = "Log-likel
 
 
 # -----------------------------------------------------------------
-# Example 2:
-# Run RGM based on summary level data with Spike and Slab prior
+# Example 4:
+# Run RGM based on summary level data with Spike and Slab prior based on the model Y = AY + E
 
 # Data Generation
 set.seed(9154)
@@ -273,7 +400,7 @@ B
 
 
 # Apply RGM on summary level data for Spike and Slab Prior
-Output = RGM(S_YY = S_YY, S_YX = S_YX, S_XX = S_XX,
+Output = RGM(Model = "Model 2", S_YY = S_YY, S_YX = S_YX, S_XX = S_XX,
           d = c(2, 1, 1), n = 10000, prior = "Spike and Slab")
 
 # Get the graph structure between response variables
@@ -295,8 +422,8 @@ plot(Output$LL_Pst, type = 'l', xlab = "Number of Iterations", ylab = "Log-likel
 
 
 # -----------------------------------------------------------------
-# Example 3:
-# Run RGM based on Beta and Sigma_Hat with Threshold prior
+# Example 5:
+# Run RGM based on Beta and Sigma_Hat with Threshold prior based on the model Y = AY + E
 
 # Data Generation
 set.seed(9154)
@@ -391,7 +518,7 @@ B
 
 
 # Apply RGM based on S_XX, Beta and Sigma_Hat for Threshold Prior
-Output = RGM(S_XX = S_XX, Beta = Beta, Sigma_Hat = Sigma_Hat,
+Output = RGM(Model = "Model 2", S_XX = S_XX, Beta = Beta, Sigma_Hat = Sigma_Hat,
           d = c(2, 1, 1), n = 10000, prior = "Threshold")
 
 # Get the graph structure between response variables
