@@ -45,6 +45,18 @@ Sample_B <- function(S_YX, S_XX, B, B_Pseudo, i, j, Sigma_Inv, MultMat, N, phi, 
     .Call(`_RGM_Sample_B`, S_YX, S_XX, B, B_Pseudo, i, j, Sigma_Inv, MultMat, N, phi, eta, nu_2, prop_var2, tB, Trace1, Trace2)
 }
 
+Target_A_Star <- function(a, N, gamma, tau, nu_1, Trace3, Trace4, Trace5, logdet) {
+    .Call(`_RGM_Target_A_Star`, a, N, gamma, tau, nu_1, Trace3, Trace4, Trace5, logdet)
+}
+
+Sample_A_Star <- function(S_YY, A, A_Pseudo, i, j, Sigma_Inv, N, p, gamma, tau, nu_1, prop_var1, tA, Trace3, Trace4, Trace5, InvMat, logdet) {
+    .Call(`_RGM_Sample_A_Star`, S_YY, A, A_Pseudo, i, j, Sigma_Inv, N, p, gamma, tau, nu_1, prop_var1, tA, Trace3, Trace4, Trace5, InvMat, logdet)
+}
+
+LL_Star <- function(A, S_YY, Sigma_Inv, p, N) {
+    .Call(`_RGM_LL_Star`, A, S_YY, Sigma_Inv, p, N)
+}
+
 Sample_tn <- function(mu, sigma, a, b) {
     .Call(`_RGM_Sample_tn`, mu, sigma, a, b)
 }
@@ -57,11 +69,23 @@ LL <- function(A, B, S_YY, S_YX, S_XX, Sigma_Inv, p, N) {
     .Call(`_RGM_LL`, A, B, S_YY, S_YX, S_XX, Sigma_Inv, p, N)
 }
 
-RGM_Threshold <- function(S_YY, S_YX, S_XX, D, n, nIter, nBurnin, Thin, nu_1 = 0.0001, nu_2 = 0.0001, a_sigma = 0.01, b_sigma = 0.01, Prop_VarA = 0.01, Prop_VarB = 0.01) {
-    .Call(`_RGM_RGM_Threshold`, S_YY, S_YX, S_XX, D, n, nIter, nBurnin, Thin, nu_1, nu_2, a_sigma, b_sigma, Prop_VarA, Prop_VarB)
+RGM_Threshold2 <- function(S_YY, S_YX, S_XX, D, n, nIter, nBurnin, Thin, nu_1 = 0.0001, nu_2 = 0.0001, a_sigma = 0.01, b_sigma = 0.01, Prop_VarA = 0.01, Prop_VarB = 0.01) {
+    .Call(`_RGM_RGM_Threshold2`, S_YY, S_YX, S_XX, D, n, nIter, nBurnin, Thin, nu_1, nu_2, a_sigma, b_sigma, Prop_VarA, Prop_VarB)
 }
 
-RGM_SpikeSlab <- function(S_YY, S_YX, S_XX, D, n, nIter, nBurnin, Thin, a_rho = 3.0, b_rho = 1.0, nu_1 = 0.001, a_psi = 0.5, b_psi = 0.5, nu_2 = 0.0001, a_sigma = 0.01, b_sigma = 0.01, Prop_VarA = 0.01, Prop_VarB = 0.01) {
-    .Call(`_RGM_RGM_SpikeSlab`, S_YY, S_YX, S_XX, D, n, nIter, nBurnin, Thin, a_rho, b_rho, nu_1, a_psi, b_psi, nu_2, a_sigma, b_sigma, Prop_VarA, Prop_VarB)
+RGM_SpikeSlab2 <- function(S_YY, S_YX, S_XX, D, n, nIter, nBurnin, Thin, a_rho = 3.0, b_rho = 1.0, nu_1 = 0.001, a_psi = 0.5, b_psi = 0.5, nu_2 = 0.0001, a_sigma = 0.01, b_sigma = 0.01, Prop_VarA = 0.01, Prop_VarB = 0.01) {
+    .Call(`_RGM_RGM_SpikeSlab2`, S_YY, S_YX, S_XX, D, n, nIter, nBurnin, Thin, a_rho, b_rho, nu_1, a_psi, b_psi, nu_2, a_sigma, b_sigma, Prop_VarA, Prop_VarB)
+}
+
+RGM_Threshold1 <- function(S_YY, n, nIter, nBurnin, Thin, nu_1 = 0.0001, a_sigma = 0.01, b_sigma = 0.01, Prop_VarA = 0.01) {
+    .Call(`_RGM_RGM_Threshold1`, S_YY, n, nIter, nBurnin, Thin, nu_1, a_sigma, b_sigma, Prop_VarA)
+}
+
+RGM_SpikeSlab1 <- function(S_YY, n, nIter, nBurnin, Thin, a_rho = 3.0, b_rho = 1.0, nu_1 = 0.001, a_sigma = 0.01, b_sigma = 0.01, Prop_VarA = 0.01) {
+    .Call(`_RGM_RGM_SpikeSlab1`, S_YY, n, nIter, nBurnin, Thin, a_rho, b_rho, nu_1, a_sigma, b_sigma, Prop_VarA)
+}
+
+NetworkMotif_cpp <- function(Gamma, Gamma_Pst) {
+    .Call(`_RGM_NetworkMotif_cpp`, Gamma, Gamma_Pst)
 }
 
