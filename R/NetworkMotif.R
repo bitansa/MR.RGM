@@ -23,7 +23,7 @@
 #' # Data Generation
 #' set.seed(9154)
 #'
-#' # Number of datapoints
+#' # Number of data points
 #' n = 10000
 #'
 #' # Number of response variables and number of instrument variables

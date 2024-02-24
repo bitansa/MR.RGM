@@ -1,4 +1,4 @@
-#' Fitting Multivariate Bidirectional Mendelian Randomization
+#' Fitting Bayesian Multivariate Bidirectional Mendelian Randomization Networks
 #'
 #' @description The RGM function transforms causal inference by merging Mendelian randomization and network-based methods, enabling the creation of comprehensive causal graphs within complex biological systems. RGM accommodates varied data contexts with three input options: individual-level data (X, Y matrices), summary-level data including S_YY, S_YX, and S_XX matrices, and intricate data with challenging cross-correlations, utilizing S_XX, Beta, and Sigma_Hat matrices.
 #'              For the latter input, data centralization is necessary. Users can select any of these data formats to suit their needs and don’t have to specify all of them, allowing flexibility based on data availability. Crucial inputs encompass "d" (instrument count per response) and "n" (total observations, only required for summary level data), amplified by customizable parameters that refine analysis. Additionally, users can tailor the analysis by setting parameters such as "nIter" (number of MCMC iterations), "nBurnin" (number of discarded samples during burn-in for convergence), and "Thin" (thinning of posterior samples). These customizable parameters enhance the precision and relevance of the analysis.
@@ -71,7 +71,7 @@
 #' # Data Generation
 #' set.seed(9154)
 #'
-#' # Number of datapoints
+#' # Number of data points
 #' n = 10000
 #'
 #' # Number of response variables and number of instrument variables
@@ -160,7 +160,7 @@
 #' # Data Generation
 #' set.seed(9154)
 #'
-#' # Number of datapoints
+#' # Number of data points
 #' n = 10000
 #'
 #' # Number of response variables and number of instrument variables
@@ -253,7 +253,7 @@
 #'
 #' # -----------------------------------------------------------------
 #' # Example 3:
-#' # Run RGM based on Beta and Sigma_Hat with Threshold prior based on the model Y = AY + BX + E
+#' # Run RGM based on Beta and Sigma_Hat with Spike and Slab prior based on the model Y = AY + BX + E
 #'
 #' # Data Generation
 #' set.seed(9154)
@@ -347,9 +347,9 @@
 #' B
 #'
 #'
-#' # Apply RGM based on S_XX, Beta and Sigma_Hat for Threshold Prior
+#' # Apply RGM based on S_XX, Beta and Sigma_Hat for Spike and Slab Prior
 #' Output = RGM(S_XX = S_XX, Beta = Beta, Sigma_Hat = Sigma_Hat,
-#'           d = c(2, 1, 1), n = 10000, prior = "Threshold")
+#'           d = c(2, 1, 1), n = 10000, prior = "Spike and Slab")
 #'
 #' # Get the graph structure between response variables
 #' Output$zA_Est
@@ -439,7 +439,7 @@ RGM = function(X = NULL, Y = NULL, S_YY = NULL, S_YX = NULL, S_XX = NULL, Beta =
     if(!is.numeric(a_rho) || a_rho < 0 || !is.numeric(b_rho) || b_rho < 0  || !is.numeric(a_sigma) || a_sigma < 0 || !is.numeric(b_sigma) || b_sigma < 0){
 
       # Print an error message
-      stop("All the beta and inverse gamma parameters should be positive")
+      stop("All the beta and inverse gamma parameters should be positive.")
 
     }
 
@@ -448,7 +448,7 @@ RGM = function(X = NULL, Y = NULL, S_YY = NULL, S_YX = NULL, S_XX = NULL, Beta =
     if(!is.numeric(nu_1) || nu_1 <= 0 || !is.numeric(Prop_VarA) || Prop_VarA <= 0){
 
       # Print an error message
-      stop("All the variance terms should be positive")
+      stop("All the variance terms should be positive.")
 
     }
 
@@ -785,7 +785,7 @@ RGM = function(X = NULL, Y = NULL, S_YY = NULL, S_YX = NULL, S_XX = NULL, Beta =
     if(!is.numeric(a_rho) || a_rho < 0 || !is.numeric(b_rho) || b_rho < 0 || !is.numeric(a_psi) || a_psi < 0 || !is.numeric(b_psi) || b_psi < 0 || !is.numeric(a_sigma) || a_sigma < 0 || !is.numeric(b_sigma) || b_sigma < 0){
 
       # Print an error message
-      stop("All the beta and inverse gamma parameters should be positive")
+      stop("All the beta and inverse gamma parameters should be positive.")
 
     }
 
@@ -794,7 +794,7 @@ RGM = function(X = NULL, Y = NULL, S_YY = NULL, S_YX = NULL, S_XX = NULL, Beta =
     if(!is.numeric(nu_1) || nu_1 <= 0 || !is.numeric(nu_2) || nu_2 <= 0 || !is.numeric(Prop_VarA) || Prop_VarA <= 0 || !is.numeric(Prop_VarB) || Prop_VarB <= 0){
 
       # Print an error message
-      stop("All the variance terms should be positive")
+      stop("All the variance terms should be positive.")
 
     }
 
@@ -885,7 +885,7 @@ RGM = function(X = NULL, Y = NULL, S_YY = NULL, S_YX = NULL, S_XX = NULL, Beta =
   } else {
 
     # Print an error message
-    stop("Please give Y or S_YY or  X, Y or S_YY, S_YX, S_XX or S_XX, Beta and Sigma_Hat as input.")
+    stop("Please give Y or S_YY or X, Y or S_YY, S_YX, S_XX or S_XX, Beta and Sigma_Hat as input.")
 
 
   }
