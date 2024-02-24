@@ -1,0 +1,139 @@
+#' Estimating the uncertainty of a specified network
+#'
+#' @description The NetworkMotif function facilitates uncertainty quantification.
+#'              Specifically, it determines the proportion of posterior samples that exactly match the given network structure. To use this function, users need to store the Gamma_Pst output obtained from the RGM function.
+#'
+#' @param Gamma A matrix of dimension p * p that signifies a specific network structure among the response variables, where p represents the number of response variables. This matrix is the focus of uncertainty quantification.
+#' @param Gamma_Pst An array of dimension p * p * n_pst, where n_pst is the number of posterior samples and p denotes the number of response variables. It comprises the posterior samples of the causal network among the response variables. This input will be obtained from the RGM function. Initially, execute the RGM function and save the resulting Gamma_Pst. Subsequently, utilize this stored Gamma_Pst as input for this function.
+#'
+#' @return
+#'
+#' \item{The NetworkMotif function calculates the uncertainty quantification for the provided network structure. A value close to 1 indicates that the given network structure is frequently observed in the posterior samples, while a value close to 0 suggests that the given network structure is rarely observed in the posterior samples.}
+#'
+#'
+#'
+#' @export
+#'
+#' @examples
+#'
+#'
+#'#' # ---------------------------------------------------------
+#'
+#' # Example 1:
+#' # Run NetworkMotif to do uncertainty quantification for a given network among the response variable
+#'
+#' # Data Generation
+#' set.seed(9154)
+#'
+#' # Number of datapoints
+#' n = 10000
+#'
+#' # Number of response variables and number of instrument variables
+#' p = 3
+#' k = 4
+#'
+#' # Initialize causal interaction matrix between response variables
+#' A = matrix(sample(c(-0.1, 0.1), p^2, replace = TRUE), p, p)
+#'
+#' # Diagonal entries of A matrix will always be 0
+#' diag(A) = 0
+#'
+#' # Make the network sparse
+#' A[sample(which(A!=0), length(which(A!=0))/2)] = 0
+#'
+#' # Initialize causal interaction matrix between response and instrument variables
+#' B = matrix(0, p, k)
+#'
+#' # Create d vector
+#' d = c(2, 1, 1)
+#'
+#'
+#' # Initialize m
+#' m = 1
+#'
+#' # Calculate B matrix based on d vector
+#' for (i in 1:p) {
+#'
+#'  # Update ith row of B
+#'  B[i, m:(m + d[i] - 1)] = 1
+#'
+#'  # Update m
+#'  m = m + d[i]
+#'
+#' }
+#'
+#' Sigma = diag(p)
+#'
+#' Mult_Mat = solve(diag(p) - A)
+#'
+#' Variance = Mult_Mat %*% Sigma %*% t(Mult_Mat)
+#'
+#' # Generate instrument data matrix
+#' X = matrix(rnorm(n * k, 0, 1), nrow = n, ncol = k)
+#'
+#' # Initialize response data matrix
+#' Y = matrix(0, nrow = n, ncol = p)
+#'
+#' # Generate response data matrix based on instrument data matrix
+#' for (i in 1:n) {
+#'
+#'     Y[i, ] = MASS::mvrnorm(n = 1, Mult_Mat %*% B %*% X[i, ], Variance)
+#'
+#' }
+#'
+#'
+#' # Apply RGM on individual level data for Threshold Prior
+#' Output = RGM(X = X, Y = Y, d = c(2, 1, 1), prior = "Threshold")
+#'
+#' # Store Gamma_Pst
+#' Gamma_Pst = Output$Gamma_Pst
+#'
+#' # True network structure among the response variables
+#' Gamma = (A != 0) * 1
+#'
+#' # Do uncertainty quantification for the true network structure
+#' NetworkMotif(Gamma = Gamma, Gamma_Pst = Gamma_Pst)
+#'
+#'
+#'
+#'
+#'
+#' @references
+#' Ni, Y., Ji, Y., & Müller, P. (2018).
+#' Reciprocal graphical models for integrative gene regulatory network analysis.
+#' \emph{Bayesian Analysis},
+#' \strong{13(4)}, 1095-1110.
+#' \doi{10.1214/17-BA1087}.
+NetworkMotif = function(Gamma, Gamma_Pst) {
+
+  # Check whether Gamma is a numeric matrix
+  if(!is.numeric(Gamma) || !is.matrix(Gamma)){
+
+    # Print an error message
+    stop("Gamma should be a numeric matrix.")
+
+  }
+
+  # Check if the attribute "RGM_GammaPst" is present
+  if (!(any(names(attributes(Gamma_Pst)) == "RGM_GammaPst"))) {
+
+    # Print an error message
+    stop("Gamma_Pst should be provided as output from the RGM function. Please ensure that Gamma_Pst is obtained from the output of the RGM function.")
+
+  }
+
+  # Calculate number of rows of Gamma_Pst
+  p = nrow(Gamma_Pst)
+
+  # Check whether Gamma is a square matrix with dimension p * p
+  if((nrow(Gamma) != p) || (ncol(Gamma) != p)) {
+
+    # Print an error message
+    stop("Gamma should be a square matrix with number of rows and columns equal to number of rows of Gamma_Pst.")
+
+  }
+
+  # Return Network Motif
+  return(NetworkMotif_cpp(Gamma = Gamma, Gamma_Pst = Gamma_Pst))
+
+}
