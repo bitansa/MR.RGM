@@ -6,9 +6,7 @@
 #' @param Gamma A matrix of dimension p * p that signifies a specific network structure among the response variables, where p represents the number of response variables. This matrix is the focus of uncertainty quantification.
 #' @param Gamma_Pst An array of dimension p * p * n_pst, where n_pst is the number of posterior samples and p denotes the number of response variables. It comprises the posterior samples of the causal network among the response variables. This input will be obtained from the RGM function. Initially, execute the RGM function and save the resulting Gamma_Pst. Subsequently, utilize this stored Gamma_Pst as input for this function.
 #'
-#' @return
-#'
-#' \item{The NetworkMotif function calculates the uncertainty quantification for the provided network structure. A value close to 1 indicates that the given network structure is frequently observed in the posterior samples, while a value close to 0 suggests that the given network structure is rarely observed in the posterior samples.}
+#' @return The NetworkMotif function calculates the uncertainty quantification for the provided network structure. A value close to 1 indicates that the given network structure is frequently observed in the posterior samples, while a value close to 0 suggests that the given network structure is rarely observed in the posterior samples.
 #'
 #'
 #'
