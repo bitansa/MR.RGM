@@ -29,6 +29,8 @@ double Sample_Psi(double Phi, double a_psi, double b_psi) {
 }
 
 
+
+
 // Sample Tau
 // [[Rcpp::export]]
 double Sample_Tau(double a, double gamma, double tau, double nu_1) {
@@ -36,7 +38,7 @@ double Sample_Tau(double a, double gamma, double tau, double nu_1) {
   // Sample Epsilon based on old tau
   double Epsilon = 1 / Rcpp::rgamma(1, 1, 1 / (1 + 1 / tau))(0);
 
-  // Sample Tau from inverse gamma distribution
+  // Initialize Tau
   double Tau;
 
   // Check whether gamma is 0 or 1
@@ -66,7 +68,7 @@ double Sample_Eta(double b, double phi, double eta, double nu_2) {
   // Sample Epsilon based on old eta
   double Epsilon = 1 / Rcpp::rgamma(1, 1, 1 / (1 + 1 / eta))(0);
 
-  // Sample Eta from inverse gamma distribution
+  // Initialize Eta
   double Eta;
 
   // Check whether phi is 0 or 1
@@ -135,7 +137,7 @@ double Sample_Sigma(double n, double z_sum, double a_sigma, double b_sigma) {
 }
 
 
-// Calculate target value for a particular A for model2
+// Calculate target value for a particular A for the model when both X and Y are there
 // [[Rcpp::export]]
 double Target_A(double a, double N, double gamma, double tau, double nu_1, double Trace3, double Trace4, double Trace5, double Trace6, double logdet) {
 
@@ -151,7 +153,7 @@ double Target_A(double a, double N, double gamma, double tau, double nu_1, doubl
 }
 
 
-// Sample a particular entry of matrix A for model2
+// Sample a particular entry of matrix A for the model when both X and Y are there
 // [[Rcpp::export]]
 Rcpp::List Sample_A(const arma::mat& S_YY, const arma::mat& S_YX, const arma::mat& A, const arma::mat& A_Pseudo, double i, double j, const arma::colvec& Sigma_Inv, double N, double p, const arma::mat& B, double gamma, double tau, double nu_1, double prop_var1, double tA, double Trace3, double Trace4, double Trace5, double Trace6, arma::mat InvMat, double logdet) {
 
@@ -278,7 +280,7 @@ Rcpp::List Sample_B(const arma::mat& S_YX, const arma::mat& S_XX, const arma::ma
 }
 
 
-// Calculate target value for a particular A for model1
+// Calculate target value for a particular A for the model when only Y is there
 // [[Rcpp::export]]
 double Target_A_Star(double a, double N, double gamma, double tau, double nu_1, double Trace3, double Trace4, double Trace5, double logdet) {
 
@@ -296,7 +298,7 @@ double Target_A_Star(double a, double N, double gamma, double tau, double nu_1, 
 
 
 
-// Sample a particular entry of matrix A for model1
+// Sample a particular entry of matrix A for the model when only Y is there
 // [[Rcpp::export]]
 Rcpp::List Sample_A_Star(const arma::mat& S_YY, const arma::mat& A, const arma::mat& A_Pseudo, double i, double j, const arma::colvec& Sigma_Inv, double N, double p, double gamma, double tau, double nu_1, double prop_var1, double tA, double Trace3, double Trace4, double Trace5, arma::mat InvMat, double logdet) {
 
@@ -356,7 +358,7 @@ Rcpp::List Sample_A_Star(const arma::mat& S_YY, const arma::mat& A, const arma::
 
 
 
-// Calculate log-likelihood for model1
+// Calculate log-likelihood for the model when only Y is there
 // [[Rcpp::export]]
 double LL_Star(const arma::mat& A, const arma::mat& S_YY, const arma::colvec& Sigma_Inv, double p, double N) {
 
@@ -416,7 +418,7 @@ double tn_pdf(double x, double mu, double sigma, double a, double b) {
 }
 
 
-// Calculate log-likelihood for model2
+// Calculate log-likelihood for the model when both X and Y are there
 // [[Rcpp::export]]
 double LL(const arma::mat& A, const arma::mat& B, const arma::mat& S_YY, const arma::mat& S_YX, const arma::mat& S_XX, const arma::colvec& Sigma_Inv, double p, double N) {
 
@@ -441,7 +443,7 @@ double LL(const arma::mat& A, const arma::mat& B, const arma::mat& S_YY, const a
 
 
 
-// Do MCMC sampling with threshold prior
+// Do MCMC sampling with threshold prior for the model when both X and Y are there
 // [[Rcpp::export]]
 Rcpp::List RGM_Threshold2(const arma::mat& S_YY, const arma::mat& S_YX, const arma::mat& S_XX, const arma::mat& D, double n, int nIter, int nBurnin, int Thin, double nu_1 = 0.0001, double nu_2 = 0.0001, double a_sigma = 0.01, double b_sigma = 0.01, double Prop_VarA = 0.01, double Prop_VarB = 0.01){
 
@@ -452,7 +454,7 @@ Rcpp::List RGM_Threshold2(const arma::mat& S_YY, const arma::mat& S_YX, const ar
   // Calculate number of columns of S_XX
   int k = S_XX.n_cols;
 
-  // Initialize A, B, A_Pseudo and B_Pseudo matrix
+  // Initialize A, B, A_Pseudo and B_Pseudo matrices
   arma::mat A = arma::zeros(p, p);
   arma::mat B = arma::zeros(p, k);
   arma::mat A_Pseudo = arma::zeros(p, p);
@@ -462,7 +464,7 @@ Rcpp::List RGM_Threshold2(const arma::mat& S_YY, const arma::mat& S_YX, const ar
   arma::colvec Sigma_Inv = Rcpp::rgamma(p, a_sigma, 1 / b_sigma);
 
 
-  // Initialize Gamma, Phi, Tau and Eta matrix
+  // Initialize Gamma, Phi, Tau and Eta matrices
   arma::mat Gamma = arma::ones(p, p);
   arma::mat Phi = arma::ones(p, k);
   arma::mat Tau = arma::ones(p, p);
@@ -518,11 +520,11 @@ Rcpp::List RGM_Threshold2(const arma::mat& S_YY, const arma::mat& S_YX, const ar
     // Calculate I_p - A
     arma::mat MultMat = arma::eye(p, p) - A;
 
-    // Calculate Trace
+    // Calculate Trace values
     double Trace1 = - 2 * n * arma::trace(S_YX * B.t() * arma::diagmat(Sigma_Inv) * MultMat);
     double Trace2 = n * arma::trace(S_XX * B.t() * arma::diagmat(Sigma_Inv) * B);
 
-    // Update Eta based on corresponding b  and then Update b based on the corresponding eta
+    // Update Eta based on corresponding b and then update b based on the corresponding eta
     for (int j = 0; j < p; j++) {
 
       for (int l = 0; l < k; l++) {
@@ -741,7 +743,7 @@ Rcpp::List RGM_Threshold2(const arma::mat& S_YY, const arma::mat& S_YX, const ar
 
 
 
-// Do MCMC sampling with Spike and Slab Prior
+// Do MCMC sampling with Spike and Slab Prior for the model when both X and Y are there
 // [[Rcpp::export]]
 Rcpp::List RGM_SpikeSlab2(const arma::mat& S_YY, const arma::mat& S_YX, const arma::mat& S_XX, const arma::mat& D, double n, int nIter, int nBurnin, int Thin, double a_rho = 3.0, double b_rho = 1.0, double nu_1 = 0.001, double a_psi = 0.5, double b_psi = 0.5, double nu_2 = 0.0001, double a_sigma = 0.01, double b_sigma = 0.01, double Prop_VarA = 0.01, double Prop_VarB = 0.01){
 
@@ -759,7 +761,7 @@ Rcpp::List RGM_SpikeSlab2(const arma::mat& S_YY, const arma::mat& S_YX, const ar
   // Initialize Sigma_Inv
   arma::colvec Sigma_Inv = Rcpp::rgamma(p, a_sigma, 1 / b_sigma);
 
-  // Initialize Rho, Psi, Gamma, Phi, Tau and Eta matrix
+  // Initialize Rho, Psi, Gamma, Phi, Tau and Eta matrices
   arma::mat Rho = arma::zeros(p, p);
   arma::mat Psi = arma::zeros(p, k);
   arma::mat Gamma = arma::ones(p, p);
@@ -984,7 +986,7 @@ Rcpp::List RGM_SpikeSlab2(const arma::mat& S_YY, const arma::mat& S_YX, const ar
 
 
 
-// Do MCMC sampling with threshold prior
+// Do MCMC sampling with threshold prior for the model when only Y is there
 // [[Rcpp::export]]
 Rcpp::List RGM_Threshold1(const arma::mat& S_YY, double n, int nIter, int nBurnin, int Thin, double nu_1 = 0.0001, double a_sigma = 0.01, double b_sigma = 0.01, double Prop_VarA = 0.01){
 
@@ -1041,10 +1043,9 @@ Rcpp::List RGM_Threshold1(const arma::mat& S_YY, double n, int nIter, int nBurni
   // Run a loop to do MCMC sampling
   for(int i = 1; i <= nIter; i++){
 
-    // Update B
+
     // Calculate I_p - A
     arma::mat MultMat = arma::eye(p, p) - A;
-
 
 
     ////////////////////
@@ -1192,7 +1193,7 @@ Rcpp::List RGM_Threshold1(const arma::mat& S_YY, double n, int nIter, int nBurni
 
 
 
-// Do MCMC sampling with Spike and Slab Prior
+// Do MCMC sampling with Spike and Slab Prior for the model when only Y is there
 // [[Rcpp::export]]
 Rcpp::List RGM_SpikeSlab1(const arma::mat& S_YY, double n, int nIter, int nBurnin, int Thin, double a_rho = 3.0, double b_rho = 1.0, double nu_1 = 0.001, double a_sigma = 0.01, double b_sigma = 0.01, double Prop_VarA = 0.01){
 
@@ -1238,10 +1239,8 @@ Rcpp::List RGM_SpikeSlab1(const arma::mat& S_YY, double n, int nIter, int nBurni
   // Run a loop to do MCMC sampling
   for(int i = 1; i <= nIter; i++){
 
-    // Update B
     // Calculate I_p - A
     arma::mat MultMat = arma::eye(p, p) - A;
-
 
     ////////////////////
     // Update Sigma
@@ -1254,7 +1253,6 @@ Rcpp::List RGM_SpikeSlab1(const arma::mat& S_YY, double n, int nIter, int nBurni
       Sigma_Inv(j) = 1 / Sample_Sigma(n, z_sum, a_sigma, b_sigma);
 
     }
-
 
 
 
@@ -1371,7 +1369,7 @@ Rcpp::List RGM_SpikeSlab1(const arma::mat& S_YY, double n, int nIter, int nBurni
 
 
 
-// Define the function NetworkMotif with two parameters: Gamma and Gamma_Pst
+// Define the function NetworkMotif_cpp with two parameters: Gamma and Gamma_Pst
 // The function calculates the network motif based on the given parameters
 // [[Rcpp::export]]
 double NetworkMotif_cpp(const arma::mat& Gamma, const arma::cube& Gamma_Pst) {
