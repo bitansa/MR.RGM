@@ -2,7 +2,7 @@
 % Please edit documentation in R/RGM.R
 \name{RGM}
 \alias{RGM}
-\title{Fitting Multivariate Bidirectional Mendelian Randomization}
+\title{Fitting Bayesian Multivariate Bidirectional Mendelian Randomization Networks}
 \usage{
 RGM(
   X = NULL,
@@ -116,7 +116,7 @@ RGM provides essential causal effect/strength estimates between response variabl
 # Data Generation
 set.seed(9154)
 
-# Number of datapoints
+# Number of data points
 n = 10000
 
 # Number of response variables and number of instrument variables
@@ -205,7 +205,7 @@ plot(Output$LL_Pst, type = 'l', xlab = "Number of Iterations", ylab = "Log-likel
 # Data Generation
 set.seed(9154)
 
-# Number of datapoints
+# Number of data points
 n = 10000
 
 # Number of response variables and number of instrument variables
@@ -298,7 +298,7 @@ plot(Output$LL_Pst, type = 'l', xlab = "Number of Iterations", ylab = "Log-likel
 
 # -----------------------------------------------------------------
 # Example 3:
-# Run RGM based on Beta and Sigma_Hat with Threshold prior based on the model Y = AY + BX + E
+# Run RGM based on Beta and Sigma_Hat with Spike and Slab prior based on the model Y = AY + BX + E
 
 # Data Generation
 set.seed(9154)
@@ -392,9 +392,9 @@ A
 B
 
 
-# Apply RGM based on S_XX, Beta and Sigma_Hat for Threshold Prior
+# Apply RGM based on S_XX, Beta and Sigma_Hat for Spike and Slab Prior
 Output = RGM(S_XX = S_XX, Beta = Beta, Sigma_Hat = Sigma_Hat,
-          d = c(2, 1, 1), n = 10000, prior = "Threshold")
+          d = c(2, 1, 1), n = 10000, prior = "Spike and Slab")
 
 # Get the graph structure between response variables
 Output$zA_Est

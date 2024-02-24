@@ -45,7 +45,7 @@ You can install RGM R package from GitHub with:
 ```  
      
 
-Once the RGM package is installed load the library in the R workspace.
+Once the RGM package is installed load the library in the R work-space.
 
 ```{r}
 
@@ -56,17 +56,17 @@ Once the RGM package is installed load the library in the R workspace.
 ## Example
 
 
-We offer a succinct demonstration of the capabilities of the RGM function within the package, showcasing its effectiveness in computing causal interactions among response variables and between responses and instrumental variables using simulated datasets. Subsequently, we provide an example of how NetworkMotif can be applied, utilizing a specified network structure and Gamma_Pst acquired from executing the RGM function.
+We offer a succinct demonstration of the capabilities of the RGM function within the package, showcasing its effectiveness in computing causal interactions among response variables and between responses and instrumental variables using simulated data sets. Subsequently, we provide an example of how NetworkMotif can be applied, utilizing a specified network structure and Gamma_Pst acquired from executing the RGM function.
 
 
 ```{r}
 
-# ModeL: Y = AY + BX + E
+# Model: Y = AY + BX + E
 
 # Set seed
 set.seed(9154)
 
-# Number of datapoints
+# Number of data points
 n = 10000
 
 # Number of response variables and number of instrument variables
@@ -172,9 +172,10 @@ for (i in 1:p) {
  }
 
 
-# Apply RGM on S_XX, Beta and Sigma_Hat for Threshold Prior
+# Apply RGM on S_XX, Beta and Sigma_Hat for Spike and Slab Prior
 Output3 = RGM(S_XX = S_XX, Beta = Beta, Sigma_Hat = Sigma_Hat,
-           d = c(2, 1, 1, 1, 1), n = 10000, prior = "Threshold")
+           d = c(2, 1, 1, 1, 1), n = 10000, prior = "Spike and Slab")
+
 
 ```
 
@@ -228,9 +229,9 @@ We can plot the log-likelihoods from the outputs in the following way:
 
 ```{r}
 
-plot(Output1$LL_Pst, type = 'l', xlab = "Iterations", ylab = "Log-likelihood", col = 'orange')
-plot(Output2$LL_Pst, type = 'l', xlab = "Iterations", ylab = "Log-likelihood", col = 'purple')
-plot(Output3$LL_Pst, type = 'l', xlab = "Iterations", ylab = "Log-likelihood", col = 'cyan')
+plot(Output1$LL_Pst, type = 'l', xlab = "Iterations", ylab = "Log-likelihood")
+plot(Output2$LL_Pst, type = 'l', xlab = "Iterations", ylab = "Log-likelihood")
+plot(Output3$LL_Pst, type = 'l', xlab = "Iterations", ylab = "Log-likelihood")
 
 
 ```

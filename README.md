@@ -46,7 +46,7 @@ You can install RGM R package from GitHub with:
     devtools::install_github("bitansa/RGM")
 ```
 
-Once the RGM package is installed load the library in the R workspace.
+Once the RGM package is installed load the library in the R work-space.
 
 ``` r
 
@@ -58,19 +58,19 @@ Once the RGM package is installed load the library in the R workspace.
 We offer a succinct demonstration of the capabilities of the RGM
 function within the package, showcasing its effectiveness in computing
 causal interactions among response variables and between responses and
-instrumental variables using simulated datasets. Subsequently, we
+instrumental variables using simulated data sets. Subsequently, we
 provide an example of how NetworkMotif can be applied, utilizing a
 specified network structure and Gamma_Pst acquired from executing the
 RGM function.
 
 ``` r
 
-# ModeL: Y = AY + BX + E
+# Model: Y = AY + BX + E
 
 # Set seed
 set.seed(9154)
 
-# Number of datapoints
+# Number of data points
 n = 10000
 
 # Number of response variables and number of instrument variables
@@ -187,9 +187,9 @@ for (i in 1:p) {
  }
 
 
-# Apply RGM on S_XX, Beta and Sigma_Hat for Threshold Prior
+# Apply RGM on S_XX, Beta and Sigma_Hat for Spike and Slab Prior
 Output3 = RGM(S_XX = S_XX, Beta = Beta, Sigma_Hat = Sigma_Hat,
-           d = c(2, 1, 1, 1, 1), n = 10000, prior = "Threshold")
+           d = c(2, 1, 1, 1, 1), n = 10000, prior = "Spike and Slab")
 ```
 
 We get the estimated causal interaction matrix between response
@@ -213,11 +213,11 @@ Output2$A_Est
 #> [5,]  0.001466929  0.10033516 -0.0072119898 -0.002885797 0.00000000
 Output3$A_Est
 #>              [,1]        [,2]         [,3]          [,4]       [,5]
-#> [1,]  0.000000000 -0.08875307  0.041318383  0.0006178063 0.09498591
-#> [2,]  0.111592403  0.00000000 -0.112605078  0.0985936916 0.13648932
-#> [3,]  0.015711571 -0.09625968  0.000000000  0.0108548068 0.11935587
-#> [4,] -0.004945287 -0.11303896  0.001301969  0.0000000000 0.01414149
-#> [5,] -0.001858740  0.13134284  0.012553030 -0.0010936366 0.00000000
+#> [1,]  0.000000000 -0.08916909  0.040323704  0.0004407186 0.09569033
+#> [2,]  0.111429981  0.00000000 -0.113294802  0.0967872414 0.13633727
+#> [3,]  0.016102229 -0.09532651  0.000000000  0.0103318146 0.11898981
+#> [4,] -0.006334381 -0.11169543  0.002591126  0.0000000000 0.01366949
+#> [5,] -0.002296943  0.13176051  0.012056218 -0.0010876040 0.00000000
 ```
 
 We get the estimated graph structure between the response variables in
@@ -241,11 +241,11 @@ Output2$zA_Est
 #> [5,]    0    1    0    0    0
 Output3$zA_Est
 #>      [,1] [,2] [,3] [,4] [,5]
-#> [1,]    0    1    1    0    1
+#> [1,]    0    1    0    0    1
 #> [2,]    1    0    1    1    1
-#> [3,]    1    1    0    1    1
-#> [4,]    1    1    0    0    1
-#> [5,]    0    1    1    0    0
+#> [3,]    0    1    0    0    1
+#> [4,]    0    1    0    0    0
+#> [5,]    0    1    0    0    0
 ```
 
 We get the estimated causal interaction matrix between the response and
@@ -269,11 +269,11 @@ Output2$B_Est
 #> [5,] 0.0000000 0.0000 0.0000000 0.0000000 0.0000000 1.002271
 Output3$B_Est
 #>           [,1]     [,2]      [,3]      [,4]      [,5]      [,6]
-#> [1,] 0.9901485 1.004256 0.0000000 0.0000000 0.0000000 0.0000000
-#> [2,] 0.0000000 0.000000 0.9928381 0.0000000 0.0000000 0.0000000
-#> [3,] 0.0000000 0.000000 0.0000000 0.9985674 0.0000000 0.0000000
-#> [4,] 0.0000000 0.000000 0.0000000 0.0000000 0.9975018 0.0000000
-#> [5,] 0.0000000 0.000000 0.0000000 0.0000000 0.0000000 0.9963616
+#> [1,] 0.9902686 1.004035 0.0000000 0.0000000 0.0000000 0.0000000
+#> [2,] 0.0000000 0.000000 0.9928588 0.0000000 0.0000000 0.0000000
+#> [3,] 0.0000000 0.000000 0.0000000 0.9988565 0.0000000 0.0000000
+#> [4,] 0.0000000 0.000000 0.0000000 0.0000000 0.9970532 0.0000000
+#> [5,] 0.0000000 0.000000 0.0000000 0.0000000 0.0000000 0.9965687
 ```
 
 We get the estimated graph structure between the response and the
@@ -308,19 +308,19 @@ We can plot the log-likelihoods from the outputs in the following way:
 
 ``` r
 
-plot(Output1$LL_Pst, type = 'l', xlab = "Iterations", ylab = "Log-likelihood", col = 'orange')
+plot(Output1$LL_Pst, type = 'l', xlab = "Iterations", ylab = "Log-likelihood")
 ```
 
 <img src="man/figures/README-unnamed-chunk-10-1.png" width="100%" />
 
 ``` r
-plot(Output2$LL_Pst, type = 'l', xlab = "Iterations", ylab = "Log-likelihood", col = 'purple')
+plot(Output2$LL_Pst, type = 'l', xlab = "Iterations", ylab = "Log-likelihood")
 ```
 
 <img src="man/figures/README-unnamed-chunk-10-2.png" width="100%" />
 
 ``` r
-plot(Output3$LL_Pst, type = 'l', xlab = "Iterations", ylab = "Log-likelihood", col = 'cyan')
+plot(Output3$LL_Pst, type = 'l', xlab = "Iterations", ylab = "Log-likelihood")
 ```
 
 <img src="man/figures/README-unnamed-chunk-10-3.png" width="100%" />
@@ -346,7 +346,7 @@ NetworkMotif(Gamma = Gamma, Gamma_Pst = Gamma_Pst1)
 NetworkMotif(Gamma = Gamma, Gamma_Pst = Gamma_Pst2)
 #> [1] 0.006
 NetworkMotif(Gamma = Gamma, Gamma_Pst = Gamma_Pst3)
-#> [1] 0
+#> [1] 0.003875
 ```
 
 ## References
