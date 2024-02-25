@@ -1,22 +1,22 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# RGM
+# MR.RGM
 
 <!-- badges: start -->
 
-[![R-CMD-check](https://github.com/bitansa/ReciprocalGraphicalModels/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/bitansa/ReciprocalGraphicalModels/actions/workflows/R-CMD-check.yaml)
+[![R-CMD-check](https://github.com/bitansa/MR.RGM/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/bitansa/MR.RGM/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 ## Intended use of the package
 
-The RGM R package presents a crucial advancement in Mendelian
+The MR.RGM R package presents a crucial advancement in Mendelian
 randomization (MR) studies, providing a robust solution to a common
 challenge. While MR has proven invaluable in establishing causal links
 between exposures and outcomes, its traditional focus on single
 exposures and specific outcomes can be limiting. Biological systems
 often exhibit complexity, with interdependent outcomes influenced by
-numerous factors. RGM introduces a network-based approach to MR,
+numerous factors. MR.RGM introduces a network-based approach to MR,
 allowing researchers to explore the broader causal landscape.
 
 With two available functions, RGM and NetworkMotif, the package offers
@@ -37,20 +37,21 @@ enriching insights derived from MR studies.
 
 ## Installation instructions
 
-You can install RGM R package from GitHub with:
+You can install MR.RGM R package from GitHub with:
 
 ``` r
 
     install.packages("devtools")
 
-    devtools::install_github("bitansa/RGM")
+    devtools::install_github("bitansa/MR.RGM")
 ```
 
-Once the RGM package is installed load the library in the R work-space.
+Once the MR.RGM package is installed load the library in the R
+work-space.
 
 ``` r
 
-     library("RGM")
+     library("MR.RGM")
 ```
 
 ## Example

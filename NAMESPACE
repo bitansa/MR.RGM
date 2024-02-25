@@ -3,4 +3,4 @@
 export(NetworkMotif)
 export(RGM)
 importFrom(Rcpp,sourceCpp)
-useDynLib(RGM, .registration = TRUE)
+useDynLib(MR.RGM, .registration = TRUE)
