@@ -13,7 +13,7 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 
 // Sample_Rho
 double Sample_Rho(double Gamma, double a_rho, double b_rho);
-RcppExport SEXP _RGM_Sample_Rho(SEXP GammaSEXP, SEXP a_rhoSEXP, SEXP b_rhoSEXP) {
+RcppExport SEXP _MR_RGM_Sample_Rho(SEXP GammaSEXP, SEXP a_rhoSEXP, SEXP b_rhoSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -26,7 +26,7 @@ END_RCPP
 }
 // Sample_Psi
 double Sample_Psi(double Phi, double a_psi, double b_psi);
-RcppExport SEXP _RGM_Sample_Psi(SEXP PhiSEXP, SEXP a_psiSEXP, SEXP b_psiSEXP) {
+RcppExport SEXP _MR_RGM_Sample_Psi(SEXP PhiSEXP, SEXP a_psiSEXP, SEXP b_psiSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -39,7 +39,7 @@ END_RCPP
 }
 // Sample_Tau
 double Sample_Tau(double a, double gamma, double tau, double nu_1);
-RcppExport SEXP _RGM_Sample_Tau(SEXP aSEXP, SEXP gammaSEXP, SEXP tauSEXP, SEXP nu_1SEXP) {
+RcppExport SEXP _MR_RGM_Sample_Tau(SEXP aSEXP, SEXP gammaSEXP, SEXP tauSEXP, SEXP nu_1SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -53,7 +53,7 @@ END_RCPP
 }
 // Sample_Eta
 double Sample_Eta(double b, double phi, double eta, double nu_2);
-RcppExport SEXP _RGM_Sample_Eta(SEXP bSEXP, SEXP phiSEXP, SEXP etaSEXP, SEXP nu_2SEXP) {
+RcppExport SEXP _MR_RGM_Sample_Eta(SEXP bSEXP, SEXP phiSEXP, SEXP etaSEXP, SEXP nu_2SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -67,7 +67,7 @@ END_RCPP
 }
 // Sample_Gamma
 double Sample_Gamma(double a, double tau, double rho, double nu_1);
-RcppExport SEXP _RGM_Sample_Gamma(SEXP aSEXP, SEXP tauSEXP, SEXP rhoSEXP, SEXP nu_1SEXP) {
+RcppExport SEXP _MR_RGM_Sample_Gamma(SEXP aSEXP, SEXP tauSEXP, SEXP rhoSEXP, SEXP nu_1SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -81,7 +81,7 @@ END_RCPP
 }
 // Sample_Phi
 double Sample_Phi(double b, double eta, double psi, double nu_2);
-RcppExport SEXP _RGM_Sample_Phi(SEXP bSEXP, SEXP etaSEXP, SEXP psiSEXP, SEXP nu_2SEXP) {
+RcppExport SEXP _MR_RGM_Sample_Phi(SEXP bSEXP, SEXP etaSEXP, SEXP psiSEXP, SEXP nu_2SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -95,7 +95,7 @@ END_RCPP
 }
 // Sample_Sigma
 double Sample_Sigma(double n, double z_sum, double a_sigma, double b_sigma);
-RcppExport SEXP _RGM_Sample_Sigma(SEXP nSEXP, SEXP z_sumSEXP, SEXP a_sigmaSEXP, SEXP b_sigmaSEXP) {
+RcppExport SEXP _MR_RGM_Sample_Sigma(SEXP nSEXP, SEXP z_sumSEXP, SEXP a_sigmaSEXP, SEXP b_sigmaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -109,7 +109,7 @@ END_RCPP
 }
 // Target_A
 double Target_A(double a, double N, double gamma, double tau, double nu_1, double Trace3, double Trace4, double Trace5, double Trace6, double logdet);
-RcppExport SEXP _RGM_Target_A(SEXP aSEXP, SEXP NSEXP, SEXP gammaSEXP, SEXP tauSEXP, SEXP nu_1SEXP, SEXP Trace3SEXP, SEXP Trace4SEXP, SEXP Trace5SEXP, SEXP Trace6SEXP, SEXP logdetSEXP) {
+RcppExport SEXP _MR_RGM_Target_A(SEXP aSEXP, SEXP NSEXP, SEXP gammaSEXP, SEXP tauSEXP, SEXP nu_1SEXP, SEXP Trace3SEXP, SEXP Trace4SEXP, SEXP Trace5SEXP, SEXP Trace6SEXP, SEXP logdetSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -129,7 +129,7 @@ END_RCPP
 }
 // Sample_A
 Rcpp::List Sample_A(const arma::mat& S_YY, const arma::mat& S_YX, const arma::mat& A, const arma::mat& A_Pseudo, double i, double j, const arma::colvec& Sigma_Inv, double N, double p, const arma::mat& B, double gamma, double tau, double nu_1, double prop_var1, double tA, double Trace3, double Trace4, double Trace5, double Trace6, arma::mat InvMat, double logdet);
-RcppExport SEXP _RGM_Sample_A(SEXP S_YYSEXP, SEXP S_YXSEXP, SEXP ASEXP, SEXP A_PseudoSEXP, SEXP iSEXP, SEXP jSEXP, SEXP Sigma_InvSEXP, SEXP NSEXP, SEXP pSEXP, SEXP BSEXP, SEXP gammaSEXP, SEXP tauSEXP, SEXP nu_1SEXP, SEXP prop_var1SEXP, SEXP tASEXP, SEXP Trace3SEXP, SEXP Trace4SEXP, SEXP Trace5SEXP, SEXP Trace6SEXP, SEXP InvMatSEXP, SEXP logdetSEXP) {
+RcppExport SEXP _MR_RGM_Sample_A(SEXP S_YYSEXP, SEXP S_YXSEXP, SEXP ASEXP, SEXP A_PseudoSEXP, SEXP iSEXP, SEXP jSEXP, SEXP Sigma_InvSEXP, SEXP NSEXP, SEXP pSEXP, SEXP BSEXP, SEXP gammaSEXP, SEXP tauSEXP, SEXP nu_1SEXP, SEXP prop_var1SEXP, SEXP tASEXP, SEXP Trace3SEXP, SEXP Trace4SEXP, SEXP Trace5SEXP, SEXP Trace6SEXP, SEXP InvMatSEXP, SEXP logdetSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -160,7 +160,7 @@ END_RCPP
 }
 // Target_B
 double Target_B(double b, double phi, double eta, double nu_2, double Trace1, double Trace2);
-RcppExport SEXP _RGM_Target_B(SEXP bSEXP, SEXP phiSEXP, SEXP etaSEXP, SEXP nu_2SEXP, SEXP Trace1SEXP, SEXP Trace2SEXP) {
+RcppExport SEXP _MR_RGM_Target_B(SEXP bSEXP, SEXP phiSEXP, SEXP etaSEXP, SEXP nu_2SEXP, SEXP Trace1SEXP, SEXP Trace2SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -176,7 +176,7 @@ END_RCPP
 }
 // Sample_B
 Rcpp::List Sample_B(const arma::mat& S_YX, const arma::mat& S_XX, const arma::mat& B, const arma::mat& B_Pseudo, double i, double j, const arma::colvec& Sigma_Inv, const arma::mat& MultMat, double N, double phi, double eta, double nu_2, double prop_var2, double tB, double Trace1, double Trace2);
-RcppExport SEXP _RGM_Sample_B(SEXP S_YXSEXP, SEXP S_XXSEXP, SEXP BSEXP, SEXP B_PseudoSEXP, SEXP iSEXP, SEXP jSEXP, SEXP Sigma_InvSEXP, SEXP MultMatSEXP, SEXP NSEXP, SEXP phiSEXP, SEXP etaSEXP, SEXP nu_2SEXP, SEXP prop_var2SEXP, SEXP tBSEXP, SEXP Trace1SEXP, SEXP Trace2SEXP) {
+RcppExport SEXP _MR_RGM_Sample_B(SEXP S_YXSEXP, SEXP S_XXSEXP, SEXP BSEXP, SEXP B_PseudoSEXP, SEXP iSEXP, SEXP jSEXP, SEXP Sigma_InvSEXP, SEXP MultMatSEXP, SEXP NSEXP, SEXP phiSEXP, SEXP etaSEXP, SEXP nu_2SEXP, SEXP prop_var2SEXP, SEXP tBSEXP, SEXP Trace1SEXP, SEXP Trace2SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -202,7 +202,7 @@ END_RCPP
 }
 // Target_A_Star
 double Target_A_Star(double a, double N, double gamma, double tau, double nu_1, double Trace3, double Trace4, double Trace5, double logdet);
-RcppExport SEXP _RGM_Target_A_Star(SEXP aSEXP, SEXP NSEXP, SEXP gammaSEXP, SEXP tauSEXP, SEXP nu_1SEXP, SEXP Trace3SEXP, SEXP Trace4SEXP, SEXP Trace5SEXP, SEXP logdetSEXP) {
+RcppExport SEXP _MR_RGM_Target_A_Star(SEXP aSEXP, SEXP NSEXP, SEXP gammaSEXP, SEXP tauSEXP, SEXP nu_1SEXP, SEXP Trace3SEXP, SEXP Trace4SEXP, SEXP Trace5SEXP, SEXP logdetSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -221,7 +221,7 @@ END_RCPP
 }
 // Sample_A_Star
 Rcpp::List Sample_A_Star(const arma::mat& S_YY, const arma::mat& A, const arma::mat& A_Pseudo, double i, double j, const arma::colvec& Sigma_Inv, double N, double p, double gamma, double tau, double nu_1, double prop_var1, double tA, double Trace3, double Trace4, double Trace5, arma::mat InvMat, double logdet);
-RcppExport SEXP _RGM_Sample_A_Star(SEXP S_YYSEXP, SEXP ASEXP, SEXP A_PseudoSEXP, SEXP iSEXP, SEXP jSEXP, SEXP Sigma_InvSEXP, SEXP NSEXP, SEXP pSEXP, SEXP gammaSEXP, SEXP tauSEXP, SEXP nu_1SEXP, SEXP prop_var1SEXP, SEXP tASEXP, SEXP Trace3SEXP, SEXP Trace4SEXP, SEXP Trace5SEXP, SEXP InvMatSEXP, SEXP logdetSEXP) {
+RcppExport SEXP _MR_RGM_Sample_A_Star(SEXP S_YYSEXP, SEXP ASEXP, SEXP A_PseudoSEXP, SEXP iSEXP, SEXP jSEXP, SEXP Sigma_InvSEXP, SEXP NSEXP, SEXP pSEXP, SEXP gammaSEXP, SEXP tauSEXP, SEXP nu_1SEXP, SEXP prop_var1SEXP, SEXP tASEXP, SEXP Trace3SEXP, SEXP Trace4SEXP, SEXP Trace5SEXP, SEXP InvMatSEXP, SEXP logdetSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -249,7 +249,7 @@ END_RCPP
 }
 // LL_Star
 double LL_Star(const arma::mat& A, const arma::mat& S_YY, const arma::colvec& Sigma_Inv, double p, double N);
-RcppExport SEXP _RGM_LL_Star(SEXP ASEXP, SEXP S_YYSEXP, SEXP Sigma_InvSEXP, SEXP pSEXP, SEXP NSEXP) {
+RcppExport SEXP _MR_RGM_LL_Star(SEXP ASEXP, SEXP S_YYSEXP, SEXP Sigma_InvSEXP, SEXP pSEXP, SEXP NSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -264,7 +264,7 @@ END_RCPP
 }
 // Sample_tn
 double Sample_tn(double mu, double sigma, double a, double b);
-RcppExport SEXP _RGM_Sample_tn(SEXP muSEXP, SEXP sigmaSEXP, SEXP aSEXP, SEXP bSEXP) {
+RcppExport SEXP _MR_RGM_Sample_tn(SEXP muSEXP, SEXP sigmaSEXP, SEXP aSEXP, SEXP bSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -278,7 +278,7 @@ END_RCPP
 }
 // tn_pdf
 double tn_pdf(double x, double mu, double sigma, double a, double b);
-RcppExport SEXP _RGM_tn_pdf(SEXP xSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP aSEXP, SEXP bSEXP) {
+RcppExport SEXP _MR_RGM_tn_pdf(SEXP xSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP aSEXP, SEXP bSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -293,7 +293,7 @@ END_RCPP
 }
 // LL
 double LL(const arma::mat& A, const arma::mat& B, const arma::mat& S_YY, const arma::mat& S_YX, const arma::mat& S_XX, const arma::colvec& Sigma_Inv, double p, double N);
-RcppExport SEXP _RGM_LL(SEXP ASEXP, SEXP BSEXP, SEXP S_YYSEXP, SEXP S_YXSEXP, SEXP S_XXSEXP, SEXP Sigma_InvSEXP, SEXP pSEXP, SEXP NSEXP) {
+RcppExport SEXP _MR_RGM_LL(SEXP ASEXP, SEXP BSEXP, SEXP S_YYSEXP, SEXP S_YXSEXP, SEXP S_XXSEXP, SEXP Sigma_InvSEXP, SEXP pSEXP, SEXP NSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -311,7 +311,7 @@ END_RCPP
 }
 // RGM_Threshold2
 Rcpp::List RGM_Threshold2(const arma::mat& S_YY, const arma::mat& S_YX, const arma::mat& S_XX, const arma::mat& D, double n, int nIter, int nBurnin, int Thin, double nu_1, double nu_2, double a_sigma, double b_sigma, double Prop_VarA, double Prop_VarB);
-RcppExport SEXP _RGM_RGM_Threshold2(SEXP S_YYSEXP, SEXP S_YXSEXP, SEXP S_XXSEXP, SEXP DSEXP, SEXP nSEXP, SEXP nIterSEXP, SEXP nBurninSEXP, SEXP ThinSEXP, SEXP nu_1SEXP, SEXP nu_2SEXP, SEXP a_sigmaSEXP, SEXP b_sigmaSEXP, SEXP Prop_VarASEXP, SEXP Prop_VarBSEXP) {
+RcppExport SEXP _MR_RGM_RGM_Threshold2(SEXP S_YYSEXP, SEXP S_YXSEXP, SEXP S_XXSEXP, SEXP DSEXP, SEXP nSEXP, SEXP nIterSEXP, SEXP nBurninSEXP, SEXP ThinSEXP, SEXP nu_1SEXP, SEXP nu_2SEXP, SEXP a_sigmaSEXP, SEXP b_sigmaSEXP, SEXP Prop_VarASEXP, SEXP Prop_VarBSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -335,7 +335,7 @@ END_RCPP
 }
 // RGM_SpikeSlab2
 Rcpp::List RGM_SpikeSlab2(const arma::mat& S_YY, const arma::mat& S_YX, const arma::mat& S_XX, const arma::mat& D, double n, int nIter, int nBurnin, int Thin, double a_rho, double b_rho, double nu_1, double a_psi, double b_psi, double nu_2, double a_sigma, double b_sigma, double Prop_VarA, double Prop_VarB);
-RcppExport SEXP _RGM_RGM_SpikeSlab2(SEXP S_YYSEXP, SEXP S_YXSEXP, SEXP S_XXSEXP, SEXP DSEXP, SEXP nSEXP, SEXP nIterSEXP, SEXP nBurninSEXP, SEXP ThinSEXP, SEXP a_rhoSEXP, SEXP b_rhoSEXP, SEXP nu_1SEXP, SEXP a_psiSEXP, SEXP b_psiSEXP, SEXP nu_2SEXP, SEXP a_sigmaSEXP, SEXP b_sigmaSEXP, SEXP Prop_VarASEXP, SEXP Prop_VarBSEXP) {
+RcppExport SEXP _MR_RGM_RGM_SpikeSlab2(SEXP S_YYSEXP, SEXP S_YXSEXP, SEXP S_XXSEXP, SEXP DSEXP, SEXP nSEXP, SEXP nIterSEXP, SEXP nBurninSEXP, SEXP ThinSEXP, SEXP a_rhoSEXP, SEXP b_rhoSEXP, SEXP nu_1SEXP, SEXP a_psiSEXP, SEXP b_psiSEXP, SEXP nu_2SEXP, SEXP a_sigmaSEXP, SEXP b_sigmaSEXP, SEXP Prop_VarASEXP, SEXP Prop_VarBSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -363,7 +363,7 @@ END_RCPP
 }
 // RGM_Threshold1
 Rcpp::List RGM_Threshold1(const arma::mat& S_YY, double n, int nIter, int nBurnin, int Thin, double nu_1, double a_sigma, double b_sigma, double Prop_VarA);
-RcppExport SEXP _RGM_RGM_Threshold1(SEXP S_YYSEXP, SEXP nSEXP, SEXP nIterSEXP, SEXP nBurninSEXP, SEXP ThinSEXP, SEXP nu_1SEXP, SEXP a_sigmaSEXP, SEXP b_sigmaSEXP, SEXP Prop_VarASEXP) {
+RcppExport SEXP _MR_RGM_RGM_Threshold1(SEXP S_YYSEXP, SEXP nSEXP, SEXP nIterSEXP, SEXP nBurninSEXP, SEXP ThinSEXP, SEXP nu_1SEXP, SEXP a_sigmaSEXP, SEXP b_sigmaSEXP, SEXP Prop_VarASEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -382,7 +382,7 @@ END_RCPP
 }
 // RGM_SpikeSlab1
 Rcpp::List RGM_SpikeSlab1(const arma::mat& S_YY, double n, int nIter, int nBurnin, int Thin, double a_rho, double b_rho, double nu_1, double a_sigma, double b_sigma, double Prop_VarA);
-RcppExport SEXP _RGM_RGM_SpikeSlab1(SEXP S_YYSEXP, SEXP nSEXP, SEXP nIterSEXP, SEXP nBurninSEXP, SEXP ThinSEXP, SEXP a_rhoSEXP, SEXP b_rhoSEXP, SEXP nu_1SEXP, SEXP a_sigmaSEXP, SEXP b_sigmaSEXP, SEXP Prop_VarASEXP) {
+RcppExport SEXP _MR_RGM_RGM_SpikeSlab1(SEXP S_YYSEXP, SEXP nSEXP, SEXP nIterSEXP, SEXP nBurninSEXP, SEXP ThinSEXP, SEXP a_rhoSEXP, SEXP b_rhoSEXP, SEXP nu_1SEXP, SEXP a_sigmaSEXP, SEXP b_sigmaSEXP, SEXP Prop_VarASEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -403,7 +403,7 @@ END_RCPP
 }
 // NetworkMotif_cpp
 double NetworkMotif_cpp(const arma::mat& Gamma, const arma::cube& Gamma_Pst);
-RcppExport SEXP _RGM_NetworkMotif_cpp(SEXP GammaSEXP, SEXP Gamma_PstSEXP) {
+RcppExport SEXP _MR_RGM_NetworkMotif_cpp(SEXP GammaSEXP, SEXP Gamma_PstSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -415,32 +415,32 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_RGM_Sample_Rho", (DL_FUNC) &_RGM_Sample_Rho, 3},
-    {"_RGM_Sample_Psi", (DL_FUNC) &_RGM_Sample_Psi, 3},
-    {"_RGM_Sample_Tau", (DL_FUNC) &_RGM_Sample_Tau, 4},
-    {"_RGM_Sample_Eta", (DL_FUNC) &_RGM_Sample_Eta, 4},
-    {"_RGM_Sample_Gamma", (DL_FUNC) &_RGM_Sample_Gamma, 4},
-    {"_RGM_Sample_Phi", (DL_FUNC) &_RGM_Sample_Phi, 4},
-    {"_RGM_Sample_Sigma", (DL_FUNC) &_RGM_Sample_Sigma, 4},
-    {"_RGM_Target_A", (DL_FUNC) &_RGM_Target_A, 10},
-    {"_RGM_Sample_A", (DL_FUNC) &_RGM_Sample_A, 21},
-    {"_RGM_Target_B", (DL_FUNC) &_RGM_Target_B, 6},
-    {"_RGM_Sample_B", (DL_FUNC) &_RGM_Sample_B, 16},
-    {"_RGM_Target_A_Star", (DL_FUNC) &_RGM_Target_A_Star, 9},
-    {"_RGM_Sample_A_Star", (DL_FUNC) &_RGM_Sample_A_Star, 18},
-    {"_RGM_LL_Star", (DL_FUNC) &_RGM_LL_Star, 5},
-    {"_RGM_Sample_tn", (DL_FUNC) &_RGM_Sample_tn, 4},
-    {"_RGM_tn_pdf", (DL_FUNC) &_RGM_tn_pdf, 5},
-    {"_RGM_LL", (DL_FUNC) &_RGM_LL, 8},
-    {"_RGM_RGM_Threshold2", (DL_FUNC) &_RGM_RGM_Threshold2, 14},
-    {"_RGM_RGM_SpikeSlab2", (DL_FUNC) &_RGM_RGM_SpikeSlab2, 18},
-    {"_RGM_RGM_Threshold1", (DL_FUNC) &_RGM_RGM_Threshold1, 9},
-    {"_RGM_RGM_SpikeSlab1", (DL_FUNC) &_RGM_RGM_SpikeSlab1, 11},
-    {"_RGM_NetworkMotif_cpp", (DL_FUNC) &_RGM_NetworkMotif_cpp, 2},
+    {"_MR_RGM_Sample_Rho", (DL_FUNC) &_MR_RGM_Sample_Rho, 3},
+    {"_MR_RGM_Sample_Psi", (DL_FUNC) &_MR_RGM_Sample_Psi, 3},
+    {"_MR_RGM_Sample_Tau", (DL_FUNC) &_MR_RGM_Sample_Tau, 4},
+    {"_MR_RGM_Sample_Eta", (DL_FUNC) &_MR_RGM_Sample_Eta, 4},
+    {"_MR_RGM_Sample_Gamma", (DL_FUNC) &_MR_RGM_Sample_Gamma, 4},
+    {"_MR_RGM_Sample_Phi", (DL_FUNC) &_MR_RGM_Sample_Phi, 4},
+    {"_MR_RGM_Sample_Sigma", (DL_FUNC) &_MR_RGM_Sample_Sigma, 4},
+    {"_MR_RGM_Target_A", (DL_FUNC) &_MR_RGM_Target_A, 10},
+    {"_MR_RGM_Sample_A", (DL_FUNC) &_MR_RGM_Sample_A, 21},
+    {"_MR_RGM_Target_B", (DL_FUNC) &_MR_RGM_Target_B, 6},
+    {"_MR_RGM_Sample_B", (DL_FUNC) &_MR_RGM_Sample_B, 16},
+    {"_MR_RGM_Target_A_Star", (DL_FUNC) &_MR_RGM_Target_A_Star, 9},
+    {"_MR_RGM_Sample_A_Star", (DL_FUNC) &_MR_RGM_Sample_A_Star, 18},
+    {"_MR_RGM_LL_Star", (DL_FUNC) &_MR_RGM_LL_Star, 5},
+    {"_MR_RGM_Sample_tn", (DL_FUNC) &_MR_RGM_Sample_tn, 4},
+    {"_MR_RGM_tn_pdf", (DL_FUNC) &_MR_RGM_tn_pdf, 5},
+    {"_MR_RGM_LL", (DL_FUNC) &_MR_RGM_LL, 8},
+    {"_MR_RGM_RGM_Threshold2", (DL_FUNC) &_MR_RGM_RGM_Threshold2, 14},
+    {"_MR_RGM_RGM_SpikeSlab2", (DL_FUNC) &_MR_RGM_RGM_SpikeSlab2, 18},
+    {"_MR_RGM_RGM_Threshold1", (DL_FUNC) &_MR_RGM_RGM_Threshold1, 9},
+    {"_MR_RGM_RGM_SpikeSlab1", (DL_FUNC) &_MR_RGM_RGM_SpikeSlab1, 11},
+    {"_MR_RGM_NetworkMotif_cpp", (DL_FUNC) &_MR_RGM_NetworkMotif_cpp, 2},
     {NULL, NULL, 0}
 };
 
-RcppExport void R_init_RGM(DllInfo *dll) {
+RcppExport void R_init_MR_RGM(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 }
