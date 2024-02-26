@@ -174,7 +174,7 @@ for (i in 1:n) {
 
 # Define a function to create smaller arrowheads
 smaller_arrowheads = function(graph) {
-    igraph::E(graph)$arrow.size = 0.25  # Adjust the arrow size value as needed
+    igraph::E(graph)$arrow.size = 1  # Adjust the arrow size value as needed
     return(graph)
 }
 
