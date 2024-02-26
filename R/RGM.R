@@ -127,16 +127,31 @@
 #'
 #' }
 #'
+#' # Define a function to create smaller arrowheads
+#' smaller_arrowheads = function(graph) {
+#'     igraph::E(graph)$arrow.size = 0.25  # Adjust the arrow size value as needed
+#'     return(graph)
+#' }
+#'
 #' # Print true causal interaction matrices between response variables
 #' # and between response and instrument variables
 #' A
 #' B
+#'
+#'
+#' # Plot the true graph structure between response variables
+#' plot(smaller_arrowheads(igraph::graph.adjacency(((A != 0) * 1),
+#'  mode = "directed")), layout = igraph::layout_in_circle, main = "True Graph")
 #'
 #' # Apply RGM on individual level data for Threshold Prior
 #' Output = RGM(X = X, Y = Y, d = c(2, 1, 1), prior = "Threshold")
 #'
 #' # Get the graph structure between response variables
 #' Output$zA_Est
+#'
+#' # Plot the estimated graph structure between response variables
+#' plot(smaller_arrowheads(igraph::graph.adjacency(Output$zA_Est,
+#'  mode = "directed")), layout = igraph::layout_in_circle, main = "Estimated Graph")
 #'
 #' # Get the estimated causal strength matrix between response variables
 #' Output$A_Est
@@ -228,6 +243,10 @@
 #' A
 #' B
 #'
+#' # Plot the true graph structure between response variables
+#' plot(smaller_arrowheads(igraph::graph.adjacency(((A != 0) * 1),
+#'  mode = "directed")), layout = igraph::layout_in_circle, main = "True Graph")
+#'
 #'
 #' # Apply RGM on summary level data for Spike and Slab Prior
 #' Output = RGM(S_YY = S_YY, S_YX = S_YX, S_XX = S_XX,
@@ -235,6 +254,10 @@
 #'
 #' # Get the graph structure between response variables
 #' Output$zA_Est
+#'
+#' # Plot the estimated graph structure between response variables
+#' plot(smaller_arrowheads(igraph::graph.adjacency(Output$zA_Est,
+#'  mode = "directed")), layout = igraph::layout_in_circle, main = "Estimated Graph")
 #'
 #' # Get the estimated causal strength matrix between response variables
 #' Output$A_Est
@@ -347,12 +370,21 @@
 #' B
 #'
 #'
+#' # Plot the true graph structure between response variables
+#' plot(smaller_arrowheads(igraph::graph.adjacency(((A != 0) * 1),
+#'  mode = "directed")), layout = igraph::layout_in_circle, main = "True Graph")
+#'
+#'
 #' # Apply RGM based on S_XX, Beta and Sigma_Hat for Spike and Slab Prior
 #' Output = RGM(S_XX = S_XX, Beta = Beta, Sigma_Hat = Sigma_Hat,
 #'           d = c(2, 1, 1), n = 10000, prior = "Spike and Slab")
 #'
 #' # Get the graph structure between response variables
 #' Output$zA_Est
+#'
+#' # Plot the estimated graph structure between response variables
+#' plot(smaller_arrowheads(igraph::graph.adjacency(Output$zA_Est,
+#'  mode = "directed")), layout = igraph::layout_in_circle, main = "Estimated Graph")
 #'
 #' # Get the estimated causal strength matrix between response variables
 #' Output$A_Est
