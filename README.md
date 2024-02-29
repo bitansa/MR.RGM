@@ -37,13 +37,11 @@ enriching insights derived from MR studies.
 
 ## Installation instructions
 
-You can install MR.RGM R package from GitHub with:
+You can install MR.RGM R package from CRAN with:
 
 ``` r
 
-    install.packages("devtools")
-
-    devtools::install_github("bitansa/MR.RGM")
+    install.packages("MR.RGM")
 ```
 
 Once the MR.RGM package is installed load the library in the R
@@ -221,8 +219,8 @@ Output3$A_Est
 #> [5,] -0.002296943  0.13176051  0.012056218 -0.0010876040 0.00000000
 ```
 
-We get the estimated graph structure between the response variables in
-the following way:
+We get the estimated causal network structure between the response
+variables in the following way:
 
 ``` r
 
@@ -248,6 +246,36 @@ Output3$zA_Est
 #> [4,]    0    1    0    0    0
 #> [5,]    0    1    0    0    0
 ```
+
+We observe that the causal network structures inferred in the three
+outputs mentioned are identical. To gain a clearer understanding of the
+network, we compare the true network structure with the one estimated by
+RGM. Since the networks derived from all three outputs are consistent,
+we plot a single graph representing the estimated causal network.
+
+``` r
+
+# Define a function to create smaller arrowheads
+smaller_arrowheads <- function(graph) {
+  igraph::E(graph)$arrow.size = 0.60  # Adjust the arrow size value as needed
+  return(graph)
+}
+
+# Create a layout for multiple plots
+par(mfrow = c(1, 2))
+
+# Plot the true causal network
+plot(smaller_arrowheads(igraph::graph.adjacency((A != 0) * 1,
+       mode = "directed")), layout = igraph::layout_in_circle,
+          main = "True Causal Network")
+
+# Plot the estimated causal network
+plot(smaller_arrowheads(igraph::graph.adjacency(Output1$zA_Est,
+      mode = "directed")), layout = igraph::layout_in_circle,
+         main = "Estimated Causal Network")
+```
+
+<img src="man/figures/README-unnamed-chunk-8-1.png" width="100%" />
 
 We get the estimated causal interaction matrix between the response and
 the instrument variables from the outputs in the following way:
@@ -312,42 +340,54 @@ We can plot the log-likelihoods from the outputs in the following way:
 plot(Output1$LL_Pst, type = 'l', xlab = "Iterations", ylab = "Log-likelihood")
 ```
 
-<img src="man/figures/README-unnamed-chunk-10-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-11-1.png" width="100%" />
 
 ``` r
 plot(Output2$LL_Pst, type = 'l', xlab = "Iterations", ylab = "Log-likelihood")
 ```
 
-<img src="man/figures/README-unnamed-chunk-10-2.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-11-2.png" width="100%" />
 
 ``` r
 plot(Output3$LL_Pst, type = 'l', xlab = "Iterations", ylab = "Log-likelihood")
 ```
 
-<img src="man/figures/README-unnamed-chunk-10-3.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-11-3.png" width="100%" />
 
 Next, we present the implementation of the NetworkMotif function. We
-begin by defining the true network structure among the response
-variables. Subsequently, we collect Gamma_Pst arrays from various
-outputs and proceed to execute NetworkMotif based on these arrays.
+begin by defining a random subgraph among the response variables.
+Subsequently, we collect Gamma_Pst arrays from various outputs and
+proceed to execute NetworkMotif based on these arrays.
 
 ``` r
 
-# Get the true network structure
-Gamma = (A != 0) * 1
+# Start with a random subgraph
+Gamma = matrix(0, nrow = p, ncol = p)
+Gamma[5, 2] = Gamma[3, 5] = Gamma[2, 3] = 1
+
+# Plot the subgraph to get an idea about the causal network
+plot(smaller_arrowheads(igraph::graph.adjacency(Gamma,
+       mode = "directed")), layout = igraph::layout_in_circle,
+          main = "Subgraph")
+```
+
+<img src="man/figures/README-unnamed-chunk-12-1.png" width="100%" />
+
+``` r
+
 
 # Store the Gamma_Pst arrays from outputs
 Gamma_Pst1 = Output1$Gamma_Pst
 Gamma_Pst2 = Output2$Gamma_Pst
 Gamma_Pst3 = Output3$Gamma_Pst
 
-# Do uncertainty quantification with these Gamma_Pst matrices
+# Get the posterior probabilities of Gamma with these Gamma_Pst matrices
 NetworkMotif(Gamma = Gamma, Gamma_Pst = Gamma_Pst1)
-#> [1] 1
+#> [1] 0
 NetworkMotif(Gamma = Gamma, Gamma_Pst = Gamma_Pst2)
-#> [1] 0.006
+#> [1] 0
 NetworkMotif(Gamma = Gamma, Gamma_Pst = Gamma_Pst3)
-#> [1] 0.003875
+#> [1] 0
 ```
 
 ## References

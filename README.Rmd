@@ -28,19 +28,13 @@ With two available functions, RGM and NetworkMotif, the package offers versatili
 RGM accommodates both individual-level data and two types of summary-level data, making it adaptable to various data availability scenarios. This adaptability enhances the package's utility across different research contexts. The outputs of RGM include estimates of causal effects, adjacency matrices, and other relevant parameters. Together, these outputs contribute to a deeper understanding of the intricate relationships within complex biological networks, thereby enriching insights derived from MR studies.
 
 
-
-
-
-
 ## Installation instructions
 
-You can install MR.RGM R package from GitHub with:
+You can install MR.RGM R package from CRAN with:
 
 ```{r, eval = F}
 
-    install.packages("devtools")
-
-    devtools::install_github("bitansa/MR.RGM")
+    install.packages("MR.RGM")
 
 ```  
      
@@ -179,7 +173,6 @@ Output3 = RGM(S_XX = S_XX, Beta = Beta, Sigma_Hat = Sigma_Hat,
 
 ```
 
-
 We get the estimated causal interaction matrix between response variables in the following way:
 
 ```{r}
@@ -191,7 +184,7 @@ Output3$A_Est
 
 ```
 
-We get the estimated graph structure between the response variables in the following way:
+We get the estimated causal network structure between the response variables in the following way:
 
 ```{r}
 
@@ -202,6 +195,31 @@ Output3$zA_Est
 
 ```
 
+We observe that the causal network structures inferred in the three outputs mentioned are identical. To gain a clearer understanding of the network, we compare the true network structure with the one estimated by RGM. Since the networks derived from all three outputs are consistent, we plot a single graph representing the estimated causal network.
+
+```{r}
+
+# Define a function to create smaller arrowheads
+smaller_arrowheads <- function(graph) {
+  igraph::E(graph)$arrow.size = 0.60  # Adjust the arrow size value as needed
+  return(graph)
+}
+
+# Create a layout for multiple plots
+par(mfrow = c(1, 2))
+
+# Plot the true causal network
+plot(smaller_arrowheads(igraph::graph.adjacency((A != 0) * 1,
+       mode = "directed")), layout = igraph::layout_in_circle,
+          main = "True Causal Network")
+
+# Plot the estimated causal network
+plot(smaller_arrowheads(igraph::graph.adjacency(Output1$zA_Est,
+      mode = "directed")), layout = igraph::layout_in_circle,
+         main = "Estimated Causal Network")
+
+
+```
 
 We get the estimated causal interaction matrix between the response and the instrument variables from the outputs in the following way:
 
@@ -236,20 +254,26 @@ plot(Output3$LL_Pst, type = 'l', xlab = "Iterations", ylab = "Log-likelihood")
 
 ```
 
-
-Next, we present the implementation of the NetworkMotif function. We begin by defining the true network structure among the response variables. Subsequently, we collect Gamma_Pst arrays from various outputs and proceed to execute NetworkMotif based on these arrays.
+Next, we present the implementation of the NetworkMotif function. We begin by defining a random subgraph among the response variables. Subsequently, we collect Gamma_Pst arrays from various outputs and proceed to execute NetworkMotif based on these arrays.
 
 ```{r}
 
-# Get the true network structure
-Gamma = (A != 0) * 1
+# Start with a random subgraph
+Gamma = matrix(0, nrow = p, ncol = p)
+Gamma[5, 2] = Gamma[3, 5] = Gamma[2, 3] = 1
+
+# Plot the subgraph to get an idea about the causal network
+plot(smaller_arrowheads(igraph::graph.adjacency(Gamma,
+       mode = "directed")), layout = igraph::layout_in_circle,
+          main = "Subgraph")
+
 
 # Store the Gamma_Pst arrays from outputs
 Gamma_Pst1 = Output1$Gamma_Pst
 Gamma_Pst2 = Output2$Gamma_Pst
 Gamma_Pst3 = Output3$Gamma_Pst
 
-# Do uncertainty quantification with these Gamma_Pst matrices
+# Get the posterior probabilities of Gamma with these Gamma_Pst matrices
 NetworkMotif(Gamma = Gamma, Gamma_Pst = Gamma_Pst1)
 NetworkMotif(Gamma = Gamma, Gamma_Pst = Gamma_Pst2)
 NetworkMotif(Gamma = Gamma, Gamma_Pst = Gamma_Pst3)
