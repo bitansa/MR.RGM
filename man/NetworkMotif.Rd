@@ -9,14 +9,14 @@ NetworkMotif(Gamma, Gamma_Pst)
 \arguments{
 \item{Gamma}{A matrix of dimension p * p that signifies a specific network structure among the response variables, where p represents the number of response variables. This matrix is the focus of uncertainty quantification.}
 
-\item{Gamma_Pst}{An array of dimension p * p * n_pst, where n_pst is the number of posterior samples and p denotes the number of response variables. It comprises the posterior samples of the causal network among the response variables. This input will be obtained from the RGM function. Initially, execute the RGM function and save the resulting Gamma_Pst. Subsequently, utilize this stored Gamma_Pst as input for this function.}
+\item{Gamma_Pst}{An array of dimension p * p * n_pst, where n_pst is the number of posterior samples and p denotes the number of response variables. It comprises the posterior samples of the causal network among the response variables. This input might be obtained from the RGM function. Initially, execute the RGM function and save the resulting Gamma_Pst. Subsequently, utilize this stored Gamma_Pst as input for this function.}
 }
 \value{
 The NetworkMotif function calculates the uncertainty quantification for the provided network structure. A value close to 1 indicates that the given network structure is frequently observed in the posterior samples, while a value close to 0 suggests that the given network structure is rarely observed in the posterior samples.
 }
 \description{
 The NetworkMotif function facilitates uncertainty quantification.
-Specifically, it determines the proportion of posterior samples that exactly match the given network structure. To use this function, users need to store the Gamma_Pst output obtained from the RGM function.
+Specifically, it determines the proportion of posterior samples that contains the given network structure. To use this function, users may use the Gamma_Pst output obtained from the RGM function.
 }
 \examples{
 
@@ -92,10 +92,23 @@ Output = RGM(X = X, Y = Y, d = c(2, 1, 1), prior = "Threshold")
 # Store Gamma_Pst
 Gamma_Pst = Output$Gamma_Pst
 
-# True network structure among the response variables
-Gamma = (A != 0) * 1
+# Define a function to create smaller arrowheads
+smaller_arrowheads = function(graph) {
+    igraph::E(graph)$arrow.size = 1  # Adjust the arrow size value as needed
+    return(graph)
+}
 
-# Do uncertainty quantification for the true network structure
+# Start with a random subgraph
+Gamma = matrix(0, nrow = p, ncol = p)
+Gamma[2, 1] = 1
+
+# Plot the subgraph to get an idea about the causal network
+plot(smaller_arrowheads(igraph::graph.adjacency(Gamma,
+         mode = "directed")), layout = igraph::layout_in_circle,
+            main = "Subgraph")
+
+
+# Do uncertainty quantification for the subgraph
 NetworkMotif(Gamma = Gamma, Gamma_Pst = Gamma_Pst)
 
 

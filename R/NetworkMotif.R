@@ -1,10 +1,10 @@
 #' Estimating the uncertainty of a specified network
 #'
 #' @description The NetworkMotif function facilitates uncertainty quantification.
-#'              Specifically, it determines the proportion of posterior samples that exactly match the given network structure. To use this function, users need to store the Gamma_Pst output obtained from the RGM function.
+#'              Specifically, it determines the proportion of posterior samples that contains the given network structure. To use this function, users may use the Gamma_Pst output obtained from the RGM function.
 #'
 #' @param Gamma A matrix of dimension p * p that signifies a specific network structure among the response variables, where p represents the number of response variables. This matrix is the focus of uncertainty quantification.
-#' @param Gamma_Pst An array of dimension p * p * n_pst, where n_pst is the number of posterior samples and p denotes the number of response variables. It comprises the posterior samples of the causal network among the response variables. This input will be obtained from the RGM function. Initially, execute the RGM function and save the resulting Gamma_Pst. Subsequently, utilize this stored Gamma_Pst as input for this function.
+#' @param Gamma_Pst An array of dimension p * p * n_pst, where n_pst is the number of posterior samples and p denotes the number of response variables. It comprises the posterior samples of the causal network among the response variables. This input might be obtained from the RGM function. Initially, execute the RGM function and save the resulting Gamma_Pst. Subsequently, utilize this stored Gamma_Pst as input for this function.
 #'
 #' @return The NetworkMotif function calculates the uncertainty quantification for the provided network structure. A value close to 1 indicates that the given network structure is frequently observed in the posterior samples, while a value close to 0 suggests that the given network structure is rarely observed in the posterior samples.
 #'
@@ -86,10 +86,23 @@
 #' # Store Gamma_Pst
 #' Gamma_Pst = Output$Gamma_Pst
 #'
-#' # True network structure among the response variables
-#' Gamma = (A != 0) * 1
+#' # Define a function to create smaller arrowheads
+#' smaller_arrowheads = function(graph) {
+#'     igraph::E(graph)$arrow.size = 1  # Adjust the arrow size value as needed
+#'     return(graph)
+#' }
 #'
-#' # Do uncertainty quantification for the true network structure
+#' # Start with a random subgraph
+#' Gamma = matrix(0, nrow = p, ncol = p)
+#' Gamma[2, 1] = 1
+#'
+#' # Plot the subgraph to get an idea about the causal network
+#' plot(smaller_arrowheads(igraph::graph.adjacency(Gamma,
+#'          mode = "directed")), layout = igraph::layout_in_circle,
+#'             main = "Subgraph")
+#'
+#'
+#' # Do uncertainty quantification for the subgraph
 #' NetworkMotif(Gamma = Gamma, Gamma_Pst = Gamma_Pst)
 #'
 #'
@@ -104,6 +117,25 @@
 #' \doi{10.1214/17-BA1087}.
 NetworkMotif = function(Gamma, Gamma_Pst) {
 
+  # Check whether Gamma_Pst is a numeric array with three dimensions
+  if (!is.numeric(Gamma_Pst) || !is.array(Gamma_Pst) || length(dim(Gamma_Pst)) != 3) {
+
+    # Print an error message
+    stop("Gamma_Pst must be a numeric array with three dimensions.")
+
+  }
+
+  # Calculate number of rows of Gamma_Pst
+  p = nrow(Gamma_Pst)
+
+  # Check whether number of rows of Gamma_Pst is same as number of columns of Gamma_Pst
+  if(ncol(Gamma_Pst) != p){
+
+    # Print an error message
+    stop("Number of rows and columns of Gamma_Pst should be equal.")
+
+  }
+
   # Check whether Gamma is a numeric matrix
   if(!is.numeric(Gamma) || !is.matrix(Gamma)){
 
@@ -111,17 +143,6 @@ NetworkMotif = function(Gamma, Gamma_Pst) {
     stop("Gamma should be a numeric matrix.")
 
   }
-
-  # Check if the attribute "RGM_GammaPst" is present
-  if (!(any(names(attributes(Gamma_Pst)) == "RGM_GammaPst"))) {
-
-    # Print an error message
-    stop("Gamma_Pst should be provided as output from the RGM function. Please ensure that Gamma_Pst is obtained from the output of the RGM function.")
-
-  }
-
-  # Calculate number of rows of Gamma_Pst
-  p = nrow(Gamma_Pst)
 
   # Check whether Gamma is a square matrix with dimension p * p
   if((nrow(Gamma) != p) || (ncol(Gamma) != p)) {
