@@ -1362,13 +1362,6 @@ Rcpp::List RGM_SpikeSlab1(const arma::mat& S_YY, double n, int nIter, int nBurni
 
 
 
-
-
-
-
-
-
-
 // Define the function NetworkMotif_cpp with two parameters: Gamma and Gamma_Pst
 // The function calculates the network motif based on the given parameters
 // [[Rcpp::export]]
@@ -1386,8 +1379,11 @@ double NetworkMotif_cpp(const arma::mat& Gamma, const arma::cube& Gamma_Pst) {
     // Extract the Gamma matrix for the current posterior sample
     arma::mat Gamma_Test = Gamma_Pst.slice(i);
 
-    // Calculate the absolute difference between the Gamma matrix and the Gamma_Test matrix
-    double Diff = arma::accu(arma::abs(Gamma - Gamma_Test));
+    // Find indices where Gamma is equal to 1
+    arma::uvec indices = arma::find(Gamma == 1);
+
+    // Calculate the absolute difference between the Gamma matrix and the Gamma_Test matrix where Gamma values are 1
+    double Diff = arma::accu(arma::abs(Gamma.elem(indices) - Gamma_Test.elem(indices)));
 
     // If the difference is zero, it means the network motif matches
     if (Diff == 0) {
@@ -1401,5 +1397,6 @@ double NetworkMotif_cpp(const arma::mat& Gamma, const arma::cube& Gamma_Pst) {
 
   // Return the proportion of matching network motifs to the total number of posterior samples
   return (Count / nPst);
+
 
 }

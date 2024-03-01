@@ -519,19 +519,12 @@ RGM = function(X = NULL, Y = NULL, S_YY = NULL, S_YX = NULL, S_XX = NULL, Beta =
 
 
 
-      # Get the posterior samples of gamma
-      Gamma_Pst = Output$Gamma_Pst
-
-      # Tag Gamma_Pst
-      attr(Gamma_Pst, "RGM_GammaPst") = TRUE
-
-
       # Return outputs
       return(list(A_Est = Output$A_Est, zA_Est = Output$zA_Est,
                   Gamma_Est = Output$Gamma_Est, Tau_Est = Output$Tau_Est, Rho_Est = Output$Rho_Est,
                   Sigma_Est = Output$Sigma_Est,
                   AccptA = Output$AccptA,
-                  LL_Pst = Output$LL_Pst, Gamma_Pst = Gamma_Pst))
+                  LL_Pst = Output$LL_Pst, Gamma_Pst = Output$Gamma_Pst))
 
 
 
@@ -542,12 +535,6 @@ RGM = function(X = NULL, Y = NULL, S_YY = NULL, S_YX = NULL, S_XX = NULL, Beta =
                               a_sigma = a_sigma, b_sigma = b_sigma, Prop_VarA = Prop_VarA)
 
 
-      # Get the posterior samples of gamma
-      Gamma_Pst = Output$Gamma_Pst
-
-      # Tag Gamma_Pst
-      attr(Gamma_Pst, "RGM_GammaPst") = TRUE
-
 
 
       # Return outputs
@@ -556,7 +543,7 @@ RGM = function(X = NULL, Y = NULL, S_YY = NULL, S_YX = NULL, S_XX = NULL, Beta =
                   tA_Est = Output$tA_Est,
                   Sigma_Est = Output$Sigma_Est,
                   AccptA = Output$AccptA, Accpt_tA = Output$Accpt_tA,
-                  LL_Pst = Output$LL_Pst, Gamma_Pst = Gamma_Pst))
+                  LL_Pst = Output$LL_Pst, Gamma_Pst = Output$Gamma_Pst))
 
 
 
@@ -864,11 +851,7 @@ RGM = function(X = NULL, Y = NULL, S_YY = NULL, S_YX = NULL, S_XX = NULL, Beta =
                               a_rho = a_rho, b_rho = b_rho, nu_1 = nu_1, a_psi = a_psi, b_psi = b_psi,
                               nu_2 = nu_2, a_sigma = a_sigma, b_sigma = b_sigma, Prop_VarA = Prop_VarA, Prop_VarB = Prop_VarB)
 
-      # Get the posterior samples of gamma
-      Gamma_Pst = Output$Gamma_Pst
 
-      # Tag Gamma_Pst
-      attr(Gamma_Pst, "RGM_GammaPst") = TRUE
 
       # Return outputs
       return(list(A_Est = Output$A_Est, B_Est = Output$B_Est, zA_Est = Output$zA_Est, zB_Est = Output$zB_Est,
@@ -876,7 +859,7 @@ RGM = function(X = NULL, Y = NULL, S_YY = NULL, S_YX = NULL, S_XX = NULL, Beta =
                   Phi_Est = Output$Phi_Est, Eta_Est = Output$Eta_Est, Psi_Est = Output$Psi_Est,
                   Sigma_Est = Output$Sigma_Est,
                   AccptA = Output$AccptA, AccptB = Output$AccptB,
-                  LL_Pst = Output$LL_Pst, Gamma_Pst = Gamma_Pst))
+                  LL_Pst = Output$LL_Pst, Gamma_Pst = Output$Gamma_Pst))
 
 
 
@@ -886,11 +869,6 @@ RGM = function(X = NULL, Y = NULL, S_YY = NULL, S_YX = NULL, S_XX = NULL, Beta =
       Output = RGM_Threshold2(S_YY, S_YX, S_XX, D, n, nIter = nIter, nBurnin = nBurnin, Thin = Thin, nu_1 = nu_1, nu_2 = nu_2,
                               a_sigma = a_sigma, b_sigma = b_sigma, Prop_VarA = Prop_VarA, Prop_VarB = Prop_VarB)
 
-      # Get the posterior samples of gamma
-      Gamma_Pst = Output$Gamma_Pst
-
-      # Tag Gamma_Pst
-      attr(Gamma_Pst, "RGM_GammaPst") = TRUE
 
 
       # Return outputs
@@ -899,7 +877,7 @@ RGM = function(X = NULL, Y = NULL, S_YY = NULL, S_YX = NULL, S_XX = NULL, Beta =
                   Phi_Est = Output$Phi_Est, Eta_Est = Output$Eta_Est, tA_Est = Output$tA_Est, tB_Est = Output$tB_Est,
                   Sigma_Est = Output$Sigma_Est,
                   AccptA = Output$AccptA, AccptB = Output$AccptB, Accpt_tA = Output$Accpt_tA, Accpt_tB = Output$Accpt_tB,
-                  LL_Pst = Output$LL_Pst, Gamma_Pst = Gamma_Pst))
+                  LL_Pst = Output$LL_Pst, Gamma_Pst = Output$Gamma_Pst))
 
 
 
