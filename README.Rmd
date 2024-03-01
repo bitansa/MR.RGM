@@ -50,7 +50,7 @@ Once the MR.RGM package is installed load the library in the R work-space.
 ## Example
 
 
-We offer a succinct demonstration of the capabilities of the RGM function within the package, showcasing its effectiveness in computing causal interactions among response variables and between responses and instrumental variables using simulated data sets. Subsequently, we provide an example of how NetworkMotif can be applied, utilizing a specified network structure and Gamma_Pst acquired from executing the RGM function.
+We offer a concise demonstration of the capabilities of the RGM function within the package, showcasing its effectiveness in computing causal interactions among response variables and between responses and instrumental variables using simulated data sets. Subsequently, we provide an example of how NetworkMotif can be applied, utilizing a specified network structure and Gamma_Pst acquired from executing the RGM function.
 
 
 ```{r}

@@ -54,9 +54,9 @@ work-space.
 
 ## Example
 
-We offer a succinct demonstration of the capabilities of the RGM
-function within the package, showcasing its effectiveness in computing
-causal interactions among response variables and between responses and
+We offer a concise demonstration of the capabilities of the RGM function
+within the package, showcasing its effectiveness in computing causal
+interactions among response variables and between responses and
 instrumental variables using simulated data sets. Subsequently, we
 provide an example of how NetworkMotif can be applied, utilizing a
 specified network structure and Gamma_Pst acquired from executing the
@@ -383,11 +383,11 @@ Gamma_Pst3 = Output3$Gamma_Pst
 
 # Get the posterior probabilities of Gamma with these Gamma_Pst matrices
 NetworkMotif(Gamma = Gamma, Gamma_Pst = Gamma_Pst1)
-#> [1] 0
+#> [1] 1
 NetworkMotif(Gamma = Gamma, Gamma_Pst = Gamma_Pst2)
-#> [1] 0
+#> [1] 0.3795
 NetworkMotif(Gamma = Gamma, Gamma_Pst = Gamma_Pst3)
-#> [1] 0
+#> [1] 0.485125
 ```
 
 ## References
