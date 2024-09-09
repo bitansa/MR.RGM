@@ -140,7 +140,7 @@
 #'
 #'
 #' # Plot the true graph structure between response variables
-#' plot(smaller_arrowheads(igraph::graph.adjacency(((A != 0) * 1),
+#' plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix(((A != 0) * 1),
 #'  mode = "directed")), layout = igraph::layout_in_circle, main = "True Graph")
 #'
 #' # Apply RGM on individual level data for Threshold Prior
@@ -150,7 +150,7 @@
 #' Output$zA_Est
 #'
 #' # Plot the estimated graph structure between response variables
-#' plot(smaller_arrowheads(igraph::graph.adjacency(Output$zA_Est,
+#' plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix(Output$zA_Est,
 #'  mode = "directed")), layout = igraph::layout_in_circle, main = "Estimated Graph")
 #'
 #' # Get the estimated causal strength matrix between response variables
@@ -244,7 +244,7 @@
 #' B
 #'
 #' # Plot the true graph structure between response variables
-#' plot(smaller_arrowheads(igraph::graph.adjacency(((A != 0) * 1),
+#' plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix(((A != 0) * 1),
 #'  mode = "directed")), layout = igraph::layout_in_circle, main = "True Graph")
 #'
 #'
@@ -256,7 +256,7 @@
 #' Output$zA_Est
 #'
 #' # Plot the estimated graph structure between response variables
-#' plot(smaller_arrowheads(igraph::graph.adjacency(Output$zA_Est,
+#' plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix(Output$zA_Est,
 #'  mode = "directed")), layout = igraph::layout_in_circle, main = "Estimated Graph")
 #'
 #' # Get the estimated causal strength matrix between response variables
@@ -371,7 +371,7 @@
 #'
 #'
 #' # Plot the true graph structure between response variables
-#' plot(smaller_arrowheads(igraph::graph.adjacency(((A != 0) * 1),
+#' plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix(((A != 0) * 1),
 #'  mode = "directed")), layout = igraph::layout_in_circle, main = "True Graph")
 #'
 #'
@@ -383,7 +383,7 @@
 #' Output$zA_Est
 #'
 #' # Plot the estimated graph structure between response variables
-#' plot(smaller_arrowheads(igraph::graph.adjacency(Output$zA_Est,
+#' plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix(Output$zA_Est,
 #'  mode = "directed")), layout = igraph::layout_in_circle, main = "Estimated Graph")
 #'
 #' # Get the estimated causal strength matrix between response variables

@@ -97,7 +97,7 @@
 #' Gamma[2, 1] = 1
 #'
 #' # Plot the subgraph to get an idea about the causal network
-#' plot(smaller_arrowheads(igraph::graph.adjacency(Gamma,
+#' plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix(Gamma,
 #'          mode = "directed")), layout = igraph::layout_in_circle,
 #'             main = "Subgraph")
 #'

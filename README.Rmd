@@ -209,12 +209,12 @@ smaller_arrowheads <- function(graph) {
 par(mfrow = c(1, 2))
 
 # Plot the true causal network
-plot(smaller_arrowheads(igraph::graph.adjacency((A != 0) * 1,
+plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix((A != 0) * 1,
        mode = "directed")), layout = igraph::layout_in_circle,
           main = "True Causal Network")
 
 # Plot the estimated causal network
-plot(smaller_arrowheads(igraph::graph.adjacency(Output1$zA_Est,
+plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix(Output1$zA_Est,
       mode = "directed")), layout = igraph::layout_in_circle,
          main = "Estimated Causal Network")
 
@@ -263,7 +263,7 @@ Gamma = matrix(0, nrow = p, ncol = p)
 Gamma[5, 2] = Gamma[3, 5] = Gamma[2, 3] = 1
 
 # Plot the subgraph to get an idea about the causal network
-plot(smaller_arrowheads(igraph::graph.adjacency(Gamma,
+plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix(Gamma,
        mode = "directed")), layout = igraph::layout_in_circle,
           main = "Subgraph")
 
