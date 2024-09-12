@@ -175,7 +175,7 @@ Rcpp::List Sample_A(const arma::mat& S_YY, const arma::mat& S_YX, const arma::ma
 
   // Calculate new trace values
   double Trace3_New = Trace3 - N * ((fabs(a_new) > tA) * a_new - (fabs(a) > tA) * a) * Sigma_Inv(i) * S_YY(i, j);
-  double Trace4_New = Trace4 - N * ((fabs(a_new) > tA) * a_new - (fabs(a) > tA) * a) * Sigma_Inv(i) * S_YY(i, j);
+  double Trace4_New = Trace4 - N * ((fabs(a_new) > tA) * a_new - (fabs(a) > tA) * a) * Sigma_Inv(i) * S_YY(j, i);
   double Trace5_New = Trace5 + N * ((fabs(a_new) > tA) * a_new - (fabs(a) > tA) * a) * Sigma_Inv(i) * arma::trace(A.row(i) * S_YY.col(j) + S_YY.row(j) * A_new.row(i).t());
   double Trace6_New = Trace6 + 2 * N * ((fabs(a_new) > tA) * a_new - (fabs(a) > tA) * a) * Sigma_Inv(i) * arma::trace(B.row(i) * S_YX.row(j).t());
 
@@ -320,7 +320,7 @@ Rcpp::List Sample_A_Star(const arma::mat& S_YY, const arma::mat& A, const arma::
 
   // Calculate new trace values
   double Trace3_New = Trace3 - N * ((fabs(a_new) > tA) * a_new - (fabs(a) > tA) * a) * Sigma_Inv(i) * S_YY(i, j);
-  double Trace4_New = Trace4 - N * ((fabs(a_new) > tA) * a_new - (fabs(a) > tA) * a) * Sigma_Inv(i) * S_YY(i, j);
+  double Trace4_New = Trace4 - N * ((fabs(a_new) > tA) * a_new - (fabs(a) > tA) * a) * Sigma_Inv(i) * S_YY(j, i);
   double Trace5_New = Trace5 + N * ((fabs(a_new) > tA) * a_new - (fabs(a) > tA) * a) * Sigma_Inv(i) * arma::trace(A.row(i) * S_YY.col(j) + S_YY.row(j) * A_new.row(i).t());
 
   // Calculate target values with a and a_new
