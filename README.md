@@ -143,7 +143,7 @@ B
 ```
 
 We will now apply RGM based on individual level data, summary level data
-and Beta, Sigma_Hat matrices to show its functionality.
+and Beta, SigmaHat matrices to show its functionality.
 
 ``` r
 
@@ -151,12 +151,12 @@ and Beta, Sigma_Hat matrices to show its functionality.
 Output1 = RGM(X = X, Y = Y, d = c(2, 1, 1, 1, 1), prior = "Threshold")
 
 # Calculate summary level data
-S_YY = t(Y) %*% Y / n
-S_YX = t(Y) %*% X / n
-S_XX = t(X) %*% X / n
+Syy = t(Y) %*% Y / n
+Syx = t(Y) %*% X / n
+Sxx = t(X) %*% X / n
 
 # Apply RGM on summary level data for Spike and Slab Prior
-Output2 = RGM(S_YY = S_YY, S_YX = S_YX, S_XX = S_XX,
+Output2 = RGM(Syy = Syy, Syx = Syx, Sxx = Sxx,
            d = c(2, 1, 1, 1, 1), n = 10000, prior = "Spike and Slab")
 
 # Calculate Beta and Sigma_Hat
@@ -164,12 +164,12 @@ Output2 = RGM(S_YY = S_YY, S_YX = S_YX, S_XX = S_XX,
 Y = t(t(Y) - colMeans(Y))
 X = t(t(X) - colMeans(X))
 
-# Calculate S_XX
-S_XX = t(X) %*% X / n
+# Calculate Sxx
+Sxx = t(X) %*% X / n
 
-# Generate Beta matrix and Sigma_Hat
+# Generate Beta matrix and SigmaHat
 Beta = matrix(0, nrow = p, ncol = k)
-Sigma_Hat = matrix(0, nrow = p, ncol = k)
+SigmaHat = matrix(0, nrow = p, ncol = k)
 
 for (i in 1:p) {
 
@@ -179,15 +179,15 @@ for (i in 1:p) {
 
         Beta[i, j] =  fit$coefficients[2]
 
-        Sigma_Hat[i, j] = sum(fit$residuals^2) / n
+        SigmaHat[i, j] = sum(fit$residuals^2) / n
 
         }
 
  }
 
 
-# Apply RGM on S_XX, Beta and Sigma_Hat for Spike and Slab Prior
-Output3 = RGM(S_XX = S_XX, Beta = Beta, Sigma_Hat = Sigma_Hat,
+# Apply RGM on Sxx, Beta and SigmaHat for Spike and Slab Prior
+Output3 = RGM(Sxx = Sxx, Beta = Beta, SigmaHat = SigmaHat,
            d = c(2, 1, 1, 1, 1), n = 10000, prior = "Spike and Slab")
 ```
 
@@ -196,21 +196,21 @@ variables in the following way:
 
 ``` r
 
-Output1$A_Est
+Output1$AEst
 #>           [,1]        [,2]       [,3]      [,4]       [,5]
 #> [1,] 0.0000000 -0.11032661  0.0000000 0.0000000 0.10676811
 #> [2,] 0.0991208  0.00000000 -0.1104576 0.1002182 0.11012341
 #> [3,] 0.0000000 -0.09370579  0.0000000 0.0000000 0.09747664
 #> [4,] 0.0000000 -0.10185959  0.0000000 0.0000000 0.00000000
 #> [5,] 0.0000000  0.10045256  0.0000000 0.0000000 0.00000000
-Output2$A_Est
+Output2$AEst
 #>              [,1]       [,2]          [,3]          [,4]        [,5]
 #> [1,]  0.000000000 -0.1127249 -0.0006355133  0.0012237310 0.107520412
 #> [2,]  0.099881480  0.0000000 -0.1079853541  0.0996589823 0.109275947
 #> [3,] -0.001747246 -0.0929592  0.0000000000 -0.0006473297 0.099778267
 #> [4,] -0.003863658 -0.1030056 -0.0024683725  0.0000000000 0.009191016
 #> [5,]  0.001966818  0.1014136 -0.0055458038 -0.0050688662 0.000000000
-Output3$A_Est
+Output3$AEst
 #>             [,1]        [,2]         [,3]          [,4]       [,5]
 #> [1,]  0.00000000 -0.08972628  0.039412442 -0.0006516754 0.09454632
 #> [2,]  0.11040214  0.00000000 -0.112569739  0.0983975424 0.13676682
@@ -224,21 +224,21 @@ variables in the following way:
 
 ``` r
 
-Output1$zA_Est
+Output1$zAEst
 #>      [,1] [,2] [,3] [,4] [,5]
 #> [1,]    0    1    0    0    1
 #> [2,]    1    0    1    1    1
 #> [3,]    0    1    0    0    1
 #> [4,]    0    1    0    0    0
 #> [5,]    0    1    0    0    0
-Output2$zA_Est
+Output2$zAEst
 #>      [,1] [,2] [,3] [,4] [,5]
 #> [1,]    0    1    0    0    1
 #> [2,]    1    0    1    1    1
 #> [3,]    0    1    0    0    1
 #> [4,]    0    1    0    0    0
 #> [5,]    0    1    0    0    0
-Output3$zA_Est
+Output3$zAEst
 #>      [,1] [,2] [,3] [,4] [,5]
 #> [1,]    0    1    0    0    1
 #> [2,]    1    0    1    1    1
@@ -270,7 +270,7 @@ plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix((A != 0) * 1,
           main = "True Causal Network")
 
 # Plot the estimated causal network
-plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix(Output1$zA_Est,
+plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix(Output1$zAEst,
       mode = "directed")), layout = igraph::layout_in_circle,
          main = "Estimated Causal Network")
 ```
@@ -282,21 +282,21 @@ the instrument variables from the outputs in the following way:
 
 ``` r
 
-Output1$B_Est
+Output1$BEst
 #>           [,1]     [,2]      [,3]      [,4]      [,5]      [,6]
 #> [1,] 0.9921448 1.010301 0.0000000 0.0000000 0.0000000 0.0000000
 #> [2,] 0.0000000 0.000000 0.9961312 0.0000000 0.0000000 0.0000000
 #> [3,] 0.0000000 0.000000 0.0000000 0.9989298 0.0000000 0.0000000
 #> [4,] 0.0000000 0.000000 0.0000000 0.0000000 0.9991987 0.0000000
 #> [5,] 0.0000000 0.000000 0.0000000 0.0000000 0.0000000 0.9977224
-Output2$B_Est
+Output2$BEst
 #>           [,1]     [,2]      [,3]      [,4]     [,5]     [,6]
 #> [1,] 0.9942219 1.009985 0.0000000 0.0000000 0.000000 0.000000
 #> [2,] 0.0000000 0.000000 0.9931885 0.0000000 0.000000 0.000000
 #> [3,] 0.0000000 0.000000 0.0000000 0.9992243 0.000000 0.000000
 #> [4,] 0.0000000 0.000000 0.0000000 0.0000000 1.000336 0.000000
 #> [5,] 0.0000000 0.000000 0.0000000 0.0000000 0.000000 1.001666
-Output3$B_Est
+Output3$BEst
 #>           [,1]     [,2]     [,3]      [,4]      [,5]      [,6]
 #> [1,] 0.9910789 1.006024 0.000000 0.0000000 0.0000000 0.0000000
 #> [2,] 0.0000000 0.000000 0.993928 0.0000000 0.0000000 0.0000000
@@ -310,21 +310,21 @@ instrument variables from the outputs in the following way:
 
 ``` r
 
-Output1$zB_Est
+Output1$zBEst
 #>      [,1] [,2] [,3] [,4] [,5] [,6]
 #> [1,]    1    1    0    0    0    0
 #> [2,]    0    0    1    0    0    0
 #> [3,]    0    0    0    1    0    0
 #> [4,]    0    0    0    0    1    0
 #> [5,]    0    0    0    0    0    1
-Output2$zB_Est
+Output2$zBEst
 #>      [,1] [,2] [,3] [,4] [,5] [,6]
 #> [1,]    1    1    0    0    0    0
 #> [2,]    0    0    1    0    0    0
 #> [3,]    0    0    0    1    0    0
 #> [4,]    0    0    0    0    1    0
 #> [5,]    0    0    0    0    0    1
-Output3$zB_Est
+Output3$zBEst
 #>      [,1] [,2] [,3] [,4] [,5] [,6]
 #> [1,]    1    1    0    0    0    0
 #> [2,]    0    0    1    0    0    0
@@ -337,26 +337,26 @@ We can plot the log-likelihoods from the outputs in the following way:
 
 ``` r
 
-plot(Output1$LL_Pst, type = 'l', xlab = "Iterations", ylab = "Log-likelihood")
+plot(Output1$LLPst, type = 'l', xlab = "Iterations", ylab = "Log-likelihood")
 ```
 
 <img src="man/figures/README-unnamed-chunk-11-1.png" width="100%" />
 
 ``` r
-plot(Output2$LL_Pst, type = 'l', xlab = "Iterations", ylab = "Log-likelihood")
+plot(Output2$LLPst, type = 'l', xlab = "Iterations", ylab = "Log-likelihood")
 ```
 
 <img src="man/figures/README-unnamed-chunk-11-2.png" width="100%" />
 
 ``` r
-plot(Output3$LL_Pst, type = 'l', xlab = "Iterations", ylab = "Log-likelihood")
+plot(Output3$LLPst, type = 'l', xlab = "Iterations", ylab = "Log-likelihood")
 ```
 
 <img src="man/figures/README-unnamed-chunk-11-3.png" width="100%" />
 
 Next, we present the implementation of the NetworkMotif function. We
 begin by defining a random subgraph among the response variables.
-Subsequently, we collect Gamma_Pst arrays from various outputs and
+Subsequently, we collect GammaPst arrays from various outputs and
 proceed to execute NetworkMotif based on these arrays.
 
 ``` r
@@ -376,17 +376,17 @@ plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix(Gamma,
 ``` r
 
 
-# Store the Gamma_Pst arrays from outputs
-Gamma_Pst1 = Output1$Gamma_Pst
-Gamma_Pst2 = Output2$Gamma_Pst
-Gamma_Pst3 = Output3$Gamma_Pst
+# Store the GammaPst arrays from outputs
+GammaPst1 = Output1$GammaPst
+GammaPst2 = Output2$GammaPst
+GammaPst3 = Output3$GammaPst
 
-# Get the posterior probabilities of Gamma with these Gamma_Pst matrices
-NetworkMotif(Gamma = Gamma, Gamma_Pst = Gamma_Pst1)
+# Get the posterior probabilities of Gamma with these GammaPst matrices
+NetworkMotif(Gamma = Gamma, GammaPst = GammaPst1)
 #> [1] 1
-NetworkMotif(Gamma = Gamma, Gamma_Pst = Gamma_Pst2)
+NetworkMotif(Gamma = Gamma, GammaPst = GammaPst2)
 #> [1] 0.37325
-NetworkMotif(Gamma = Gamma, Gamma_Pst = Gamma_Pst3)
+NetworkMotif(Gamma = Gamma, GammaPst = GammaPst3)
 #> [1] 0.461375
 ```
 
