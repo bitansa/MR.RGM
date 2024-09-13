@@ -123,7 +123,7 @@ B
 
 ```
 
-We will now apply RGM based on individual level data, summary level data and Beta, Sigma_Hat matrices to show its functionality.
+We will now apply RGM based on individual level data, summary level data and Beta, SigmaHat matrices to show its functionality.
 
 ```{r}
 
@@ -131,12 +131,12 @@ We will now apply RGM based on individual level data, summary level data and Bet
 Output1 = RGM(X = X, Y = Y, d = c(2, 1, 1, 1, 1), prior = "Threshold")
 
 # Calculate summary level data
-S_YY = t(Y) %*% Y / n
-S_YX = t(Y) %*% X / n
-S_XX = t(X) %*% X / n
+Syy = t(Y) %*% Y / n
+Syx = t(Y) %*% X / n
+Sxx = t(X) %*% X / n
 
 # Apply RGM on summary level data for Spike and Slab Prior
-Output2 = RGM(S_YY = S_YY, S_YX = S_YX, S_XX = S_XX,
+Output2 = RGM(Syy = Syy, Syx = Syx, Sxx = Sxx,
            d = c(2, 1, 1, 1, 1), n = 10000, prior = "Spike and Slab")
 
 # Calculate Beta and Sigma_Hat
@@ -144,12 +144,12 @@ Output2 = RGM(S_YY = S_YY, S_YX = S_YX, S_XX = S_XX,
 Y = t(t(Y) - colMeans(Y))
 X = t(t(X) - colMeans(X))
 
-# Calculate S_XX
-S_XX = t(X) %*% X / n
+# Calculate Sxx
+Sxx = t(X) %*% X / n
 
-# Generate Beta matrix and Sigma_Hat
+# Generate Beta matrix and SigmaHat
 Beta = matrix(0, nrow = p, ncol = k)
-Sigma_Hat = matrix(0, nrow = p, ncol = k)
+SigmaHat = matrix(0, nrow = p, ncol = k)
 
 for (i in 1:p) {
 
@@ -159,15 +159,15 @@ for (i in 1:p) {
 
         Beta[i, j] =  fit$coefficients[2]
 
-        Sigma_Hat[i, j] = sum(fit$residuals^2) / n
+        SigmaHat[i, j] = sum(fit$residuals^2) / n
 
         }
 
  }
 
 
-# Apply RGM on S_XX, Beta and Sigma_Hat for Spike and Slab Prior
-Output3 = RGM(S_XX = S_XX, Beta = Beta, Sigma_Hat = Sigma_Hat,
+# Apply RGM on Sxx, Beta and SigmaHat for Spike and Slab Prior
+Output3 = RGM(Sxx = Sxx, Beta = Beta, SigmaHat = SigmaHat,
            d = c(2, 1, 1, 1, 1), n = 10000, prior = "Spike and Slab")
 
 
@@ -177,9 +177,9 @@ We get the estimated causal interaction matrix between response variables in the
 
 ```{r}
 
-Output1$A_Est
-Output2$A_Est
-Output3$A_Est
+Output1$AEst
+Output2$AEst
+Output3$AEst
 
 
 ```
@@ -188,9 +188,9 @@ We get the estimated causal network structure between the response variables in 
 
 ```{r}
 
-Output1$zA_Est
-Output2$zA_Est
-Output3$zA_Est
+Output1$zAEst
+Output2$zAEst
+Output3$zAEst
 
 
 ```
@@ -214,7 +214,7 @@ plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix((A != 0) * 1,
           main = "True Causal Network")
 
 # Plot the estimated causal network
-plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix(Output1$zA_Est,
+plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix(Output1$zAEst,
       mode = "directed")), layout = igraph::layout_in_circle,
          main = "Estimated Causal Network")
 
@@ -225,9 +225,9 @@ We get the estimated causal interaction matrix between the response and the inst
 
 ```{r}
 
-Output1$B_Est
-Output2$B_Est
-Output3$B_Est
+Output1$BEst
+Output2$BEst
+Output3$BEst
 
 
 ```
@@ -236,9 +236,9 @@ We get the estimated graph structure between the response and the instrument var
 
 ```{r}
 
-Output1$zB_Est
-Output2$zB_Est
-Output3$zB_Est
+Output1$zBEst
+Output2$zBEst
+Output3$zBEst
 
 
 ```
@@ -247,14 +247,14 @@ We can plot the log-likelihoods from the outputs in the following way:
 
 ```{r}
 
-plot(Output1$LL_Pst, type = 'l', xlab = "Iterations", ylab = "Log-likelihood")
-plot(Output2$LL_Pst, type = 'l', xlab = "Iterations", ylab = "Log-likelihood")
-plot(Output3$LL_Pst, type = 'l', xlab = "Iterations", ylab = "Log-likelihood")
+plot(Output1$LLPst, type = 'l', xlab = "Iterations", ylab = "Log-likelihood")
+plot(Output2$LLPst, type = 'l', xlab = "Iterations", ylab = "Log-likelihood")
+plot(Output3$LLPst, type = 'l', xlab = "Iterations", ylab = "Log-likelihood")
 
 
 ```
 
-Next, we present the implementation of the NetworkMotif function. We begin by defining a random subgraph among the response variables. Subsequently, we collect Gamma_Pst arrays from various outputs and proceed to execute NetworkMotif based on these arrays.
+Next, we present the implementation of the NetworkMotif function. We begin by defining a random subgraph among the response variables. Subsequently, we collect GammaPst arrays from various outputs and proceed to execute NetworkMotif based on these arrays.
 
 ```{r}
 
@@ -268,15 +268,15 @@ plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix(Gamma,
           main = "Subgraph")
 
 
-# Store the Gamma_Pst arrays from outputs
-Gamma_Pst1 = Output1$Gamma_Pst
-Gamma_Pst2 = Output2$Gamma_Pst
-Gamma_Pst3 = Output3$Gamma_Pst
+# Store the GammaPst arrays from outputs
+GammaPst1 = Output1$GammaPst
+GammaPst2 = Output2$GammaPst
+GammaPst3 = Output3$GammaPst
 
-# Get the posterior probabilities of Gamma with these Gamma_Pst matrices
-NetworkMotif(Gamma = Gamma, Gamma_Pst = Gamma_Pst1)
-NetworkMotif(Gamma = Gamma, Gamma_Pst = Gamma_Pst2)
-NetworkMotif(Gamma = Gamma, Gamma_Pst = Gamma_Pst3)
+# Get the posterior probabilities of Gamma with these GammaPst matrices
+NetworkMotif(Gamma = Gamma, GammaPst = GammaPst1)
+NetworkMotif(Gamma = Gamma, GammaPst = GammaPst2)
+NetworkMotif(Gamma = Gamma, GammaPst = GammaPst3)
 
 
 ```

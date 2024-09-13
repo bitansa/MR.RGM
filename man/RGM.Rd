@@ -7,27 +7,27 @@
 RGM(
   X = NULL,
   Y = NULL,
-  S_YY = NULL,
-  S_YX = NULL,
-  S_XX = NULL,
+  Syy = NULL,
+  Syx = NULL,
+  Sxx = NULL,
   Beta = NULL,
-  Sigma_Hat = NULL,
+  SigmaHat = NULL,
   d,
   n,
   nIter = 10000,
   nBurnin = 2000,
   Thin = 1,
   prior = c("Threshold", "Spike and Slab"),
-  a_rho = 3,
-  b_rho = 1,
-  nu_1 = 0.001,
-  a_psi = 0.5,
-  b_psi = 0.5,
-  nu_2 = 1e-04,
-  a_sigma = 0.01,
-  b_sigma = 0.01,
-  Prop_VarA = 0.01,
-  Prop_VarB = 0.01
+  aRho = 3,
+  bRho = 1,
+  nu1 = 0.001,
+  aPsi = 0.5,
+  bPsi = 0.5,
+  nu2 = 1e-04,
+  aSigma = 0.01,
+  bSigma = 0.01,
+  PropVarA = 0.01,
+  PropVarB = 0.01
 )
 }
 \arguments{
@@ -35,15 +35,15 @@ RGM(
 
 \item{Y}{A matrix of dimension n * p. In this matrix, each row corresponds to a specific observation, and each column pertains to a particular response variable. The default value is set to NULL.}
 
-\item{S_YY}{A matrix of dimensions p * p. Here, "p" signifies the count of response variables. This matrix is derived through the operation t(Y) \%*\% Y / n, where "Y" denotes the response data matrix and "n" stands for the total number of observations.}
+\item{Syy}{A matrix of dimensions p * p. Here, "p" signifies the count of response variables. This matrix is derived through the operation t(Y) \%*\% Y / n, where "Y" denotes the response data matrix and "n" stands for the total number of observations.}
 
-\item{S_YX}{A matrix of dimensions p * k. Here, "p" signifies the number of response variables, and "k" represents the count of instrument variables. This matrix is calculated using the operation t(Y) \%*\% X / n, where "Y" is the response data matrix, "X" is the instrument data matrix and "n" is the total number of observations.}
+\item{Syx}{A matrix of dimensions p * k. Here, "p" signifies the number of response variables, and "k" represents the count of instrument variables. This matrix is calculated using the operation t(Y) \%*\% X / n, where "Y" is the response data matrix, "X" is the instrument data matrix and "n" is the total number of observations.}
 
-\item{S_XX}{A matrix of dimensions k * k. Here, "k" signifies the count of instrument variables. This matrix is derived through the operation t(X) \%*\% X / n, where "X" denotes the instrument data matrix and "n" stands for the total number of observations.}
+\item{Sxx}{A matrix of dimensions k * k. Here, "k" signifies the count of instrument variables. This matrix is derived through the operation t(X) \%*\% X / n, where "X" denotes the instrument data matrix and "n" stands for the total number of observations.}
 
-\item{Beta}{A matrix of dimensions p * k. In this matrix, each row corresponds to a specific response variable, and each column pertains to a distinct instrument variable. Each entry within the matrix represents the regression coefficient of the individual response variable on the specific instrument variable. To use Beta as an input, ensure you centralize each column of Y i.e. response data matrix and X i.e. instrument data matrix before calculating Beta, S_XX, and Sigma_Hat.}
+\item{Beta}{A matrix of dimensions p * k. In this matrix, each row corresponds to a specific response variable, and each column pertains to a distinct instrument variable. Each entry within the matrix represents the regression coefficient of the individual response variable on the specific instrument variable. To use Beta as an input, ensure you centralize each column of Y i.e. response data matrix and X i.e. instrument data matrix before calculating Beta, Sxx, and SigmaHat.}
 
-\item{Sigma_Hat}{A matrix of dimensions p * k. In this matrix, each row corresponds to a specific response variable, and each column pertains to an individual instrument variable. Each entry in this matrix represents the mean square error associated with regressing the particular response on the specific instrument variable. To employ Sigma_Hat as an input, ensure that you centralize each column of Y i.e. response data matrix and X i.e. instrument data matrix before calculating Beta, S_XX, and Sigma_Hat.}
+\item{SigmaHat}{A matrix of dimensions p * k. In this matrix, each row corresponds to a specific response variable, and each column pertains to an individual instrument variable. Each entry in this matrix represents the mean square error associated with regressing the particular response on the specific instrument variable. To employ SigmaHat as an input, ensure that you centralize each column of Y i.e. response data matrix and X i.e. instrument data matrix before calculating Beta, Sxx, and SigmaHat.}
 
 \item{d}{A vector input with a length of p i.e. number of response variables. Each element within this vector is a positive integer denoting the count of instrument variables influencing a specific response variable. The sum of all elements in the vector should be equal to the total count of instrument variables, represented as k.}
 
@@ -57,51 +57,51 @@ RGM(
 
 \item{prior}{A parameter representing the prior assumption on the graph structure. It offers two options: "Threshold" or "Spike and Slab". The default value is "Spike and Slab".}
 
-\item{a_rho}{A positive scalar input representing the first parameter of a Beta distribution. The default value is set to 3.}
+\item{aRho}{A positive scalar input representing the first parameter of a Beta distribution. The default value is set to 3.}
 
-\item{b_rho}{A positive scalar input representing the second parameter of a Beta distribution. The default value is set to 1.}
+\item{bRho}{A positive scalar input representing the second parameter of a Beta distribution. The default value is set to 1.}
 
-\item{nu_1}{A positive scalar input representing the multiplication factor in the variance of the spike part in the spike and slab distribution of matrix A. The default value is set to 0.001.}
+\item{nu1}{A positive scalar input representing the multiplication factor in the variance of the spike part in the spike and slab distribution of matrix A. The default value is set to 0.001.}
 
-\item{a_psi}{A positive scalar input corresponding to the first parameter of a Beta distribution. The default value is set to 0.5.}
+\item{aPsi}{A positive scalar input corresponding to the first parameter of a Beta distribution. The default value is set to 0.5.}
 
-\item{b_psi}{A positive scalar input corresponding to the second parameter of a Beta distribution. The default value is set to 0.5.}
+\item{bPsi}{A positive scalar input corresponding to the second parameter of a Beta distribution. The default value is set to 0.5.}
 
-\item{nu_2}{A positive scalar input corresponding to the multiplication factor in the variance of the spike part in the spike and slab distribution of matrix B. The default value is set to 0.0001.}
+\item{nu2}{A positive scalar input corresponding to the multiplication factor in the variance of the spike part in the spike and slab distribution of matrix B. The default value is set to 0.0001.}
 
-\item{a_sigma}{A positive scalar input corresponding to the first parameter of an Inverse Gamma distribution, which is associated with the variance of the model. The default value is set to 0.01.}
+\item{aSigma}{A positive scalar input corresponding to the first parameter of an Inverse Gamma distribution, which is associated with the variance of the model. The default value is set to 0.01.}
 
-\item{b_sigma}{A positive scalar input corresponding to the second parameter of an Inverse Gamma distribution, which is associated with the variance of the model. The default value is set to 0.01.}
+\item{bSigma}{A positive scalar input corresponding to the second parameter of an Inverse Gamma distribution, which is associated with the variance of the model. The default value is set to 0.01.}
 
-\item{Prop_VarA}{A positive scalar input representing the variance of the normal distribution used for proposing terms within the A matrix. The default value is set to 0.01.}
+\item{PropVarA}{A positive scalar input representing the variance of the normal distribution used for proposing terms within the A matrix. The default value is set to 0.01.}
 
-\item{Prop_VarB}{A positive scalar input representing the variance of the normal distribution used for proposing terms within the B matrix. The default value is set to 0.01.}
+\item{PropVarB}{A positive scalar input representing the variance of the normal distribution used for proposing terms within the B matrix. The default value is set to 0.01.}
 }
 \value{
-\item{A_Est}{A matrix of dimensions p * p, representing the estimated causal effects or strengths between the response variables.}
-\item{B_Est}{A matrix of dimensions p * k, representing the estimated causal effects or strengths between the response variables and the instrument variables. Each row corresponds to a specific response variable, and each column corresponds to a particular instrument variable.}
-\item{zA_Est}{A binary adjacency matrix of dimensions p * p, indicating the graph structure between the response variables. Each entry in the matrix represents the presence (1) or absence (0) of a causal link between the corresponding response variables.}
-\item{zB_Est}{A binary adjacency matrix of dimensions p * k, illustrating the graph structure between the response variables and the instrument variables. Each row corresponds to a specific response variable, and each column corresponds to a particular instrument variable. The presence of a causal link is denoted by 1, while the absence is denoted by 0.}
-\item{A0_Est}{A matrix of dimensions p * p, representing the estimated causal effects or strengths between response variables before thresholding. This output is particularly relevant for cases where the "Threshold" prior assumption is utilized.}
-\item{B0_Est}{A matrix of dimensions p * k, representing the estimated causal effects or strengths between the response variables and the instrument variables before thresholding. This output is particularly relevant for cases where the "Threshold" prior assumption is utilized. Each row corresponds to a specific response variable, and each column corresponds to a particular instrument variable.}
-\item{Gamma_Est}{A matrix of dimensions p * p, representing the estimated probabilities of edges between response variables in the graph structure. Each entry in the matrix indicates the probability of a causal link between the corresponding response variables.}
-\item{Tau_Est}{A matrix of dimensions p * p, representing the estimated variances of causal interactions between response variables. Each entry in the matrix corresponds to the variance of the causal effect between the corresponding response variables.}
-\item{Phi_Est}{A matrix of dimensions p * k, representing the estimated probabilities of edges between response and instrument variables in the graph structure. Each row corresponds to a specific response variable, and each column corresponds to a particular instrument variable.}
-\item{Eta_Est}{A matrix of dimensions p * k, representing the estimated variances of causal interactions between response and instrument variables. Each row corresponds to a specific response variable, and each column corresponds to a particular instrument variable.}
-\item{tA_Est}{A scalar value representing the estimated thresholding value of causal interactions between response variables. This output is relevant when using the "Threshold" prior assumption.}
-\item{tB_Est}{A scalar value representing the estimated thresholding value of causal interactions between response and instrument variables. This output is applicable when using the "Threshold" prior assumption.}
-\item{Sigma_Est}{A vector of length p, representing the estimated variances of each response variable. Each element in the vector corresponds to the variance of a specific response variable.}
+\item{AEst}{A matrix of dimensions p * p, representing the estimated causal effects or strengths between the response variables.}
+\item{BEst}{A matrix of dimensions p * k, representing the estimated causal effects or strengths between the response variables and the instrument variables. Each row corresponds to a specific response variable, and each column corresponds to a particular instrument variable.}
+\item{zAEst}{A binary adjacency matrix of dimensions p * p, indicating the graph structure between the response variables. Each entry in the matrix represents the presence (1) or absence (0) of a causal link between the corresponding response variables.}
+\item{zBEst}{A binary adjacency matrix of dimensions p * k, illustrating the graph structure between the response variables and the instrument variables. Each row corresponds to a specific response variable, and each column corresponds to a particular instrument variable. The presence of a causal link is denoted by 1, while the absence is denoted by 0.}
+\item{A0Est}{A matrix of dimensions p * p, representing the estimated causal effects or strengths between response variables before thresholding. This output is particularly relevant for cases where the "Threshold" prior assumption is utilized.}
+\item{B0Est}{A matrix of dimensions p * k, representing the estimated causal effects or strengths between the response variables and the instrument variables before thresholding. This output is particularly relevant for cases where the "Threshold" prior assumption is utilized. Each row corresponds to a specific response variable, and each column corresponds to a particular instrument variable.}
+\item{GammaEst}{A matrix of dimensions p * p, representing the estimated probabilities of edges between response variables in the graph structure. Each entry in the matrix indicates the probability of a causal link between the corresponding response variables.}
+\item{TauEst}{A matrix of dimensions p * p, representing the estimated variances of causal interactions between response variables. Each entry in the matrix corresponds to the variance of the causal effect between the corresponding response variables.}
+\item{PhiEst}{A matrix of dimensions p * k, representing the estimated probabilities of edges between response and instrument variables in the graph structure. Each row corresponds to a specific response variable, and each column corresponds to a particular instrument variable.}
+\item{EtaEst}{A matrix of dimensions p * k, representing the estimated variances of causal interactions between response and instrument variables. Each row corresponds to a specific response variable, and each column corresponds to a particular instrument variable.}
+\item{tAEst}{A scalar value representing the estimated thresholding value of causal interactions between response variables. This output is relevant when using the "Threshold" prior assumption.}
+\item{tBEst}{A scalar value representing the estimated thresholding value of causal interactions between response and instrument variables. This output is applicable when using the "Threshold" prior assumption.}
+\item{SigmaEst}{A vector of length p, representing the estimated variances of each response variable. Each element in the vector corresponds to the variance of a specific response variable.}
 \item{AccptA}{The percentage of accepted entries in the A matrix, which represents the causal interactions between response variables. This metric indicates the proportion of proposed changes that were accepted during the sampling process.}
 \item{AccptB}{The percentage of accepted entries in the B matrix, which represents the causal interactions between response and instrument variables. This metric indicates the proportion of proposed changes that were accepted during the sampling process.}
-\item{Accpt_tA}{The percentage of accepted thresholding values for causal interactions between response variables when using the "Threshold" prior assumption. This metric indicates the proportion of proposed thresholding values that were accepted during the sampling process.}
-\item{Accpt_tB}{The percentage of accepted thresholding values for causal interactions between response and instrument variables when using the "Threshold" prior assumption. This metric indicates the proportion of proposed thresholding values that were accepted during the sampling process.}
-\item{LL_Pst}{A vector containing the posterior log-likelihoods of the model. Each element in the vector represents the log-likelihood of the model given the observed data and the estimated parameters.}
-\item{Rho_Est}{A matrix of dimensions p * p, representing the estimated Bernoulli success probabilities of causal interactions between response variables when using the "Spike and Slab" prior assumption. Each entry in the matrix corresponds to the success probability of a causal interaction between the corresponding response variables.}
-\item{Psi_Est}{A matrix of dimensions p * k, representing the estimated Bernoulli success probabilities of causal interactions between response and instrument variables when using the "Spike and Slab" prior assumption. Each row in the matrix corresponds to a specific response variable, and each column corresponds to a particular instrument variable.}
-\item{Gamma_Pst}{An array containing the posterior samples of the network structure among the response variables.}
+\item{AccpttA}{The percentage of accepted thresholding values for causal interactions between response variables when using the "Threshold" prior assumption. This metric indicates the proportion of proposed thresholding values that were accepted during the sampling process.}
+\item{AccpttB}{The percentage of accepted thresholding values for causal interactions between response and instrument variables when using the "Threshold" prior assumption. This metric indicates the proportion of proposed thresholding values that were accepted during the sampling process.}
+\item{LLPst}{A vector containing the posterior log-likelihoods of the model. Each element in the vector represents the log-likelihood of the model given the observed data and the estimated parameters.}
+\item{RhoEst}{A matrix of dimensions p * p, representing the estimated Bernoulli success probabilities of causal interactions between response variables when using the "Spike and Slab" prior assumption. Each entry in the matrix corresponds to the success probability of a causal interaction between the corresponding response variables.}
+\item{PsiEst}{A matrix of dimensions p * k, representing the estimated Bernoulli success probabilities of causal interactions between response and instrument variables when using the "Spike and Slab" prior assumption. Each row in the matrix corresponds to a specific response variable, and each column corresponds to a particular instrument variable.}
+\item{GammaPst}{An array containing the posterior samples of the network structure among the response variables.}
 }
 \description{
-The RGM function transforms causal inference by merging Mendelian randomization and network-based methods, enabling the creation of comprehensive causal graphs within complex biological systems. RGM accommodates varied data contexts with three input options: individual-level data (X, Y matrices), summary-level data including S_YY, S_YX, and S_XX matrices, and intricate data with challenging cross-correlations, utilizing S_XX, Beta, and Sigma_Hat matrices.
+The RGM function transforms causal inference by merging Mendelian randomization and network-based methods, enabling the creation of comprehensive causal graphs within complex biological systems. RGM accommodates varied data contexts with three input options: individual-level data (X, Y matrices), summary-level data including Syy, Syx, and Sxx matrices, and intricate data with challenging cross-correlations, utilizing Sxx, Beta, and SigmaHat matrices.
 For the latter input, data centralization is necessary. Users can select any of these data formats to suit their needs and don’t have to specify all of them, allowing flexibility based on data availability. Crucial inputs encompass "d" (instrument count per response) and "n" (total observations, only required for summary level data), amplified by customizable parameters that refine analysis. Additionally, users can tailor the analysis by setting parameters such as "nIter" (number of MCMC iterations), "nBurnin" (number of discarded samples during burn-in for convergence), and "Thin" (thinning of posterior samples). These customizable parameters enhance the precision and relevance of the analysis.
 RGM provides essential causal effect/strength estimates between response variables and between response and instrument variables. Moreover, it furnishes adjacency matrices, visually mapping causal graph structures. These outputs empower researchers to untangle intricate relationships within biological networks, fostering a holistic understanding of complex systems.
 }
@@ -185,30 +185,30 @@ B
 
 
 # Plot the true graph structure between response variables
-plot(smaller_arrowheads(igraph::graph.adjacency(((A != 0) * 1),
+plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix(((A != 0) * 1),
  mode = "directed")), layout = igraph::layout_in_circle, main = "True Graph")
 
 # Apply RGM on individual level data for Threshold Prior
 Output = RGM(X = X, Y = Y, d = c(2, 1, 1), prior = "Threshold")
 
 # Get the graph structure between response variables
-Output$zA_Est
+Output$zAEst
 
 # Plot the estimated graph structure between response variables
-plot(smaller_arrowheads(igraph::graph.adjacency(Output$zA_Est,
+plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix(Output$zAEst,
  mode = "directed")), layout = igraph::layout_in_circle, main = "Estimated Graph")
 
 # Get the estimated causal strength matrix between response variables
-Output$A_Est
+Output$AEst
 
 # Get the graph structure between response and instrument variables
-Output$zB_Est
+Output$zBEst
 
 # Get the estimated causal strength matrix between response and instrument variables
-Output$B_Est
+Output$BEst
 
 # Plot posterior log-likelihood
-plot(Output$LL_Pst, type = 'l', xlab = "Number of Iterations", ylab = "Log-likelihood")
+plot(Output$LLPst, type = 'l', xlab = "Number of Iterations", ylab = "Log-likelihood")
 
 
 
@@ -278,9 +278,9 @@ for (i in 1:n) {
 
 
 # Calculate summary level data
-S_YY = t(Y) \%*\% Y / n
-S_YX = t(Y) \%*\% X / n
-S_XX = t(X) \%*\% X / n
+Syy = t(Y) \%*\% Y / n
+Syx = t(Y) \%*\% X / n
+Sxx = t(X) \%*\% X / n
 
 
 # Print true causal interaction matrices between response variables
@@ -289,39 +289,39 @@ A
 B
 
 # Plot the true graph structure between response variables
-plot(smaller_arrowheads(igraph::graph.adjacency(((A != 0) * 1),
+plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix(((A != 0) * 1),
  mode = "directed")), layout = igraph::layout_in_circle, main = "True Graph")
 
 
 # Apply RGM on summary level data for Spike and Slab Prior
-Output = RGM(S_YY = S_YY, S_YX = S_YX, S_XX = S_XX,
+Output = RGM(Syy = Syy, Syx = Syx, Sxx = Sxx,
           d = c(2, 1, 1), n = 10000, prior = "Spike and Slab")
 
 # Get the graph structure between response variables
-Output$zA_Est
+Output$zAEst
 
 # Plot the estimated graph structure between response variables
-plot(smaller_arrowheads(igraph::graph.adjacency(Output$zA_Est,
+plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix(Output$zAEst,
  mode = "directed")), layout = igraph::layout_in_circle, main = "Estimated Graph")
 
 # Get the estimated causal strength matrix between response variables
-Output$A_Est
+Output$AEst
 
 # Get the graph structure between response and instrument variables
-Output$zB_Est
+Output$zBEst
 
 # Get the estimated causal strength matrix between response and instrument variables
-Output$B_Est
+Output$BEst
 
 # Plot posterior log-likelihood
-plot(Output$LL_Pst, type = 'l', xlab = "Number of Iterations", ylab = "Log-likelihood")
+plot(Output$LLPst, type = 'l', xlab = "Number of Iterations", ylab = "Log-likelihood")
 
 
 
 
 # -----------------------------------------------------------------
 # Example 3:
-# Run RGM based on Beta and Sigma_Hat with Spike and Slab prior based on the model Y = AY + BX + E
+# Run RGM based on Beta and SigmaHat with Spike and Slab prior based on the model Y = AY + BX + E
 
 # Data Generation
 set.seed(9154)
@@ -387,12 +387,12 @@ for (i in 1:n) {
 Y = t(t(Y) - colMeans(Y))
 X = t(t(X) - colMeans(X))
 
-# Calculate S_XX
-S_XX = t(X) \%*\% X / n
+# Calculate Sxx
+Sxx = t(X) \%*\% X / n
 
-# Generate Beta matrix and Sigma_Hat
+# Generate Beta matrix and SigmaHat
 Beta = matrix(0, nrow = p, ncol = k)
-Sigma_Hat = matrix(0, nrow = p, ncol = k)
+SigmaHat = matrix(0, nrow = p, ncol = k)
 
 for (i in 1:p) {
 
@@ -402,7 +402,7 @@ for (i in 1:p) {
 
        Beta[i, j] =  fit$coefficients[2]
 
-       Sigma_Hat[i, j] = sum(fit$residuals^2) / n
+       SigmaHat[i, j] = sum(fit$residuals^2) / n
 
        }
 
@@ -416,32 +416,32 @@ B
 
 
 # Plot the true graph structure between response variables
-plot(smaller_arrowheads(igraph::graph.adjacency(((A != 0) * 1),
+plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix(((A != 0) * 1),
  mode = "directed")), layout = igraph::layout_in_circle, main = "True Graph")
 
 
-# Apply RGM based on S_XX, Beta and Sigma_Hat for Spike and Slab Prior
-Output = RGM(S_XX = S_XX, Beta = Beta, Sigma_Hat = Sigma_Hat,
+# Apply RGM based on Sxx, Beta and SigmaHat for Spike and Slab Prior
+Output = RGM(Sxx = Sxx, Beta = Beta, SigmaHat = SigmaHat,
           d = c(2, 1, 1), n = 10000, prior = "Spike and Slab")
 
 # Get the graph structure between response variables
-Output$zA_Est
+Output$zAEst
 
 # Plot the estimated graph structure between response variables
-plot(smaller_arrowheads(igraph::graph.adjacency(Output$zA_Est,
+plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix(Output$zAEst,
  mode = "directed")), layout = igraph::layout_in_circle, main = "Estimated Graph")
 
 # Get the estimated causal strength matrix between response variables
-Output$A_Est
+Output$AEst
 
 # Get the graph structure between response and instrument variables
-Output$zB_Est
+Output$zBEst
 
 # Get the estimated causal strength matrix between response and instrument variables
-Output$B_Est
+Output$BEst
 
 # Plot posterior log-likelihood
-plot(Output$LL_Pst, type = 'l', xlab = "Number of Iterations", ylab = "Log-likelihood")
+plot(Output$LLPst, type = 'l', xlab = "Number of Iterations", ylab = "Log-likelihood")
 
 
 
