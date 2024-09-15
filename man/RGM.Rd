@@ -12,7 +12,7 @@ RGM(
   Sxx = NULL,
   Beta = NULL,
   SigmaHat = NULL,
-  d,
+  D,
   n,
   nIter = 10000,
   nBurnin = 2000,
@@ -31,21 +31,21 @@ RGM(
 )
 }
 \arguments{
-\item{X}{A matrix of dimension n * k. In this matrix, each row signifies a distinct observation, while each column represents a specific instrument variable. The default value is set to NULL.}
+\item{X}{A matrix of dimension n * k. Each row represents a distinct observation, and each column corresponds to a specific instrumental variable. The default value is set to NULL.}
 
-\item{Y}{A matrix of dimension n * p. In this matrix, each row corresponds to a specific observation, and each column pertains to a particular response variable. The default value is set to NULL.}
+\item{Y}{A matrix of dimension n * p. Each row represents a specific observation, and each column corresponds to a particular response variable. The default value is set to NULL.}
 
-\item{Syy}{A matrix of dimensions p * p. Here, "p" signifies the count of response variables. This matrix is derived through the operation t(Y) \%*\% Y / n, where "Y" denotes the response data matrix and "n" stands for the total number of observations.}
+\item{Syy}{A matrix of dimension p * p, where "p" is the number of response variables. It is calculated as t(Y) \%*\% Y / n, where "Y" represents the response data matrix and "n" is the number of observations.}
 
-\item{Syx}{A matrix of dimensions p * k. Here, "p" signifies the number of response variables, and "k" represents the count of instrument variables. This matrix is calculated using the operation t(Y) \%*\% X / n, where "Y" is the response data matrix, "X" is the instrument data matrix and "n" is the total number of observations.}
+\item{Syx}{A matrix of dimension p * k, where "p" is the number of response variables, and "k" is the number of instrumental variables. It is calculated as t(Y) \%*\% X / n, where "Y" represents the response data matrix, "X" represents the instrumental data matrix, and "n" is the number of observations.}
 
-\item{Sxx}{A matrix of dimensions k * k. Here, "k" signifies the count of instrument variables. This matrix is derived through the operation t(X) \%*\% X / n, where "X" denotes the instrument data matrix and "n" stands for the total number of observations.}
+\item{Sxx}{A matrix of dimension k * k, where "k" is the number of instrumental variables. It is derived as t(X) \%*\% X / n, where "X" represents the instrumental data matrix and "n" is the number of observations.}
 
-\item{Beta}{A matrix of dimensions p * k. In this matrix, each row corresponds to a specific response variable, and each column pertains to a distinct instrument variable. Each entry within the matrix represents the regression coefficient of the individual response variable on the specific instrument variable. To use Beta as an input, ensure you centralize each column of Y i.e. response data matrix and X i.e. instrument data matrix before calculating Beta, Sxx, and SigmaHat.}
+\item{Beta}{A matrix of dimension p * k, where each row corresponds to a specific response variable and each column pertains to an instrumental variable. Each entry represents the regression coefficient of the response variable on the instrumental variable. When using Beta as input, ensure that both Y (response data) and X (instrument data) are centered before calculating Beta, Sxx, and SigmaHat.}
 
-\item{SigmaHat}{A matrix of dimensions p * k. In this matrix, each row corresponds to a specific response variable, and each column pertains to an individual instrument variable. Each entry in this matrix represents the mean square error associated with regressing the particular response on the specific instrument variable. To employ SigmaHat as an input, ensure that you centralize each column of Y i.e. response data matrix and X i.e. instrument data matrix before calculating Beta, Sxx, and SigmaHat.}
+\item{SigmaHat}{A matrix of dimension p * k. Each row corresponds to a specific response variable, and each column pertains to an instrumental variable. Each entry represents the mean square error of the regression between the response and the instrumental variable. As with Beta, ensure that both Y and X are centered before calculating SigmaHat.}
 
-\item{d}{A vector input with a length of p i.e. number of response variables. Each element within this vector is a positive integer denoting the count of instrument variables influencing a specific response variable. The sum of all elements in the vector should be equal to the total count of instrument variables, represented as k.}
+\item{D}{A binary indicator matrix of dimension p * k, where each row corresponds to a response variable, and each column corresponds to an instrumental variable. The entry \code{D[i, j]} is 1 if instrumental variable j affects response variable i, and 0 otherwise. For each response variable, there must be at least one instrumental variable that affects only that response (i.e., for each row in D, there must be at least one column with 1, and that column must have zeros in all other rows). If you use \code{Syy}, \code{Beta}, and \code{SigmaHat} as inputs, this condition must be satisfied to run this algorithm. If this condition is not met, an error will be thrown. However, if using \code{X}, \code{Y} or \code{Syy}, \code{Syx}, \code{Sxx} as inputs, a warning will be issued if the condition is violated, but the method will still proceed.}
 
 \item{n}{A positive integer input representing the count of data points or observations in the dataset. This input is only required when summary level data is used as input.}
 
@@ -79,7 +79,7 @@ RGM(
 }
 \value{
 \item{AEst}{A matrix of dimensions p * p, representing the estimated causal effects or strengths between the response variables.}
-\item{BEst}{A matrix of dimensions p * k, representing the estimated causal effects or strengths between the response variables and the instrument variables. Each row corresponds to a specific response variable, and each column corresponds to a particular instrument variable.}
+\item{BEst}{A matrix of dimensions p * k, representing the estimated causal effects or strengths of the instrument variables on the response variables. Each row corresponds to a specific response variable, and each column corresponds to a particular instrument variable.}
 \item{zAEst}{A binary adjacency matrix of dimensions p * p, indicating the graph structure between the response variables. Each entry in the matrix represents the presence (1) or absence (0) of a causal link between the corresponding response variables.}
 \item{zBEst}{A binary adjacency matrix of dimensions p * k, illustrating the graph structure between the response variables and the instrument variables. Each row corresponds to a specific response variable, and each column corresponds to a particular instrument variable. The presence of a causal link is denoted by 1, while the absence is denoted by 0.}
 \item{A0Est}{A matrix of dimensions p * p, representing the estimated causal effects or strengths between response variables before thresholding. This output is particularly relevant for cases where the "Threshold" prior assumption is utilized.}
@@ -108,7 +108,7 @@ RGM provides essential causal effect/strength estimates between response variabl
 \examples{
 
 
-#' # ---------------------------------------------------------
+# ---------------------------------------------------------
 
 # Example 1:
 # Run RGM based on individual level data with Threshold prior based on the model Y = AY + BX + E
@@ -130,33 +130,37 @@ A = matrix(sample(c(-0.1, 0.1), p^2, replace = TRUE), p, p)
 diag(A) = 0
 
 # Make the network sparse
-A[sample(which(A!=0), length(which(A!=0))/2)] = 0
+A[sample(which(A != 0), length(which(A != 0)) / 2)] = 0
 
-# Initialize causal interaction matrix between response and instrument variables
-B = matrix(0, p, k)
+# Create D matrix (Indicator matrix where each row corresponds to a response variable
+# and each column corresponds to an instrument variable)
+D = matrix(0, nrow = p, ncol = k)
 
-# Create d vector
-d = c(2, 1, 1)
+# Manually assign values to D matrix
+D[1, 1:2] = 1  # First response variable is influenced by the first 2 instruments
+D[2, 3] = 1    # Second response variable is influenced by the 3rd instrument
+D[3, 4] = 1    # Third response variable is influenced by the 4th instrument
 
 
-# Initialize m
-m = 1
+# Initialize B matrix
+B = matrix(0, p, k)  # Initialize B matrix with zeros
 
-# Calculate B matrix based on d vector
+# Calculate B matrix based on D matrix
 for (i in 1:p) {
-
- # Update ith row of B
- B[i, m:(m + d[i] - 1)] = 1
-
- # Update m
- m = m + d[i]
-
+  for (j in 1:k) {
+    if (D[i, j] == 1) {
+      B[i, j] = 1  # Set B[i, j] to 1 if D[i, j] is 1
+    }
+  }
 }
 
+# Define Sigma matrix
 Sigma = diag(p)
 
+# Compute Mult_Mat
 Mult_Mat = solve(diag(p) - A)
 
+# Calculate Variance
 Variance = Mult_Mat \%*\% Sigma \%*\% t(Mult_Mat)
 
 # Generate instrument data matrix
@@ -167,15 +171,13 @@ Y = matrix(0, nrow = n, ncol = p)
 
 # Generate response data matrix based on instrument data matrix
 for (i in 1:n) {
-
-    Y[i, ] = MASS::mvrnorm(n = 1, Mult_Mat \%*\% B \%*\% X[i, ], Variance)
-
+  Y[i, ] = MASS::mvrnorm(n = 1, Mult_Mat \%*\% B \%*\% X[i, ], Variance)
 }
 
 # Define a function to create smaller arrowheads
 smaller_arrowheads = function(graph) {
-    igraph::E(graph)$arrow.size = 1  # Adjust the arrow size value as needed
-    return(graph)
+  igraph::E(graph)$arrow.size = 1  # Adjust the arrow size value as needed
+  return(graph)
 }
 
 # Print true causal interaction matrices between response variables
@@ -183,20 +185,19 @@ smaller_arrowheads = function(graph) {
 A
 B
 
-
 # Plot the true graph structure between response variables
-plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix(((A != 0) * 1),
- mode = "directed")), layout = igraph::layout_in_circle, main = "True Graph")
+plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix((A != 0) * 1,
+  mode = "directed")), layout = igraph::layout_in_circle, main = "True Graph")
 
 # Apply RGM on individual level data for Threshold Prior
-Output = RGM(X = X, Y = Y, d = c(2, 1, 1), prior = "Threshold")
+Output = RGM(X = X, Y = Y, D = D, prior = "Threshold")
 
 # Get the graph structure between response variables
 Output$zAEst
 
 # Plot the estimated graph structure between response variables
 plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix(Output$zAEst,
- mode = "directed")), layout = igraph::layout_in_circle, main = "Estimated Graph")
+  mode = "directed")), layout = igraph::layout_in_circle, main = "Estimated Graph")
 
 # Get the estimated causal strength matrix between response variables
 Output$AEst
@@ -210,12 +211,9 @@ Output$BEst
 # Plot posterior log-likelihood
 plot(Output$LLPst, type = 'l', xlab = "Number of Iterations", ylab = "Log-likelihood")
 
-
-
-
 # -----------------------------------------------------------------
 # Example 2:
-# Run RGM based on summary level data with Spike and Slab prior based on the model Y = AY + BX + E
+# Run RGM based on Syy, Syx and Sxx with Spike and Slab prior based on the model Y = AY + BX + E
 
 # Data Generation
 set.seed(9154)
@@ -236,26 +234,29 @@ diag(A) = 0
 # Make the network sparse
 A[sample(which(A!=0), length(which(A!=0))/2)] = 0
 
-# Initialize causal interaction matrix between response and instrument variables
-B = matrix(0, p, k)
 
-# Create d vector
-d = c(2, 1, 1)
+# Create D matrix (Indicator matrix where each row corresponds to a response variable
+# and each column corresponds to an instrument variable)
+D = matrix(0, nrow = p, ncol = k)
+
+# Manually assign values to D matrix
+D[1, 1:2] = 1  # First response variable is influenced by the first 2 instruments
+D[2, 3] = 1    # Second response variable is influenced by the 3rd instrument
+D[3, 4] = 1    # Third response variable is influenced by the 4th instrument
 
 
-# Initialize m
-m = 1
+# Initialize B matrix
+B = matrix(0, p, k)  # Initialize B matrix with zeros
 
-# Calculate B matrix based on d vector
+# Calculate B matrix based on D matrix
 for (i in 1:p) {
-
- # Update ith row of B
- B[i, m:(m + d[i] - 1)] = 1
-
- # Update m
- m = m + d[i]
-
+  for (j in 1:k) {
+    if (D[i, j] == 1) {
+      B[i, j] = 1  # Set B[i, j] to 1 if D[i, j] is 1
+    }
+  }
 }
+
 
 Sigma = diag(p)
 
@@ -295,7 +296,7 @@ plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix(((A != 0) * 1),
 
 # Apply RGM on summary level data for Spike and Slab Prior
 Output = RGM(Syy = Syy, Syx = Syx, Sxx = Sxx,
-          d = c(2, 1, 1), n = 10000, prior = "Spike and Slab")
+          D = D, n = 10000, prior = "Spike and Slab")
 
 # Get the graph structure between response variables
 Output$zAEst
@@ -321,7 +322,8 @@ plot(Output$LLPst, type = 'l', xlab = "Number of Iterations", ylab = "Log-likeli
 
 # -----------------------------------------------------------------
 # Example 3:
-# Run RGM based on Beta and SigmaHat with Spike and Slab prior based on the model Y = AY + BX + E
+# Run RGM based on Sxx, Beta and SigmaHat with Spike and Slab prior
+# based on the model Y = AY + BX + E
 
 # Data Generation
 set.seed(9154)
@@ -342,26 +344,29 @@ diag(A) = 0
 # Make the network sparse
 A[sample(which(A!=0), length(which(A!=0))/2)] = 0
 
-# Initialize causal interaction matrix between response and instrument variables
-B = matrix(0, p, k)
 
-# Create d vector
-d = c(2, 1, 1)
+# Create D matrix (Indicator matrix where each row corresponds to a response variable
+# and each column corresponds to an instrument variable)
+D = matrix(0, nrow = p, ncol = k)
+
+# Manually assign values to D matrix
+D[1, 1:2] = 1  # First response variable is influenced by the first 2 instruments
+D[2, 3] = 1    # Second response variable is influenced by the 3rd instrument
+D[3, 4] = 1    # Third response variable is influenced by the 4th instrument
 
 
-# Initialize m
-m = 1
+# Initialize B matrix
+B = matrix(0, p, k)  # Initialize B matrix with zeros
 
-# Calculate B matrix based on d vector
+# Calculate B matrix based on D matrix
 for (i in 1:p) {
-
- # Update ith row of B
- B[i, m:(m + d[i] - 1)] = 1
-
- # Update m
- m = m + d[i]
-
+  for (j in 1:k) {
+    if (D[i, j] == 1) {
+      B[i, j] = 1  # Set B[i, j] to 1 if D[i, j] is 1
+    }
+  }
 }
+
 
 Sigma = diag(p)
 
@@ -422,7 +427,7 @@ plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix(((A != 0) * 1),
 
 # Apply RGM based on Sxx, Beta and SigmaHat for Spike and Slab Prior
 Output = RGM(Sxx = Sxx, Beta = Beta, SigmaHat = SigmaHat,
-          d = c(2, 1, 1), n = 10000, prior = "Spike and Slab")
+          D = D, n = 10000, prior = "Spike and Slab")
 
 # Get the graph structure between response variables
 Output$zAEst

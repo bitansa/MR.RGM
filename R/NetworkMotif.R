@@ -39,25 +39,26 @@
 #' # Make the network sparse
 #' A[sample(which(A!=0), length(which(A!=0))/2)] = 0
 #'
-#' # Initialize causal interaction matrix between response and instrument variables
-#' B = matrix(0, p, k)
+#' # Create D matrix (Indicator matrix where each row corresponds to a response variable
+#' # and each column corresponds to an instrument variable)
+#' D = matrix(0, nrow = p, ncol = k)
 #'
-#' # Create d vector
-#' d = c(2, 1, 1)
+#' # Manually assign values to D matrix
+#' D[1, 1:2] = 1  # First response variable is influenced by the first 2 instruments
+#' D[2, 3] = 1    # Second response variable is influenced by the 3rd instrument
+#' D[3, 4] = 1    # Third response variable is influenced by the 4th instrument
 #'
 #'
-#' # Initialize m
-#' m = 1
+#' # Initialize B matrix
+#' B = matrix(0, p, k)  # Initialize B matrix with zeros
 #'
-#' # Calculate B matrix based on d vector
+#' # Calculate B matrix based on D matrix
 #' for (i in 1:p) {
-#'
-#'  # Update ith row of B
-#'  B[i, m:(m + d[i] - 1)] = 1
-#'
-#'  # Update m
-#'  m = m + d[i]
-#'
+#'   for (j in 1:k) {
+#'     if (D[i, j] == 1) {
+#'       B[i, j] = 1  # Set B[i, j] to 1 if D[i, j] is 1
+#'     }
+#'   }
 #' }
 #'
 #' Sigma = diag(p)
@@ -80,8 +81,8 @@
 #' }
 #'
 #'
-#' # Apply RGM on individual level data for Threshold Prior
-#' Output = RGM(X = X, Y = Y, d = c(2, 1, 1), prior = "Threshold")
+#' # Apply RGM on individual level data with Spike and Slab Prior
+#' Output = RGM(X = X, Y = Y, D = D, prior = "Spike and Slab")
 #'
 #' # Store GammaPst
 #' GammaPst = Output$GammaPst
