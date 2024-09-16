@@ -287,5 +287,147 @@ NetworkMotif(Gamma = Gamma, GammaPst = GammaPst3)
 
 ```
 
+## Expanded Simulation Setup
+
+In real-world scenarios, it is common to encounter a large number of instrumental variables (IVs), each explaining only a small proportion of the trait variance. To better reflect this, we have expanded our simulation setup with the following new elements:
+
+1. **Initial Setup with Numerous IVs:**
+   - We start with $100$ IVs for each response variable, each IV having a small effect on the trait. This setup mimics the situation where each IV contributes minimally to the overall trait variance, as often observed in real GWAS studies.
+
+2. **Dimensionality Reduction:**
+   - **Principal Component Analysis (PCA):** To manage the high dimensionality of the data and focus on the most significant aspects of the variance, we perform PCA on each set of SNPs associated with a response variable.
+   - We select the top $20$ principal components (PCs) from each PCA. This step helps in reducing the complexity of the data while retaining the key features that explain the majority of the variance.
+
+3. **Compact Data Matrix:**
+   - **Creation of `compact_X`:** By combining the top PCs from each response variable, we form a condensed matrix `compact_X`. This matrix aggregates the instrumental variables into a more manageable form, facilitating a more efficient analysis.
+
+4. **Revised Summary Level Data:**
+   - Using `compact_X`, we calculate new summary level data (`Sxx_compact` and `Syx_compact`) for the RGM function application. This approach provides a more realistic representation of the instrumental variables' effects in scenarios with many IVs explaining only a small proportion of the variance.
+
+Here is the updated R code reflecting these changes:
+
+```{r}
+
+# Load necessary libraries
+library(MASS)
+library(igraph)
+
+# Set seed for reproducibility
+set.seed(9154)
+
+# Number of data points
+n = 10000
+
+# Number of response variables
+p = 5
+
+# Number of SNPs per response variable
+num_snps_per_y = 100
+
+# Total number of SNPs
+k = num_snps_per_y * p
+
+# Initialize causal interaction matrix between response variables
+A = matrix(sample(c(-0.1, 0.1), p^2, replace = TRUE), p, p)
+diag(A) = 0
+A[sample(which(A != 0), length(which(A != 0)) / 2)] = 0
+
+# Create D matrix (Indicator matrix where each row corresponds to a response variable
+# and each column corresponds to an instrument variable)
+D = matrix(0, nrow = p, ncol = k)
+
+# Assign values to D matrix using a loop
+for (run in 1:p) {
+  
+  D[run, ((run - 1) * 100 + 1) : (run * 100)] = 1
+  
+}
+
+# Initialize B matrix
+B = matrix(0, p, k)  # Initialize B matrix with zeros
+
+# Calculate B matrix based on D matrix
+for (i in 1:p) {
+   for (j in 1:k) {
+     if (D[i, j] == 1) {
+       B[i, j] = 1  # Set B[i, j] to 1 if D[i, j] is 1
+     }
+   }
+ }
+
+
+# Calculate Variance-Covariance matrix
+Sigma = diag(p)
+Mult_Mat = solve(diag(p) - A)
+Variance = Mult_Mat %*% Sigma %*% t(Mult_Mat)
+
+# Generate instrument data matrix (X)
+X = matrix(rnorm(n * k, 0, 1), nrow = n, ncol = k)
+
+# Initialize response data matrix (Y)
+Y = matrix(0, nrow = n, ncol = p)
+
+# Generate response data matrix based on instrument data matrix
+for (i in 1:n) {
+    Y[i, ] = MASS::mvrnorm(n = 1, Mult_Mat %*% B %*% X[i, ], Variance)
+}
+
+# Calculate summary level data
+Syy = t(Y) %*% Y / n
+Syx = t(Y) %*% X / n
+Sxx = t(X) %*% X / n
+
+# Perform PCA for each response variable to get top 20 PCs
+top_snps_list = list()
+for (i in 1:p) {
+    X_sub = X[, (num_snps_per_y * (i - 1) + 1):(num_snps_per_y * i)]
+    pca = prcomp(X_sub, center = TRUE, scale. = TRUE)
+    top_20_pcs = pca$x[, 1:20]
+    top_snps_list[[i]] = top_20_pcs
+}
+
+# Combine the top PCs from all response variables
+compact_X = do.call(cbind, top_snps_list)
+
+# Calculate summary level data based on compact_X
+Sxx_compact = t(compact_X) %*% compact_X / n
+Syx_compact = t(Y) %*% compact_X / n
+
+# Create D_New
+D_New = matrix(0, nrow = p, ncol = 20 * p)
+
+# Assign values to D matrix using a loop
+for (run in 1:p) {
+  
+  D_New[run, ((run - 1) * 20 + 1) : (run * 20)] = 1
+  
+}
+
+# Apply RGM on summary level data for Spike and Slab Prior using the compact_X matrix
+Output = RGM(Syy = Syy, Syx = Syx_compact, Sxx = Sxx_compact, D = D_New, n = n, prior = "Spike and Slab")
+
+# Print estimated causal interaction matrices
+Output$AEst
+Output$zAEst
+
+# Create a layout for multiple plots
+par(mfrow = c(1, 2))
+
+# Plot the true causal network
+plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix((A != 0) * 1, mode = "directed")),
+     layout = igraph::layout_in_circle, main = "True Causal Network")
+
+# Plot the estimated causal network
+plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix(Output$zAEst, mode = "directed")),
+     layout = igraph::layout_in_circle, main = "Estimated Causal Network")
+
+```
+## Conclusion
+
+Although we have mimicked a real-world setup where there are numerous instrumental variables (IVs), each explaining only a small portion of the trait variance, our approach still yields very promising results. This demonstrates that our method is robust even in complex scenarios with many IVs.
+
+The dimensionality reduction technique we employed, specifically using Principal Component Analysis (PCA) to select the top principal components as IVs, proves to be effective. This approach can be broadly applied to similar problems where dimensionality reduction is necessary. By leveraging PCA or other dimensionality reduction methods, researchers can efficiently manage large sets of IVs and apply our algorithm to gain valuable insights into causal relationships.
+
+
 ## References
 Yang Ni. Yuan Ji. Peter Müller. "Reciprocal Graphical Models for Integrative Gene Regulatory Network Analysis." Bayesian Anal. 13 (4) 1095 - 1110, December 2018. https://doi.org/10.1214/17-BA1087
