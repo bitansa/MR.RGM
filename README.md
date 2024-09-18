@@ -59,8 +59,8 @@ within the package, showcasing its effectiveness in computing causal
 interactions among response variables and between responses and
 instrumental variables using simulated data sets. Subsequently, we
 provide an example of how NetworkMotif can be applied, utilizing a
-specified network structure and Gamma_Pst acquired from executing the
-RGM function.
+specified network structure and GammaPst acquired from executing the RGM
+function.
 
 ``` r
 
@@ -567,8 +567,9 @@ plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix(Output$zAEst, mode =
      layout = igraph::layout_in_circle, main = "Estimated Causal Network")
 ```
 
-<img src="man/figures/README-unnamed-chunk-13-1.png" width="100%" /> \##
-Conclusion
+<img src="man/figures/README-unnamed-chunk-13-1.png" width="100%" />
+
+**Conclusion**
 
 Although we have mimicked a real-world setup where there are numerous
 instrumental variables (IVs), each explaining only a small portion of

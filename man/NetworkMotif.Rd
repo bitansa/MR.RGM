@@ -99,6 +99,11 @@ smaller_arrowheads = function(graph) {
     return(graph)
 }
 
+
+# Plot the true graph structure between response variables
+plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix((A != 0) * 1,
+  mode = "directed")), layout = igraph::layout_in_circle, main = "True Graph")
+
 # Start with a random subgraph
 Gamma = matrix(0, nrow = p, ncol = p)
 Gamma[2, 1] = 1
