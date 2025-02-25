@@ -2,7 +2,9 @@
 #'
 #' @description The RGM function transforms causal inference by merging Mendelian randomization and network-based methods, enabling the creation of comprehensive causal graphs within complex biological systems. RGM accommodates varied data contexts with three input options: individual-level data (X, Y matrices), summary-level data including Syy, Syx, and Sxx matrices, and intricate data with challenging cross-correlations, utilizing Sxx, Beta, and SigmaHat matrices.
 #'              For the latter input, data centralization is necessary. Users can select any of these data formats to suit their needs and don’t have to specify all of them, allowing flexibility based on data availability. Crucial inputs encompass "D" (a matrix indicating which IV is affecting which response) and "n" (total observations, only required for summary level data), amplified by customizable parameters that refine analysis. Additionally, users can tailor the analysis by setting parameters such as "nIter" (number of MCMC iterations), "nBurnin" (number of discarded samples during burn-in for convergence), and "Thin" (thinning of posterior samples). These customizable parameters enhance the precision and relevance of the analysis.
-#'              RGM provides essential causal effect/strength estimates between response variables and between response and instrument variables. Moreover, it furnishes adjacency matrices, visually mapping causal graph structures. These outputs empower researchers to untangle intricate relationships within biological networks, fostering a holistic understanding of complex systems. AEst, BEst, A0Est, B0Est, GammaEst, TauEst, PhiEst, EtaEst, tAEst, tBEst, SigmaEst, RhoEst, and PsiEst represent the posterior means of the corresponding quantities. LLPst and GammaPst represent posterior samples. zAEst and zBEst are obtained by thresholding GammaEst and TauEst, respectively.
+#'              RGM provides essential causal effect/strength estimates between response variables and between response and instrument variables. Moreover, it furnishes adjacency matrices, visually mapping causal graph structures. These outputs empower researchers to untangle intricate relationships within biological networks, fostering a holistic understanding of complex systems.
+#'              The function also returns a Graph object representing the estimated causal network. This graph consists of directed edges that indicate causal effects, with effect sizes displayed on the edges. The edges are determined based on a threshold of 0.5 for inclusion. Users can visualize the network by plotting this object, which helps in interpreting the causal relationships between response and instrumental variables.
+#'              The output includes AEst, BEst, A0Est, B0Est, GammaEst, TauEst, PhiEst, EtaEst, tAEst, tBEst, SigmaEst, RhoEst, and PsiEst, representing the posterior means of the corresponding quantities. Additionally, LLPst and GammaPst represent posterior samples. The adjacency matrices zAEst and zBEst are obtained by thresholding GammaEst and TauEst, respectively.
 #'
 #' @param X A matrix of dimension n * k. Each row represents a distinct observation, and each column corresponds to a specific instrumental variable. The default value is set to NULL.
 #' @param Y A matrix of dimension n * p. Each row represents a specific observation, and each column corresponds to a particular response variable. The default value is set to NULL.
@@ -30,6 +32,7 @@
 #'
 #' @return
 #'
+#' \item{Graph}{A graph object representing the estimated causal network involving response and instrumental variables. The graph consists of directed edges that indicate the direction of causal effects, with effect sizes displayed on the edges. The edges are determined based on a threshold of 0.5 for edge inclusion. Users can visualize the network by plotting this object.}
 #' \item{AEst}{A matrix of dimensions p * p, representing the estimated causal effects or strengths between the response variables.}
 #' \item{BEst}{A matrix of dimensions p * k, representing the estimated causal effects or strengths of the instrument variables on the response variables. Each row corresponds to a specific response variable, and each column corresponds to a particular instrument variable.}
 #' \item{zAEst}{A binary adjacency matrix of dimensions p * p, indicating the graph structure between the response variables. Each entry in the matrix represents the presence (1) or absence (0) of a causal link between the corresponding response variables.}
@@ -147,12 +150,14 @@
 #' # Apply RGM on individual level data for Threshold Prior
 #' Output = RGM(X = X, Y = Y, D = D, prior = "Threshold")
 #'
+#' # Get the estimated causal network
+#' Output$Graph
+#'
+#' # Plot the estimated causal network
+#' plot(Output$Graph, main = "Estimated Causal Network")
+#'
 #' # Get the graph structure between response variables
 #' Output$zAEst
-#'
-#' # Plot the estimated graph structure between response variables
-#' plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix(Output$zAEst,
-#'   mode = "directed")), layout = igraph::layout_in_circle, main = "Estimated Graph")
 #'
 #' # Get the estimated causal strength matrix between response variables
 #' Output$AEst
@@ -253,12 +258,14 @@
 #' Output = RGM(Syy = Syy, Syx = Syx, Sxx = Sxx,
 #'           D = D, n = 10000, prior = "Spike and Slab")
 #'
+#' # Get the estimated causal network
+#' Output$Graph
+#'
+#' # Plot the estimated causal network
+#' plot(Output$Graph, main = "Estimated Causal Network")
+#'
 #' # Get the graph structure between response variables
 #' Output$zAEst
-#'
-#' # Plot the estimated graph structure between response variables
-#' plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix(Output$zAEst,
-#'  mode = "directed")), layout = igraph::layout_in_circle, main = "Estimated Graph")
 #'
 #' # Get the estimated causal strength matrix between response variables
 #' Output$AEst
@@ -384,12 +391,14 @@
 #' Output = RGM(Sxx = Sxx, Beta = Beta, SigmaHat = SigmaHat,
 #'           D = D, n = 10000, prior = "Spike and Slab")
 #'
+#' # Get the estimated causal network
+#' Output$Graph
+#'
+#' # Plot the estimated causal network
+#' plot(Output$Graph, main = "Estimated Causal Network")
+#'
 #' # Get the graph structure between response variables
 #' Output$zAEst
-#'
-#' # Plot the estimated graph structure between response variables
-#' plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix(Output$zAEst,
-#'  mode = "directed")), layout = igraph::layout_in_circle, main = "Estimated Graph")
 #'
 #' # Get the estimated causal strength matrix between response variables
 #' Output$AEst
@@ -525,7 +534,8 @@ RGM = function(X = NULL, Y = NULL, Syy = NULL, Syx = NULL, Sxx = NULL, Beta = NU
 
 
       # Return outputs
-      return(list(AEst = Output$A_Est, zAEst = Output$zA_Est,
+      return(list(Graph = create_causal_graph_Y(Output$A_Est, Output$zA_Est),
+                  AEst = Output$A_Est, zAEst = Output$zA_Est,
                   GammaEst = Output$Gamma_Est, TauEst = Output$Tau_Est, RhoEst = Output$Rho_Est,
                   SigmaEst = Output$Sigma_Est,
                   AccptA = Output$AccptA,
@@ -543,7 +553,8 @@ RGM = function(X = NULL, Y = NULL, Syy = NULL, Syx = NULL, Sxx = NULL, Beta = NU
 
 
       # Return outputs
-      return(list(AEst = Output$A_Est, zAEst = Output$zA_Est,
+      return(list(Graph = create_causal_graph_Y(Output$A_Est, Output$zA_Est),
+                  AEst = Output$A_Est, zAEst = Output$zA_Est,
                   A0Est = Output$A0_Est, GammaEst = Output$Gamma_Est, TauEst = Output$Tau_Est,
                   tAEst = Output$tA_Est,
                   SigmaEst = Output$Sigma_Est,
@@ -870,7 +881,8 @@ RGM = function(X = NULL, Y = NULL, Syy = NULL, Syx = NULL, Sxx = NULL, Beta = NU
 
 
       # Return outputs
-      return(list(AEst = Output$A_Est, BEst = Output$B_Est, zAEst = Output$zA_Est, zBEst = Output$zB_Est,
+      return(list(Graph = create_causal_graph(Output$A_Est, Output$B_Est, Output$zA_Est, Output$zB_Est),
+                  AEst = Output$A_Est, BEst = Output$B_Est, zAEst = Output$zA_Est, zBEst = Output$zB_Est,
                   GammaEst = Output$Gamma_Est, TauEst = Output$Tau_Est, RhoEst = Output$Rho_Est,
                   PhiEst = Output$Phi_Est, EtaEst = Output$Eta_Est, PsiEst = Output$Psi_Est,
                   SigmaEst = Output$Sigma_Est,
@@ -888,7 +900,8 @@ RGM = function(X = NULL, Y = NULL, Syy = NULL, Syx = NULL, Sxx = NULL, Beta = NU
 
 
       # Return outputs
-      return(list(AEst = Output$A_Est, BEst = Output$B_Est, zAEst = Output$zA_Est, zBEst = Output$zB_Est,
+      return(list(Graph = create_causal_graph(Output$A_Est, Output$B_Est, Output$zA_Est, Output$zB_Est),
+                  AEst = Output$A_Est, BEst = Output$B_Est, zAEst = Output$zA_Est, zBEst = Output$zB_Est,
                   A0Est = Output$A0_Est, B0Est = Output$B0_Est, GammaEst = Output$Gamma_Est, TauEst = Output$Tau_Est,
                   PhiEst = Output$Phi_Est, EtaEst = Output$Eta_Est, tAEst = Output$tA_Est, tBEst = Output$tB_Est,
                   SigmaEst = Output$Sigma_Est,
