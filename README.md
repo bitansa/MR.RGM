@@ -276,9 +276,7 @@ plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix((A != 0) * 1,
           main = "True Causal Network")
 
 # Plot the estimated causal network
-plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix(Output1$zAEst,
-      mode = "directed")), layout = igraph::layout_in_circle,
-         main = "Estimated Causal Network")
+plot(Output1$Graph, main = "Estimated Causal Network")
 ```
 
 <img src="man/figures/README-unnamed-chunk-8-1.png" width="100%" />
@@ -563,8 +561,7 @@ plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix((A != 0) * 1, mode =
      layout = igraph::layout_in_circle, main = "True Causal Network")
 
 # Plot the estimated causal network
-plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix(Output$zAEst, mode = "directed")),
-     layout = igraph::layout_in_circle, main = "Estimated Causal Network")
+plot(Output$Graph, main = "Estimated Causal Network")
 ```
 
 <img src="man/figures/README-unnamed-chunk-13-1.png" width="100%" />
