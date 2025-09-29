@@ -434,6 +434,7 @@ Here is the updated R code reflecting these changes:
 # Load necessary libraries
 library(MASS)
 library(igraph)
+#> Warning: package 'igraph' was built under R version 4.3.3
 #> 
 #> Attaching package: 'igraph'
 #> The following objects are masked from 'package:stats':
