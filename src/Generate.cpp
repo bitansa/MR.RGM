@@ -98,6 +98,11 @@ double Sample_Gamma(double a, double tau, double rho, double nu_1) {
   // Calculate acceptance probability
   double p = exp(-0.5 * (a * a / tau)) * rho / (exp(-0.5 * (a * a / tau)) * rho + 1 / sqrt(nu_1) * exp(-0.5 * (a * a / (nu_1 * tau))) * (1 - rho));
 
+  // Check if p is NaN and assign 0.5 for it
+  if (std::isnan(p)) {
+    p = 0.5;  // Set p to 0.5 if NaN is encountered
+  }
+
   // Sample Gamma from binomial distribution
   double Gamma = Rcpp::rbinom(1, 1, p)(0);
 
@@ -114,6 +119,11 @@ double Sample_Phi(double b, double eta, double psi, double nu_2) {
 
   // Calculate acceptance probability
   double p = exp(-0.5 * (b * b / eta)) * psi / (exp(-0.5 * (b * b / eta)) * psi + 1 / sqrt(nu_2) * exp(-0.5 * (b * b / (nu_2 * eta))) * (1 - psi));
+
+  // Check if p is NaN and assign 0.5 for it
+  if (std::isnan(p)) {
+    p = 0.5;  // Set p to 0.5 if NaN is encountered
+  }
 
   // Sample Phi from binomial distribution
   double Phi = Rcpp::rbinom(1, 1, p)(0);
