@@ -89,3 +89,19 @@ NetworkMotif_cpp <- function(Gamma, Gamma_Pst) {
     .Call(`_MR_RGM_NetworkMotif_cpp`, Gamma, Gamma_Pst)
 }
 
+RGM_SpikeSlab_SSSL_Covariates <- function(S_YY, S_YX, S_XX, S_YU, S_XU, S_UU, D, n, nIter, nBurnin, Thin, a_rho = 3.0, b_rho = 1.0, nu_1 = 0.001, a_psi = 0.5, b_psi = 0.5, nu_2 = 0.0001, Prop_VarA = 0.01, Prop_VarB = 0.01, TAU = 2) {
+    .Call(`_MR_RGM_RGM_SpikeSlab_SSSL_Covariates`, S_YY, S_YX, S_XX, S_YU, S_XU, S_UU, D, n, nIter, nBurnin, Thin, a_rho, b_rho, nu_1, a_psi, b_psi, nu_2, Prop_VarA, Prop_VarB, TAU)
+}
+
+RGM_SpikeSlab_SSSL_Star_Covariates <- function(S_YY, S_YU, S_UU, n, nIter, nBurnin, Thin, a_rho = 3.0, b_rho = 1.0, nu_1 = 0.001, Prop_VarA = 0.01, TAU = 2) {
+    .Call(`_MR_RGM_RGM_SpikeSlab_SSSL_Star_Covariates`, S_YY, S_YU, S_UU, n, nIter, nBurnin, Thin, a_rho, b_rho, nu_1, Prop_VarA, TAU)
+}
+
+RGM_Threshold_SSSL_Covariates <- function(S_YY, S_YX, S_XX, S_YU, S_XU, S_UU, D, n, nIter, nBurnin, Thin, nu_1 = 0.0001, nu_2 = 0.0001, Prop_VarA = 0.01, Prop_VarB = 0.01, TAU = 2) {
+    .Call(`_MR_RGM_RGM_Threshold_SSSL_Covariates`, S_YY, S_YX, S_XX, S_YU, S_XU, S_UU, D, n, nIter, nBurnin, Thin, nu_1, nu_2, Prop_VarA, Prop_VarB, TAU)
+}
+
+RGM_Threshold_SSSL_Star_Covariates <- function(S_YY, S_YU, S_UU, n, nIter, nBurnin, Thin, nu_1 = 0.0001, Prop_VarA = 0.01, TAU = 2) {
+    .Call(`_MR_RGM_RGM_Threshold_SSSL_Star_Covariates`, S_YY, S_YU, S_UU, n, nIter, nBurnin, Thin, nu_1, Prop_VarA, TAU)
+}
+
