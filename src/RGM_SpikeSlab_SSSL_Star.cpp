@@ -115,6 +115,10 @@ arma::mat Sample_Sigma_Full(const arma::mat& Sigma, const arma::mat& S, const ar
   // Set diagonal entries of V to 0
   V.diag().zeros();
 
+  // --- get GIGrvg::rgig safely (no need to attach GIGrvg) ---
+  Rcpp::Environment GIGrvg = Rcpp::Environment::namespace_env("GIGrvg");
+  Rcpp::Function rgig = GIGrvg["rgig"];
+
   // Run a loop for each column of Sigma
   for (int i = 0; i < p; i++) {
 
@@ -162,10 +166,10 @@ arma::mat Sample_Sigma_Full(const arma::mat& Sigma, const arma::mat& S, const ar
     arma::colvec u = arma::mvnrnd((C * Sigma11_Inv * s12) / v, C);
 
     // Sample v from GIG distribution
-    Function rgig("rgig");
-    v = Rcpp::as<double>(rgig(Named("n") = 1, Named("lambda") = 1 - n / 2,
-                              Named("chi") = (arma::as_scalar(u.t() * Sigma11_Inv * S11 * Sigma11_Inv * u) -
-                                2 * arma::as_scalar(s12.t() * Sigma11_Inv * u) + s22), Named("psi") = lambda));
+    Rcpp::NumericVector vv = rgig(Named("n") = 1, Named("lambda") = 1 - n / 2,
+                                  Named("chi") = (arma::as_scalar(u.t() * Sigma11_Inv * S11 * Sigma11_Inv * u) -
+                                  2 * arma::as_scalar(s12.t() * Sigma11_Inv * u) + s22), Named("psi") = lambda);
+    v = vv[0];
 
     // Update New_Sigma
     New_Sigma.submat(not_col_index, arma::uvec{static_cast<unsigned int>(i)}) = u;
