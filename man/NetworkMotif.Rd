@@ -88,7 +88,7 @@ for (i in 1:n) {
 
 
 # Apply RGM on individual level data with Spike and Slab Prior
-Output = RGM(X = X, Y = Y, D = D, prior = "Spike and Slab")
+Output = RGM(X = X, Y = Y, D = D, prior = "Spike and Slab", SigmaStarModel = "diagonal")
 
 # Store GammaPst
 GammaPst = Output$GammaPst

@@ -1,16 +1,23 @@
-#' Fitting Bayesian Multivariate Bidirectional Mendelian Randomization Networks
+#' Fitting Multivariate Bidirectional Mendelian Randomization Networks
+#' Using Bayesian Directed Cyclic Graphical Models
 #'
 #' @description The RGM function transforms causal inference by merging Mendelian randomization and network-based methods, enabling the creation of comprehensive causal graphs within complex biological systems. RGM accommodates varied data contexts with three input options: individual-level data (X, Y matrices), summary-level data including Syy, Syx, and Sxx matrices, and intricate data with challenging cross-correlations, utilizing Sxx, Beta, and SigmaHat matrices.
-#'              For the latter input, data centralization is necessary. Users can select any of these data formats to suit their needs and don’t have to specify all of them, allowing flexibility based on data availability. Crucial inputs encompass "D" (a matrix indicating which IV is affecting which response) and "n" (total observations, only required for summary level data), amplified by customizable parameters that refine analysis. Additionally, users can tailor the analysis by setting parameters such as "nIter" (number of MCMC iterations), "nBurnin" (number of discarded samples during burn-in for convergence), and "Thin" (thinning of posterior samples). These customizable parameters enhance the precision and relevance of the analysis.
-#'              RGM provides essential causal effect/strength estimates between response variables and between response and instrument variables. Moreover, it furnishes adjacency matrices, visually mapping causal graph structures. These outputs empower researchers to untangle intricate relationships within biological networks, fostering a holistic understanding of complex systems.
-#'              The function also returns a graph object representing the estimated causal network between the responses. This graph consists of directed edges that indicate causal effects, with effect sizes displayed on the edges. The edges are determined based on a threshold of 0.5 for inclusion. Users can visualize the network by plotting this object, which helps in interpreting the causal relationships between response variables.
-#'              The output includes AEst, BEst, A0Est, B0Est, GammaEst, TauEst, PhiEst, EtaEst, tAEst, tBEst, SigmaEst, RhoEst, and PsiEst, representing the posterior means of the corresponding quantities. Additionally, LLPst and GammaPst represent posterior samples. The adjacency matrices zAEst and zBEst are obtained by thresholding GammaEst and TauEst, respectively.
+#'              For the latter input, data centralization is necessary. Users can select any of these data formats to suit their needs and don’t have to specify all of them, allowing flexibility based on data availability. In addition, RGM optionally allows the inclusion of covariate information. When individual-level data are provided, covariates may be supplied either through the raw covariate matrix U or through summary matrices Syu, Sxu, and Suu. When only summary-level data are used,
+#'              the covariate summary matrices Syu, Sxu, and Suu must be provided explicitly. Covariate information is optional and the method remains valid in its absence. Crucial inputs encompass "D" (a matrix indicating which IV is affecting which response) and "n" (total observations, only required for summary level data), amplified by customizable parameters that refine analysis. Additionally, users can tailor the analysis by setting parameters such as "nIter" (number of MCMC iterations),
+#'              "nBurnin" (number of discarded samples during burn-in for convergence), and "Thin" (thinning of posterior samples). These customizable parameters enhance the precision and relevance of the analysis. RGM provides essential causal effect/strength estimates between response variables, between response and instrument variables and between response and covariates. Moreover, it furnishes adjacency matrices, visually mapping causal graph structures. These outputs empower researchers to
+#'              untangle intricate relationships within biological networks, fostering a holistic understanding of complex systems. The function also returns a graph object representing the estimated causal network between the responses. This graph consists of directed edges that indicate causal effects, with effect sizes displayed on the edges. The edges are determined based on a threshold of 0.5 for inclusion. Users can visualize the network by plotting this object,
+#'              which helps in interpreting the causal relationships between response variables. The output includes AEst, BEst, CEst, A0Est, B0Est, GammaEst, TauEst, PhiEst, EtaEst, tAEst, tBEst, SigmaEst, ZEst, RhoEst, and PsiEst, representing the posterior means of the corresponding quantities. Additionally, LLPst and GammaPst represent posterior samples. The adjacency matrices zAEst and zBEst are obtained by thresholding GammaEst and TauEst, respectively. When a full error variance–covariance matrix
+#'              is estimated, the off-diagonal elements of SigmaEst may be interpreted as evidence of unmeasured confounding between responses.
 #'
 #' @param X A matrix of dimension n * k. Each row represents a distinct observation, and each column corresponds to a specific instrumental variable. The default value is set to NULL.
 #' @param Y A matrix of dimension n * p. Each row represents a specific observation, and each column corresponds to a particular response variable. The default value is set to NULL.
+#' @param U A matrix of dimension n * l. Each row represents a distinct observation, and each column corresponds to a covariate. The default value is set to NULL.
 #' @param Syy A matrix of dimension p * p, where "p" is the number of response variables. It is calculated as t(Y) %*% Y / n, where "Y" represents the response data matrix and "n" is the number of observations.
 #' @param Syx A matrix of dimension p * k, where "p" is the number of response variables, and "k" is the number of instrumental variables. It is calculated as t(Y) %*% X / n, where "Y" represents the response data matrix, "X" represents the instrumental data matrix, and "n" is the number of observations.
 #' @param Sxx A matrix of dimension k * k, where "k" is the number of instrumental variables. It is derived as t(X) %*% X / n, where "X" represents the instrumental data matrix and "n" is the number of observations.
+#' @param Syu A matrix of dimension p * l, where "p" is the number of response variables and "l" is the number of covariates. It is calculated as t(Y) %*% U / n, where "Y" represents the response data matrix, "U" represents the covariate matrix, and "n" is the number of observations.
+#' @param Sxu A matrix of dimension k * l, where "k" is the number of instrumental variables and "l" is the number of covariates. It is calculated as t(X) %*% U / n, where "X" represents the instrument data matrix, "U" represents the covariate matrix, and "n" is the number of observations.
+#' @param Suu A matrix of dimension l * l, where "l" is the number of covariates. It is calculated as t(U) %*% U / n, where "U" represents the covariate matrix and "n" is the number of observations.
 #' @param Beta A matrix of dimension p * k, where each row corresponds to a specific response variable and each column pertains to an instrumental variable. Each entry represents the regression coefficient of the response variable on the instrumental variable. When using Beta as input, ensure that both Y (response data) and X (instrument data) are centered before calculating Beta, Sxx, and SigmaHat.
 #' @param SigmaHat A matrix of dimension p * k. Each row corresponds to a specific response variable, and each column pertains to an instrumental variable. Each entry represents the mean square error of the regression between the response and the instrumental variable. As with Beta, ensure that both Y and X are centered before calculating SigmaHat.
 #' @param D A binary indicator matrix of dimension p * k, where each row corresponds to a response variable, and each column corresponds to an instrumental variable. The entry `D[i, j]` is 1 if instrumental variable j affects response variable i, and 0 otherwise. For each response variable, there must be at least one instrumental variable that affects only that response (i.e., for each row in D, there must be at least one column with 1, and that column must have zeros in all other rows). If you use `Syy`, `Beta`, and `SigmaHat` as inputs, this condition must be satisfied to run this algorithm. If this condition is not met, an error will be thrown. However, if using `X`, `Y` or `Syy`, `Syx`, `Sxx` as inputs, a warning will be issued if the condition is violated, but the method will still proceed.
@@ -18,15 +25,16 @@
 #' @param nIter A positive integer input representing the number of MCMC (Markov Chain Monte Carlo) sampling iterations. The default value is set to 10,000.
 #' @param nBurnin A non-negative integer input representing the number of samples to be discarded during the burn-in phase of MCMC sampling. It's important that nBurnin is less than nIter. The default value is set to 2000.
 #' @param Thin A positive integer input denoting the thinning factor applied to posterior samples. Thinning reduces the number of samples retained from the MCMC process for efficiency. Thin should not exceed (nIter - nBurnin). The default value is set to 1.
-#' @param prior A parameter representing the prior assumption on the graph structure. It offers two options: "Threshold" or "Spike and Slab". The default value is "Spike and Slab".
-#' @param aRho A positive scalar input representing the first parameter of a Beta distribution. The default value is set to 3.
-#' @param bRho A positive scalar input representing the second parameter of a Beta distribution. The default value is set to 1.
+#' @param prior A character input specifying the prior assumption on the graph structure. Options are \code{"Threshold"} and \code{"Spike and Slab"}. The default option is \code{"Spike and Slab"}.
+#' @param SigmaStarModel A character input specifying the assumed structure of the error covariance matrix in the model. It provides three options: \code{"SSSL"} (stochastic spike-and-slab prior for correlated errors), \code{"IW"} (Inverse Wishart prior for correlated errors), or \code{"diagonal"} (diagonal error covariance for independent errors). The default option is \code{"SSSL"}.
+#' @param aRho A positive scalar specifying the first shape parameter of the Beta prior on the inclusion probability of edges in matrix A under the spike-and-slab prior. The default value is set to 3.
+#' @param bRho A positive scalar specifying the second shape parameter of the Beta prior on the inclusion probability of edges in matrix A under the spike-and-slab prior. The default value is set to 1.
 #' @param nu1 A positive scalar input representing the multiplication factor in the variance of the spike part in the spike and slab distribution of matrix A. The default value is set to 0.001.
-#' @param aPsi A positive scalar input corresponding to the first parameter of a Beta distribution. The default value is set to 0.5.
-#' @param bPsi  A positive scalar input corresponding to the second parameter of a Beta distribution. The default value is set to 0.5.
+#' @param aPsi A positive scalar specifying the first shape parameter of the Beta prior on the inclusion probability of edges in matrix B under the spike-and-slab prior. The default value is set to 0.5.
+#' @param bPsi  A positive scalar specifying the second shape parameter of the Beta prior on the inclusion probability of edges in matrix B under the spike-and-slab prior. The default value is set to 0.5.
 #' @param nu2 A positive scalar input corresponding to the multiplication factor in the variance of the spike part in the spike and slab distribution of matrix B. The default value is set to 0.0001.
-#' @param aSigma A positive scalar input corresponding to the first parameter of an Inverse Gamma distribution, which is associated with the variance of the model. The default value is set to 0.01.
-#' @param bSigma A positive scalar input corresponding to the second parameter of an Inverse Gamma distribution, which is associated with the variance of the model. The default value is set to 0.01.
+#' @param aSigma A positive scalar specifying the first shape parameter of the Inverse Gamma prior for the diagonal entries of the error variance–covariance matrix when \code{SigmaStarModel = "diagonal"}. The default value is set to 0.01.
+#' @param bSigma A positive scalar specifying the second shape parameter of the Inverse Gamma prior for the diagonal entries of the error variance–covariance matrix when \code{SigmaStarModel = "diagonal"}. The default value is set to 0.01.
 #' @param PropVarA A positive scalar input representing the variance of the normal distribution used for proposing terms within the A matrix. The default value is set to 0.01.
 #' @param PropVarB A positive scalar input representing the variance of the normal distribution used for proposing terms within the B matrix. The default value is set to 0.01.
 #'
@@ -34,6 +42,7 @@
 #'
 #' \item{AEst}{A matrix of dimensions p * p, representing the estimated causal effects or strengths between the response variables.}
 #' \item{BEst}{A matrix of dimensions p * k, representing the estimated causal effects or strengths of the instrument variables on the response variables. Each row corresponds to a specific response variable, and each column corresponds to a particular instrument variable.}
+#' \item{CEst}{A matrix of dimensions p * l, representing the estimated effects of covariates on the response variables. Each row corresponds to a response variable and each column corresponds to a covariate. This output is returned only when covariate data are provided as input (i.e., when \code{U} or \code{Syu}, \code{Sxu} and \code{Suu} are supplied).}
 #' \item{zAEst}{A binary adjacency matrix of dimensions p * p, indicating the graph structure between the response variables. Each entry in the matrix represents the presence (1) or absence (0) of a causal link between the corresponding response variables.}
 #' \item{zBEst}{A binary adjacency matrix of dimensions p * k, illustrating the graph structure between the response variables and the instrument variables. Each row corresponds to a specific response variable, and each column corresponds to a particular instrument variable. The presence of a causal link is denoted by 1, while the absence is denoted by 0.}
 #' \item{Graph}{A graph object that visually represents the estimated causal network by integrating AEst and zAEst. The graph consists of directed edges that indicate causal relationships between response variables. The edge weights correspond to effect sizes from AEst, while the structure of the graph is defined by zAEst, which already contain binary values (0 or 1) after thresholding at 0.5. This visualization provides an intuitive way to analyze both the strength and structure of causal effects within the network. Users can plot this graph to explore the causal relationships effectively.}
@@ -45,7 +54,8 @@
 #' \item{EtaEst}{A matrix of dimensions p * k, representing the estimated variances of causal interactions between response and instrument variables. Each row corresponds to a specific response variable, and each column corresponds to a particular instrument variable.}
 #' \item{tAEst}{A scalar value representing the estimated thresholding value of causal interactions between response variables. This output is relevant when using the "Threshold" prior assumption.}
 #' \item{tBEst}{A scalar value representing the estimated thresholding value of causal interactions between response and instrument variables. This output is applicable when using the "Threshold" prior assumption.}
-#' \item{SigmaEst}{A vector of length p, representing the estimated variances of each response variable. Each element in the vector corresponds to the variance of a specific response variable.}
+#' \item{SigmaEst}{Estimated error variance structure. If \code{SigmaStarModel = "diagonal"}, this is a vector of length p containing the marginal error variances of the response variables. If \code{SigmaStarModel} is \code{"IW"} or \code{"SSSL"}, this is a p * p error variance--covariance matrix.}
+#' \item{ZEst}{A matrix of dimensions p * p containing posterior inclusion probabilities for the entries of \code{SigmaEst}. This output is returned when \code{SigmaStarModel = "SSSL"}.}
 #' \item{AccptA}{The percentage of accepted entries in the A matrix, which represents the causal interactions between response variables. This metric indicates the proportion of proposed changes that were accepted during the sampling process.}
 #' \item{AccptB}{The percentage of accepted entries in the B matrix, which represents the causal interactions between response and instrument variables. This metric indicates the proportion of proposed changes that were accepted during the sampling process.}
 #' \item{AccpttA}{The percentage of accepted thresholding values for causal interactions between response variables when using the "Threshold" prior assumption. This metric indicates the proportion of proposed thresholding values that were accepted during the sampling process.}
@@ -67,9 +77,124 @@
 #'
 #'
 #' # ---------------------------------------------------------
-#'
+#' #
 #' # Example 1:
-#' # Run RGM based on individual level data with Threshold prior based on the model Y = AY + BX + E
+#' # Run RGM based on individual-level data with Threshold prior
+#' # based on the model Y = AY + BX + CU + E
+#' #
+#' # Data Generation
+#' set.seed(9154)
+#'
+#' # Number of data points
+#' n = 10000
+#'
+#' # Number of response variables, instrument variables, and covariates
+#' p = 3
+#' k = 4
+#' l = 2
+#'
+#' # Initialize causal interaction matrix between response variables
+#' A = matrix(sample(c(-0.1, 0.1), p^2, replace = TRUE), p, p)
+#'
+#' # Diagonal entries of A matrix will always be 0
+#' diag(A) = 0
+#'
+#' # Make the network sparse
+#' A[sample(which(A != 0), length(which(A != 0)) / 2)] = 0
+#'
+#' # Create D matrix (Indicator matrix: rows = responses, cols = instruments)
+#' D = matrix(0, nrow = p, ncol = k)
+#'
+#' # Manually assign values to D matrix
+#' D[1, 1:2] = 1  # First response variable is influenced by the first 2 instruments
+#' D[2, 3] = 1    # Second response variable is influenced by the 3rd instrument
+#' D[3, 4] = 1    # Third response variable is influenced by the 4th instrument
+#'
+#' # Initialize B matrix (effects of instruments on responses) based on D
+#' B = matrix(0, p, k)
+#' for (i in 1:p) {
+#'   for (j in 1:k) {
+#'     if (D[i, j] == 1) {
+#'       B[i, j] = 1
+#'     }
+#'   }
+#' }
+#'
+#' # Generate covariate data matrix U (n x l)
+#' U = matrix(rnorm(n * l, 0, 1), nrow = n, ncol = l)
+#'
+#' # Initialize C matrix (effects of covariates on responses), similar to B
+#' C = matrix(0, p, l)
+#' C[sample(length(C), size = ceiling(length(C) / 2))] = 1  # simple sparse pattern
+#'
+#' # Define Sigma matrix (diagonal error variance)
+#' Sigma = diag(p)
+#'
+#' # Compute Mult_Mat
+#' Mult_Mat = solve(diag(p) - A)
+#'
+#' # Calculate Variance
+#' Variance = Mult_Mat %*% Sigma %*% t(Mult_Mat)
+#'
+#' # Generate instrument data matrix X (n x k)
+#' X = matrix(rnorm(n * k, 0, 1), nrow = n, ncol = k)
+#'
+#' # Initialize response data matrix Y (n x p)
+#' Y = matrix(0, nrow = n, ncol = p)
+#'
+#' # Generate response data matrix based on the model
+#' for (i in 1:n) {
+#'   mu_i = Mult_Mat %*% (B %*% X[i, ] + C %*% U[i, ])
+#'   Y[i, ] = MASS::mvrnorm(n = 1, mu = mu_i, Sigma = Variance)
+#' }
+#'
+#' # Define a function to create smaller arrowheads
+#' smaller_arrowheads = function(graph) {
+#'   igraph::E(graph)$arrow.size = 1
+#'   return(graph)
+#' }
+#'
+#' # Print true causal interaction matrices
+#' A
+#' B
+#' C
+#'
+#' # Plot the true graph structure between response variables
+#' plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix((A != 0) * 1,
+#'   mode = "directed")), layout = igraph::layout_in_circle, main = "True Graph")
+#'
+#' # Apply RGM on individual-level data with covariates for Threshold prior
+#' Output = RGM(X = X, Y = Y, U = U, D = D,
+#'              prior = "Threshold", SigmaStarModel = "diagonal")
+#'
+#' # Get the graph structure between response variables
+#' Output$zAEst
+#'
+#' # Get the estimated causal strength matrix between response variables
+#' Output$AEst
+#'
+#' # Get the graph structure between response and instrument variables
+#' Output$zBEst
+#'
+#' # Get the estimated causal strength matrix between response and instrument variables
+#' Output$BEst
+#'
+#' # (Only when covariates are provided) Get the estimated covariate effects
+#' Output$CEst
+#'
+#' # Get the estimated causal network between responses
+#' Output$Graph
+#'
+#' # Plot the estimated causal network
+#' plot(Output$Graph, main = "Estimated Causal Network")
+#'
+#' # Plot posterior log-likelihood
+#' plot(Output$LLPst, type = "l", xlab = "Number of Iterations", ylab = "Log-likelihood")
+#'
+#' # -----------------------------------------------------------------
+#' # Example 2:
+#' # Run RGM based on summary-level data with Spike and Slab prior
+#' # based on the model Y = AY + BX + CU + E
 #'
 #' # Data Generation
 #' set.seed(9154)
@@ -77,9 +202,10 @@
 #' # Number of data points
 #' n = 10000
 #'
-#' # Number of response variables and number of instrument variables
+#' # Number of response variables, instrument variables, and covariates
 #' p = 3
 #' k = 4
+#' l = 2
 #'
 #' # Initialize causal interaction matrix between response variables
 #' A = matrix(sample(c(-0.1, 0.1), p^2, replace = TRUE), p, p)
@@ -99,26 +225,27 @@
 #' D[2, 3] = 1    # Second response variable is influenced by the 3rd instrument
 #' D[3, 4] = 1    # Third response variable is influenced by the 4th instrument
 #'
-#'
 #' # Initialize B matrix
-#' B = matrix(0, p, k)  # Initialize B matrix with zeros
-#'
-#' # Calculate B matrix based on D matrix
+#' B = matrix(0, p, k)
 #' for (i in 1:p) {
 #'   for (j in 1:k) {
 #'     if (D[i, j] == 1) {
-#'       B[i, j] = 1  # Set B[i, j] to 1 if D[i, j] is 1
+#'       B[i, j] = 1
 #'     }
 #'   }
 #' }
 #'
-#' # Define Sigma matrix
-#' Sigma = diag(p)
+#' # Generate covariate data matrix U (n x l)
+#' U = matrix(rnorm(n * l, 0, 1), nrow = n, ncol = l)
 #'
-#' # Compute Mult_Mat
+#' # Initialize C matrix (effects of covariates on responses)
+#' C = matrix(0, p, l)
+#' C[sample(length(C), size = ceiling(length(C) / 2))] = 1  # simple sparse pattern
+#'
+#' # Use a full (non-diagonal) Sigma matrix
+#' Sigma = crossprod(matrix(rnorm(p * p), p, p))  # SPD matrix
+#'
 #' Mult_Mat = solve(diag(p) - A)
-#'
-#' # Calculate Variance
 #' Variance = Mult_Mat %*% Sigma %*% t(Mult_Mat)
 #'
 #' # Generate instrument data matrix
@@ -127,138 +254,34 @@
 #' # Initialize response data matrix
 #' Y = matrix(0, nrow = n, ncol = p)
 #'
-#' # Generate response data matrix based on instrument data matrix
+#' # Generate response data matrix based on instrument + covariate effects
 #' for (i in 1:n) {
-#'   Y[i, ] = MASS::mvrnorm(n = 1, Mult_Mat %*% B %*% X[i, ], Variance)
+#'   mu_i = Mult_Mat %*% (B %*% X[i, ] + C %*% U[i, ])
+#'   Y[i, ] = MASS::mvrnorm(n = 1, mu = mu_i, Sigma = Variance)
 #' }
 #'
-#' # Define a function to create smaller arrowheads
-#' smaller_arrowheads = function(graph) {
-#'   igraph::E(graph)$arrow.size = 1  # Adjust the arrow size value as needed
-#'   return(graph)
-#' }
-#'
-#' # Print true causal interaction matrices between response variables
-#' # and between response and instrument variables
-#' A
-#' B
-#'
-#' # Plot the true graph structure between response variables
-#' plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix((A != 0) * 1,
-#'   mode = "directed")), layout = igraph::layout_in_circle, main = "True Graph")
-#'
-#' # Apply RGM on individual level data for Threshold Prior
-#' Output = RGM(X = X, Y = Y, D = D, prior = "Threshold")
-#'
-#'
-#' # Get the graph structure between response variables
-#' Output$zAEst
-#'
-#' # Get the estimated causal strength matrix between response variables
-#' Output$AEst
-#'
-#' # Get the graph structure between response and instrument variables
-#' Output$zBEst
-#'
-#' # Get the estimated causal strength matrix between response and instrument variables
-#' Output$BEst
-#'
-#' # Get the estimated causal network between responses
-#' Output$Graph
-#'
-#' # Plot the estimated causal network
-#' plot(Output$Graph, main = "Estimated Causal Network")
-#'
-#' # Plot posterior log-likelihood
-#' plot(Output$LLPst, type = 'l', xlab = "Number of Iterations", ylab = "Log-likelihood")
-#'
-#' # -----------------------------------------------------------------
-#' # Example 2:
-#' # Run RGM based on Syy, Syx and Sxx with Spike and Slab prior based on the model Y = AY + BX + E
-#'
-#' # Data Generation
-#' set.seed(9154)
-#'
-#' # Number of data points
-#' n = 10000
-#'
-#' # Number of response variables and number of instrument variables
-#' p = 3
-#' k = 4
-#'
-#' # Initialize causal interaction matrix between response variables
-#' A = matrix(sample(c(-0.1, 0.1), p^2, replace = TRUE), p, p)
-#'
-#' # Diagonal entries of A matrix will always be 0
-#' diag(A) = 0
-#'
-#' # Make the network sparse
-#' A[sample(which(A!=0), length(which(A!=0))/2)] = 0
-#'
-#'
-#' # Create D matrix (Indicator matrix where each row corresponds to a response variable
-#' # and each column corresponds to an instrument variable)
-#' D = matrix(0, nrow = p, ncol = k)
-#'
-#' # Manually assign values to D matrix
-#' D[1, 1:2] = 1  # First response variable is influenced by the first 2 instruments
-#' D[2, 3] = 1    # Second response variable is influenced by the 3rd instrument
-#' D[3, 4] = 1    # Third response variable is influenced by the 4th instrument
-#'
-#'
-#' # Initialize B matrix
-#' B = matrix(0, p, k)  # Initialize B matrix with zeros
-#'
-#' # Calculate B matrix based on D matrix
-#' for (i in 1:p) {
-#'   for (j in 1:k) {
-#'     if (D[i, j] == 1) {
-#'       B[i, j] = 1  # Set B[i, j] to 1 if D[i, j] is 1
-#'     }
-#'   }
-#' }
-#'
-#'
-#' Sigma = diag(p)
-#'
-#' Mult_Mat = solve(diag(p) - A)
-#'
-#' Variance = Mult_Mat %*% Sigma %*% t(Mult_Mat)
-#'
-#' # Generate instrument data matrix
-#' X = matrix(rnorm(n * k, 0, 1), nrow = n, ncol = k)
-#'
-#' # Initialize response data matrix
-#' Y = matrix(0, nrow = n, ncol = p)
-#'
-#' # Generate response data matrix based on instrument data matrix
-#' for (i in 1:n) {
-#'
-#'     Y[i, ] = MASS::mvrnorm(n = 1, Mult_Mat %*% B %*% X[i, ], Variance)
-#'
-#' }
-#'
-#'
-#' # Calculate summary level data
+#' # Calculate summary-level data (including covariate summaries)
 #' Syy = t(Y) %*% Y / n
 #' Syx = t(Y) %*% X / n
 #' Sxx = t(X) %*% X / n
+#' Syu = t(Y) %*% U / n
+#' Sxu = t(X) %*% U / n
+#' Suu = t(U) %*% U / n
 #'
-#'
-#' # Print true causal interaction matrices between response variables
-#' # and between response and instrument variables
+#' # Print true causal interaction matrices
 #' A
 #' B
+#' C
 #'
 #' # Plot the true graph structure between response variables
 #' plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix(((A != 0) * 1),
-#'  mode = "directed")), layout = igraph::layout_in_circle, main = "True Graph")
+#'   mode = "directed")), layout = igraph::layout_in_circle, main = "True Graph")
 #'
-#'
-#' # Apply RGM on summary level data for Spike and Slab Prior
+#' # Apply RGM on summary-level data for Spike and Slab Prior + SSSL SigmaStarModel
 #' Output = RGM(Syy = Syy, Syx = Syx, Sxx = Sxx,
-#'           D = D, n = 10000, prior = "Spike and Slab")
-#'
+#'              Syu = Syu, Sxu = Sxu, Suu = Suu,
+#'              D = D, n = n, prior = "Spike and Slab",
+#'              SigmaStarModel = "SSSL")
 #'
 #' # Get the graph structure between response variables
 #' Output$zAEst
@@ -272,6 +295,12 @@
 #' # Get the estimated causal strength matrix between response and instrument variables
 #' Output$BEst
 #'
+#' # Get the estimated covariate effect matrix
+#' Output$CEst
+#'
+#' # (Only when SigmaStarModel = "SSSL") inclusion probabilities for Sigma*
+#' Output$ZEst
+#'
 #' # Get the estimated causal network between responses
 #' Output$Graph
 #'
@@ -279,9 +308,7 @@
 #' plot(Output$Graph, main = "Estimated Causal Network")
 #'
 #' # Plot posterior log-likelihood
-#' plot(Output$LLPst, type = 'l', xlab = "Number of Iterations", ylab = "Log-likelihood")
-#'
-#'
+#' plot(Output$LLPst, type = "l", xlab = "Number of Iterations", ylab = "Log-likelihood")
 #'
 #'
 #' # -----------------------------------------------------------------
@@ -306,8 +333,7 @@
 #' diag(A) = 0
 #'
 #' # Make the network sparse
-#' A[sample(which(A!=0), length(which(A!=0))/2)] = 0
-#'
+#' A[sample(which(A != 0), length(which(A != 0)) / 2)] = 0
 #'
 #' # Create D matrix (Indicator matrix where each row corresponds to a response variable
 #' # and each column corresponds to an instrument variable)
@@ -317,7 +343,6 @@
 #' D[1, 1:2] = 1  # First response variable is influenced by the first 2 instruments
 #' D[2, 3] = 1    # Second response variable is influenced by the 3rd instrument
 #' D[3, 4] = 1    # Third response variable is influenced by the 4th instrument
-#'
 #'
 #' # Initialize B matrix
 #' B = matrix(0, p, k)  # Initialize B matrix with zeros
@@ -331,11 +356,15 @@
 #'   }
 #' }
 #'
+#' # --- Full (non-diagonal) SPD error covariance matrix Sigma ---
+#' R = matrix(rnorm(p * p), p, p)
+#' Sigma = crossprod(R)                # SPD
+#' Sigma = Sigma / mean(diag(Sigma))   # scale so diagonal magnitudes are ~1
 #'
-#' Sigma = diag(p)
-#'
+#' # Compute Mult_Mat
 #' Mult_Mat = solve(diag(p) - A)
 #'
+#' # Calculate Variance of Y given X
 #' Variance = Mult_Mat %*% Sigma %*% t(Mult_Mat)
 #'
 #' # Generate DNA expressions
@@ -346,13 +375,10 @@
 #'
 #' # Generate response data matrix based on instrument data matrix
 #' for (i in 1:n) {
-#'
-#'     Y[i, ] = MASS::mvrnorm(n = 1, Mult_Mat %*% B %*% X[i, ], Variance)
-#'
+#'   Y[i, ] = MASS::mvrnorm(n = 1, Mult_Mat %*% B %*% X[i, ], Variance)
 #' }
 #'
-#'
-#' # Centralize Data
+#' # Centralize Data (required for Beta/SigmaHat input option)
 #' Y = t(t(Y) - colMeans(Y))
 #' X = t(t(X) - colMeans(X))
 #'
@@ -364,35 +390,33 @@
 #' SigmaHat = matrix(0, nrow = p, ncol = k)
 #'
 #' for (i in 1:p) {
-#'
-#'    for (j in 1:k) {
-#'
-#'        fit = lm(Y[, i] ~ X[, j])
-#'
-#'        Beta[i, j] =  fit$coefficients[2]
-#'
-#'        SigmaHat[i, j] = sum(fit$residuals^2) / n
-#'
-#'        }
-#'
-#'    }
-#'
+#'   for (j in 1:k) {
+#'     fit = lm(Y[, i] ~ X[, j])
+#'     Beta[i, j] = fit$coefficients[2]
+#'     SigmaHat[i, j] = sum(fit$residuals^2) / n
+#'   }
+#' }
 #'
 #' # Print true causal interaction matrices between response variables
 #' # and between response and instrument variables
 #' A
 #' B
 #'
-#'
 #' # Plot the true graph structure between response variables
-#' plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix(((A != 0) * 1),
-#'  mode = "directed")), layout = igraph::layout_in_circle, main = "True Graph")
+#' smaller_arrowheads = function(graph) {
+#'   igraph::E(graph)$arrow.size = 1
+#'   return(graph)
+#' }
 #'
+#' plot(smaller_arrowheads(
+#'   igraph::graph_from_adjacency_matrix(((A != 0) * 1), mode = "directed")
+#' ), layout = igraph::layout_in_circle, main = "True Graph")
 #'
 #' # Apply RGM based on Sxx, Beta and SigmaHat for Spike and Slab Prior
+#' # Use IW structure for SigmaStarModel
 #' Output = RGM(Sxx = Sxx, Beta = Beta, SigmaHat = SigmaHat,
-#'           D = D, n = 10000, prior = "Spike and Slab")
-#'
+#'              D = D, n = n, prior = "Spike and Slab",
+#'              SigmaStarModel = "IW")
 #'
 #' # Get the graph structure between response variables
 #' Output$zAEst
@@ -419,14 +443,15 @@
 #'
 #'
 #'
-#'
 #' @references
 #' Ni, Y., Ji, Y., & Müller, P. (2018).
 #' Reciprocal graphical models for integrative gene regulatory network analysis.
 #' \emph{Bayesian Analysis},
 #' \strong{13(4)}, 1095-1110.
 #' \doi{10.1214/17-BA1087}.
-RGM = function(X = NULL, Y = NULL, Syy = NULL, Syx = NULL, Sxx = NULL, Beta = NULL, SigmaHat = NULL, D, n, nIter = 10000, nBurnin = 2000, Thin = 1, prior = c("Threshold", "Spike and Slab"), aRho = 3, bRho = 1, nu1 = 0.001, aPsi = 0.5, bPsi = 0.5, nu2 = 0.0001, aSigma = 0.01, bSigma = 0.01, PropVarA = 0.01, PropVarB = 0.01){
+RGM = function(X = NULL, Y = NULL, U = NULL, Syy = NULL, Syx = NULL, Sxx = NULL, Syu = NULL, Sxu = NULL, Suu = NULL, Beta = NULL, SigmaHat = NULL,
+               D, n, nIter = 10000, nBurnin = 2000, Thin = 1, prior = c("Threshold", "Spike and Slab"), SigmaStarModel = c("diagonal", "IW", "SSSL"),
+               aRho = 3, bRho = 1, nu1 = 0.001, aPsi = 0.5, bPsi = 0.5, nu2 = 0.0001, aSigma = 0.01, bSigma = 0.01, PropVarA = 0.01, PropVarB = 0.01){
 
   # Check whether Y or Syy is given as data input
   if((!is.null(Y) && is.null(X)) || (!is.null(Syy) && is.null(Syx) && is.null(Sxx))){
@@ -450,6 +475,84 @@ RGM = function(X = NULL, Y = NULL, Syy = NULL, Syx = NULL, Sxx = NULL, Beta = NU
 
       # Calculate Syy
       Syy = t(Y) %*% Y / n
+
+      # Check whether U or Syu and Suu given
+      if(!is.null(U) || (!is.null(Syu) && !is.null(Suu))) {
+
+        # Check whether U is given
+        if(!is.null(U)) {
+
+          # Check whether U is a numeric matrix
+          if(!is.numeric(U) || !is.matrix(U)){
+
+            # Print an error message
+            stop("U should be numeric matrix.")
+
+          }
+
+          # Check number of rows of U
+          if(nrow(U) != n){
+
+            # Print an error message
+            stop("Number of rows of U and Y should be same")
+
+          }
+
+          # Calculate number of columns of U
+          l = ncol(U)
+
+          # Calculate Syu and Suu
+          Syu = t(Y) %*% U / n
+          Suu = t(U) %*% U / n
+
+        } else {
+
+          # Check whether Syu is a numeric matrix
+          if(!is.numeric(Syu) || !is.matrix(Syu)){
+
+            # Print an error message
+            stop("Syu should be numeric matrix.")
+
+          }
+
+          # Check whether Suu is a numeric matrix
+          if(!is.numeric(Suu) || !is.matrix(Suu)){
+
+            # Print an error message
+            stop("Suu should be numeric matrix.")
+
+          }
+
+          # Check whether number of rows of Syu is p or not
+          if(nrow(Syu) != p){
+
+            # Print an error message
+            stop("Number of rows of Syu should be equal to number of coluns of Y.")
+
+          }
+
+          # Check whether Suu is a square matrix
+          if(nrow(Suu) != ncol(Suu)){
+
+            # Print an error message
+            stop("Number of rows of Suu should be equal to number of coluns of Suu.")
+
+          }
+
+          # Calculate number of columns of Suu
+          l = ncol(Suu)
+
+          # Check whether number of columns of Syu equal to l
+          if(ncol(Syu) != ncol(Suu)){
+
+            # Print an error message
+            stop("Number of columns of Syu should be equal to number of coluns of Suu.")
+
+          }
+
+        }
+
+      }
 
     } else {
 
@@ -480,6 +583,73 @@ RGM = function(X = NULL, Y = NULL, Syy = NULL, Syx = NULL, Sxx = NULL, Beta = NU
 
       }
 
+
+      # Check whether U or Syu and Suu given
+      if(!is.null(U) || (!is.null(Syu) && !is.null(Suu))) {
+
+        # Check whether Syu and Suu are given
+        if(!is.null(Syu) && !is.null(Suu)) {
+
+
+          # Check whether Syu is a numeric matrix
+          if(!is.numeric(Syu) || !is.matrix(Syu)){
+
+            # Print an error message
+            stop("Syu should be numeric matrix.")
+
+          }
+
+          # Check whether Suu is a numeric matrix
+          if(!is.numeric(Suu) || !is.matrix(Suu)){
+
+            # Print an error message
+            stop("Suu should be numeric matrix.")
+
+          }
+
+          # Check whether number of rows of Syu is p or not
+          if(nrow(Syu) != p){
+
+            # Print an error message
+            stop("Number of rows of Syu should be equal to number of rows of Syy.")
+
+          }
+
+          # Check whether Suu is a square matrix
+          if(nrow(Suu) != ncol(Suu)){
+
+            # Print an error message
+            stop("Number of rows of Suu should be equal to number of coluns of Suu.")
+
+          }
+
+          # Calculate number of columns of Suu
+          l = ncol(Suu)
+
+          # Check whether number of columns of Syu equal to l
+          if(ncol(Syu) != ncol(Suu)){
+
+            # Print an error message
+            stop("Number of columns of Syu should be equal to number of coluns of Suu.")
+
+          }
+
+        } else {
+
+          # Check whether U is a numeric matrix
+          if(!is.numeric(U) || !is.matrix(U)){
+
+            # Print an error message
+            stop("U should be numeric matrix.")
+
+          }
+
+          # Print an error message
+          stop("The matrices Syu and Suu cannot be calculated from Syy and U alone. Please provide either (Y, U) or (Syy, Syu, Suu).")
+
+        }
+
+      }
 
     }
 
@@ -526,53 +696,348 @@ RGM = function(X = NULL, Y = NULL, Syy = NULL, Syx = NULL, Sxx = NULL, Beta = NU
 
     }
 
-    # Apply RGM for Spike and Slab prior and Threshold prior
-    if ("Spike and Slab" %in% prior){
 
-      # Run the algorithm for Spike and Slab prior
-      Output = RGM_SpikeSlab1(Syy, n, nIter = nIter, nBurnin = nBurnin, Thin = Thin,
-                              a_rho = aRho, b_rho = bRho, nu_1 = nu1,
-                              a_sigma = aSigma, b_sigma = bSigma, Prop_VarA = PropVarA)
+
+    # Check whether covariate data is given
+    if(!is.null(Syu) && !is.null(Suu)) {
 
 
 
-      # Return outputs
-      return(list(AEst = Output$A_Est, zAEst = Output$zA_Est,
-                  Graph = create_causal_graph_Y(Output$A_Est, Output$zA_Est),
-                  GammaEst = Output$Gamma_Est, TauEst = Output$Tau_Est, RhoEst = Output$Rho_Est,
-                  SigmaEst = Output$Sigma_Est,
-                  AccptA = Output$AccptA,
-                  LLPst = Output$LL_Pst, GammaPst = Output$Gamma_Pst))
+      # Check for SigmaStarModel
+      if("SSSL" %in% SigmaStarModel) {
+
+        # Apply RGM for Spike and Slab prior and Threshold prior
+        if ("Spike and Slab" %in% prior){
+
+          # Run the algorithm for Spike and Slab prior
+          Output = RGM_SpikeSlab_SSSL_Star_Covariates(Syy, Syu, Suu,
+                                                      n, nIter = nIter, nBurnin = nBurnin, Thin = Thin,
+                                                      a_rho = aRho, b_rho = bRho, nu_1 = nu1,
+                                                      Prop_VarA = PropVarA)
+
+
+          # Return outputs
+          return(list(AEst = Output$A_Est,
+                      CEst = Output$C_Est,
+                      zAEst = Output$zA_Est,
+                      Graph = create_causal_graph_Y(Output$A_Est, Output$zA_Est),
+                      GammaEst = Output$Gamma_Est, TauEst = Output$Tau_Est, RhoEst = Output$Rho_Est,
+                      SigmaEst = Output$Sigma_Est,
+                      ZEst = Output$Z_Est,
+                      AccptA = Output$AccptA,
+                      LLPst = Output$LL_Pst, GammaPst = Output$Gamma_Pst))
 
 
 
-    } else if ("Threshold" %in% prior){
+        } else if ("Threshold" %in% prior){
 
-      # Run the algorithm for Threshold prior
-      Output = RGM_Threshold1(Syy, n, nIter = nIter, nBurnin = nBurnin, Thin = Thin, nu_1 = nu1,
-                              a_sigma = aSigma, b_sigma = bSigma, Prop_VarA = PropVarA)
-
-
-
-
-      # Return outputs
-      return(list(AEst = Output$A_Est, zAEst = Output$zA_Est,
-                  Graph = create_causal_graph_Y(Output$A_Est, Output$zA_Est),
-                  A0Est = Output$A0_Est, GammaEst = Output$Gamma_Est, TauEst = Output$Tau_Est,
-                  tAEst = Output$tA_Est,
-                  SigmaEst = Output$Sigma_Est,
-                  AccptA = Output$AccptA, AccpttA = Output$Accpt_tA,
-                  LLPst = Output$LL_Pst, GammaPst = Output$Gamma_Pst))
+          # Run the algorithm for Threshold prior
+          Output = RGM_Threshold_SSSL_Star_Covariates(Syy, Syu, Suu,
+                                                      n, nIter = nIter, nBurnin = nBurnin, Thin = Thin,
+                                                      nu_1 = nu1, Prop_VarA = PropVarA)
 
 
+
+
+          # Return outputs
+          return(list(AEst = Output$A_Est,
+                      CEst = Output$C_Est,
+                      zAEst = Output$zA_Est,
+                      Graph = create_causal_graph_Y(Output$A_Est, Output$zA_Est),
+                      A0Est = Output$A0_Est, GammaEst = Output$Gamma_Est, TauEst = Output$Tau_Est,
+                      tAEst = Output$tA_Est,
+                      SigmaEst = Output$Sigma_Est,
+                      ZEst = Output$Z_Est,
+                      AccptA = Output$AccptA, AccpttA = Output$Accpt_tA,
+                      LLPst = Output$LL_Pst, GammaPst = Output$Gamma_Pst))
+
+
+
+
+
+        } else {
+
+          # Print an error message
+          stop("Please specify a prior among Threshold prior and Spike and Slab prior.")
+
+
+        }
+
+      } else if ("IW" %in% SigmaStarModel) {
+
+        # Apply RGM for Spike and Slab prior and Threshold prior
+        if ("Spike and Slab" %in% prior){
+
+          # Run the algorithm for Spike and Slab prior
+          Output = RGM_SpikeSlab_IW_Star_Covariates(Syy, Syu, Suu,
+                                                    n, nIter = nIter, nBurnin = nBurnin, Thin = Thin,
+                                                    a_rho = aRho, b_rho = bRho, nu_1 = nu1,
+                                                    Prop_VarA = PropVarA)
+
+
+
+          # Return outputs
+          return(list(AEst = Output$A_Est,
+                      CEst = Output$C_Est,
+                      zAEst = Output$zA_Est,
+                      Graph = create_causal_graph_Y(Output$A_Est, Output$zA_Est),
+                      GammaEst = Output$Gamma_Est, TauEst = Output$Tau_Est, RhoEst = Output$Rho_Est,
+                      SigmaEst = Output$Sigma_Est,
+                      AccptA = Output$AccptA,
+                      LLPst = Output$LL_Pst, GammaPst = Output$Gamma_Pst))
+
+
+
+        } else if ("Threshold" %in% prior){
+
+          # Run the algorithm for Threshold prior
+          Output = RGM_Threshold_IW_Star_Covariates(Syy, Syu, Suu,
+                                                    n, nIter = nIter, nBurnin = nBurnin, Thin = Thin,
+                                                    nu_1 = nu1, Prop_VarA = PropVarA)
+
+
+
+
+          # Return outputs
+          return(list(AEst = Output$A_Est,
+                      CEst = Output$C_Est,
+                      zAEst = Output$zA_Est,
+                      Graph = create_causal_graph_Y(Output$A_Est, Output$zA_Est),
+                      A0Est = Output$A0_Est, GammaEst = Output$Gamma_Est, TauEst = Output$Tau_Est,
+                      tAEst = Output$tA_Est,
+                      SigmaEst = Output$Sigma_Est,
+                      AccptA = Output$AccptA, AccpttA = Output$Accpt_tA,
+                      LLPst = Output$LL_Pst, GammaPst = Output$Gamma_Pst))
+
+
+        } else {
+
+          # Print an error message
+          stop("Please specify a prior among Threshold prior and Spike and Slab prior.")
+
+
+        }
+
+      } else if ("diagonal" %in% SigmaStarModel) {
+
+
+        # Apply RGM for Spike and Slab prior and Threshold prior
+        if ("Spike and Slab" %in% prior){
+
+          # Run the algorithm for Spike and Slab prior
+          Output = RGM_SpikeSlab_Diag_Star_Covariates(Syy, Syu, Suu,
+                                                      n, nIter = nIter, nBurnin = nBurnin, Thin = Thin,
+                                                      a_rho = aRho, b_rho = bRho, nu_1 = nu1,
+                                                      a_sigma = aSigma, b_sigma = bSigma, Prop_VarA = PropVarA)
+
+
+
+          # Return outputs
+          return(list(AEst = Output$A_Est,
+                      CEst = Output$C_Est,
+                      zAEst = Output$zA_Est,
+                      Graph = create_causal_graph_Y(Output$A_Est, Output$zA_Est),
+                      GammaEst = Output$Gamma_Est, TauEst = Output$Tau_Est, RhoEst = Output$Rho_Est,
+                      SigmaEst = Output$Sigma_Est,
+                      AccptA = Output$AccptA,
+                      LLPst = Output$LL_Pst, GammaPst = Output$Gamma_Pst))
+
+
+
+        } else if ("Threshold" %in% prior){
+
+          # Run the algorithm for Threshold prior
+          Output = RGM_Threshold_Diag_Star_Covariates(Syy, Syu, Suu,
+                                                      n, nIter = nIter, nBurnin = nBurnin, Thin = Thin, nu_1 = nu1,
+                                                      a_sigma = aSigma, b_sigma = bSigma, Prop_VarA = PropVarA)
+
+
+
+
+          # Return outputs
+          return(list(AEst = Output$A_Est,
+                      CEst = Output$C_Est,
+                      zAEst = Output$zA_Est,
+                      Graph = create_causal_graph_Y(Output$A_Est, Output$zA_Est),
+                      A0Est = Output$A0_Est, GammaEst = Output$Gamma_Est, TauEst = Output$Tau_Est,
+                      tAEst = Output$tA_Est,
+                      SigmaEst = Output$Sigma_Est,
+                      AccptA = Output$AccptA, AccpttA = Output$Accpt_tA,
+                      LLPst = Output$LL_Pst, GammaPst = Output$Gamma_Pst))
+
+
+        } else {
+
+          # Print an error message
+          stop("Please specify a prior among Threshold prior and Spike and Slab prior.")
+
+
+        }
+
+
+      } else {
+
+        # Print an error message
+        stop("Please specify SigmaStarModel as one of: 'SSSL', 'IW', or 'diagonal'.")
+
+      }
 
 
 
     } else {
 
-      # Print an error message
-      stop("Please specify a prior among Threshold prior and Spike and Slab prior.")
+      # Check for SigmaStarModel
+      if("SSSL" %in% SigmaStarModel) {
 
+        # Apply RGM for Spike and Slab prior and Threshold prior
+        if ("Spike and Slab" %in% prior){
+
+          # Run the algorithm for Spike and Slab prior
+          Output = RGM_SpikeSlab_SSSL_Star(Syy, n, nIter = nIter, nBurnin = nBurnin, Thin = Thin,
+                                           a_rho = aRho, b_rho = bRho, nu_1 = nu1, Prop_VarA = PropVarA)
+
+
+
+          # Return outputs
+          return(list(AEst = Output$A_Est, zAEst = Output$zA_Est,
+                      Graph = create_causal_graph_Y(Output$A_Est, Output$zA_Est),
+                      GammaEst = Output$Gamma_Est, TauEst = Output$Tau_Est, RhoEst = Output$Rho_Est,
+                      SigmaEst = Output$Sigma_Est,
+                      ZEst = Output$Z_Est,
+                      AccptA = Output$AccptA,
+                      LLPst = Output$LL_Pst, GammaPst = Output$Gamma_Pst))
+
+
+        } else if ("Threshold" %in% prior){
+
+          # Run the algorithm for Threshold prior
+          Output = RGM_Threshold_SSSL_Star(Syy, n, nIter = nIter, nBurnin = nBurnin, Thin = Thin, nu_1 = nu1,
+                                           Prop_VarA = PropVarA)
+
+
+
+
+          # Return outputs
+          return(list(AEst = Output$A_Est, zAEst = Output$zA_Est,
+                      Graph = create_causal_graph_Y(Output$A_Est, Output$zA_Est),
+                      A0Est = Output$A0_Est, GammaEst = Output$Gamma_Est, TauEst = Output$Tau_Est,
+                      tAEst = Output$tA_Est,
+                      SigmaEst = Output$Sigma_Est,
+                      ZEst = Output$Z_Est,
+                      AccptA = Output$AccptA, AccpttA = Output$Accpt_tA,
+                      LLPst = Output$LL_Pst, GammaPst = Output$Gamma_Pst))
+
+
+        } else {
+
+          # Print an error message
+          stop("Please specify a prior among Threshold prior and Spike and Slab prior.")
+
+
+        }
+
+      } else if ("IW" %in% SigmaStarModel) {
+
+        # Apply RGM for Spike and Slab prior and Threshold prior
+        if ("Spike and Slab" %in% prior){
+
+          # Run the algorithm for Spike and Slab prior
+          Output = RGM_SpikeSlab_IW_Star(Syy, n, nIter = nIter, nBurnin = nBurnin, Thin = Thin,
+                                         a_rho = aRho, b_rho = bRho, nu_1 = nu1, Prop_VarA = PropVarA)
+
+
+
+          # Return outputs
+          return(list(AEst = Output$A_Est, zAEst = Output$zA_Est,
+                      Graph = create_causal_graph_Y(Output$A_Est, Output$zA_Est),
+                      GammaEst = Output$Gamma_Est, TauEst = Output$Tau_Est, RhoEst = Output$Rho_Est,
+                      SigmaEst = Output$Sigma_Est,
+                      AccptA = Output$AccptA,
+                      LLPst = Output$LL_Pst, GammaPst = Output$Gamma_Pst))
+
+
+        } else if ("Threshold" %in% prior){
+
+          # Run the algorithm for Threshold prior
+          Output = RGM_Threshold_IW_Star(Syy, n, nIter = nIter, nBurnin = nBurnin, Thin = Thin, nu_1 = nu1,
+                                         Prop_VarA = PropVarA)
+
+
+
+
+          # Return outputs
+          return(list(AEst = Output$A_Est, zAEst = Output$zA_Est,
+                      Graph = create_causal_graph_Y(Output$A_Est, Output$zA_Est),
+                      A0Est = Output$A0_Est, GammaEst = Output$Gamma_Est, TauEst = Output$Tau_Est,
+                      tAEst = Output$tA_Est,
+                      SigmaEst = Output$Sigma_Est,
+                      AccptA = Output$AccptA, AccpttA = Output$Accpt_tA,
+                      LLPst = Output$LL_Pst, GammaPst = Output$Gamma_Pst))
+
+
+        } else {
+
+          # Print an error message
+          stop("Please specify a prior among Threshold prior and Spike and Slab prior.")
+
+
+        }
+
+      } else if ("diagonal" %in% SigmaStarModel) {
+
+
+        # Apply RGM for Spike and Slab prior and Threshold prior
+        if ("Spike and Slab" %in% prior){
+
+          # Run the algorithm for Spike and Slab prior
+          Output = RGM_SpikeSlab_Diag_Star(Syy, n, nIter = nIter, nBurnin = nBurnin, Thin = Thin,
+                                           a_rho = aRho, b_rho = bRho, nu_1 = nu1,
+                                           a_sigma = aSigma, b_sigma = bSigma, Prop_VarA = PropVarA)
+
+
+
+          # Return outputs
+          return(list(AEst = Output$A_Est, zAEst = Output$zA_Est,
+                      Graph = create_causal_graph_Y(Output$A_Est, Output$zA_Est),
+                      GammaEst = Output$Gamma_Est, TauEst = Output$Tau_Est, RhoEst = Output$Rho_Est,
+                      SigmaEst = Output$Sigma_Est,
+                      AccptA = Output$AccptA,
+                      LLPst = Output$LL_Pst, GammaPst = Output$Gamma_Pst))
+
+
+        } else if ("Threshold" %in% prior){
+
+          # Run the algorithm for Threshold prior
+          Output = RGM_Threshold_Diag_Star(Syy, n, nIter = nIter, nBurnin = nBurnin, Thin = Thin, nu_1 = nu1,
+                                           a_sigma = aSigma, b_sigma = bSigma, Prop_VarA = PropVarA)
+
+
+
+
+          # Return outputs
+          return(list(AEst = Output$A_Est, zAEst = Output$zA_Est,
+                      Graph = create_causal_graph_Y(Output$A_Est, Output$zA_Est),
+                      A0Est = Output$A0_Est, GammaEst = Output$Gamma_Est, TauEst = Output$Tau_Est,
+                      tAEst = Output$tA_Est,
+                      SigmaEst = Output$Sigma_Est,
+                      AccptA = Output$AccptA, AccpttA = Output$Accpt_tA,
+                      LLPst = Output$LL_Pst, GammaPst = Output$Gamma_Pst))
+
+
+        } else {
+
+          # Print an error message
+          stop("Please specify a prior among Threshold prior and Spike and Slab prior.")
+
+
+        }
+
+      } else {
+
+        # Print an error message
+        stop("Please specify SigmaStarModel as one of: 'SSSL', 'IW', or 'diagonal'.")
+
+      }
 
     }
 
@@ -612,6 +1077,112 @@ RGM = function(X = NULL, Y = NULL, Syy = NULL, Syx = NULL, Sxx = NULL, Beta = NU
       Syy = t(Y) %*% Y / n
       Syx = t(Y) %*% X / n
       Sxx = t(X) %*% X / n
+
+
+
+      # Check whether U or Syu, Sxu and Suu given
+      if(!is.null(U) || (!is.null(Syu) && !is.null(Sxu) && !is.null(Suu))) {
+
+        # Check whether U is given
+        if(!is.null(U)) {
+
+          # Check whether U is a numeric matrix
+          if(!is.numeric(U) || !is.matrix(U)){
+
+            # Print an error message
+            stop("U should be numeric matrix.")
+
+          }
+
+          # Check number of rows of U
+          if(nrow(U) != n){
+
+            # Print an error message
+            stop("Number of rows of U and Y should be same")
+
+          }
+
+          # Calculate number of columns of U
+          l = ncol(U)
+
+          # Calculate Syu, Sxu and Suu
+          Syu = t(Y) %*% U / n
+          Sxu = t(X) %*% U / n
+          Suu = t(U) %*% U / n
+
+        } else {
+
+          # Check whether Syu is a numeric matrix
+          if(!is.numeric(Syu) || !is.matrix(Syu)){
+
+            # Print an error message
+            stop("Syu should be numeric matrix.")
+
+          }
+
+          # Check whether Sxu is a numeric matrix
+          if(!is.numeric(Sxu) || !is.matrix(Sxu)){
+
+            # Print an error message
+            stop("Sxu should be numeric matrix.")
+
+          }
+
+          # Check whether Suu is a numeric matrix
+          if(!is.numeric(Suu) || !is.matrix(Suu)){
+
+            # Print an error message
+            stop("Suu should be numeric matrix.")
+
+          }
+
+          # Check whether number of rows of Syu is p or not
+          if(nrow(Syu) != p){
+
+            # Print an error message
+            stop("Number of rows of Syu should be equal to number of coluns of Y.")
+
+          }
+
+          # Check whether number of rows of Sxu is k or not
+          if(nrow(Sxu) != k){
+
+            # Print an error message
+            stop("Number of rows of Sxu should be equal to number of coluns of X.")
+
+          }
+
+          # Check whether Suu is a square matrix
+          if(nrow(Suu) != ncol(Suu)){
+
+            # Print an error message
+            stop("Number of rows of Suu should be equal to number of coluns of Suu.")
+
+          }
+
+          # Calculate number of columns of Suu
+          l = ncol(Suu)
+
+          # Check whether number of columns of Syu equal to l
+          if(ncol(Syu) != ncol(Suu)){
+
+            # Print an error message
+            stop("Number of columns of Syu should be equal to number of coluns of Suu.")
+
+          }
+
+          # Check whether number of columns of Sxu equal to l
+          if(ncol(Sxu) != ncol(Suu)){
+
+            # Print an error message
+            stop("Number of columns of Sxu should be equal to number of coluns of Suu.")
+
+          }
+
+        }
+
+      }
+
 
     } else if(!is.null(Syy) && !is.null(Syx) && !is.null(Sxx)){
 
@@ -658,6 +1229,98 @@ RGM = function(X = NULL, Y = NULL, Syy = NULL, Syx = NULL, Sxx = NULL, Beta = NU
 
         # Print an error message
         stop("Number of rows of Syx should be equal to number of rows of Syy and number of columns of Syx should be equal to number of columns of Sxx.")
+
+      }
+
+
+      # Check whether U or Syu, Sxu and Suu are given
+      if(!is.null(U) || (!is.null(Syu) && !is.null(Sxu) && !is.null(Suu))) {
+
+        # Check whether Syu and Suu are given
+        if(!is.null(Syu) && !is.null(Sxu) && !is.null(Suu)) {
+
+
+          # Check whether Syu is a numeric matrix
+          if(!is.numeric(Syu) || !is.matrix(Syu)){
+
+            # Print an error message
+            stop("Syu should be numeric matrix.")
+
+          }
+
+          # Check whether Sxu is a numeric matrix
+          if(!is.numeric(Sxu) || !is.matrix(Sxu)){
+
+            # Print an error message
+            stop("Sxu should be numeric matrix.")
+
+          }
+
+          # Check whether Suu is a numeric matrix
+          if(!is.numeric(Suu) || !is.matrix(Suu)){
+
+            # Print an error message
+            stop("Suu should be numeric matrix.")
+
+          }
+
+          # Check whether number of rows of Syu is p or not
+          if(nrow(Syu) != p){
+
+            # Print an error message
+            stop("Number of rows of Syu should be equal to number of rows of Syy.")
+
+          }
+
+          # Check whether number of rows of Sxu is k or not
+          if(nrow(Sxu) != k){
+
+            # Print an error message
+            stop("Number of rows of Sxu should be equal to number of rows of Sxx.")
+
+          }
+
+          # Check whether Suu is a square matrix
+          if(nrow(Suu) != ncol(Suu)){
+
+            # Print an error message
+            stop("Number of rows of Suu should be equal to number of coluns of Suu.")
+
+          }
+
+          # Calculate number of columns of Suu
+          l = ncol(Suu)
+
+          # Check whether number of columns of Syu equal to l
+          if(ncol(Syu) != ncol(Suu)){
+
+            # Print an error message
+            stop("Number of columns of Syu should be equal to number of coluns of Suu.")
+
+          }
+
+          # Check whether number of columns of Sxu equal to l
+          if(ncol(Sxu) != ncol(Suu)){
+
+            # Print an error message
+            stop("Number of columns of Sxu should be equal to number of coluns of Suu.")
+
+          }
+
+        } else {
+
+          # Check whether U is a numeric matrix
+          if(!is.numeric(U) || !is.matrix(U)){
+
+            # Print an error message
+            stop("U should be numeric matrix.")
+
+          }
+
+          # Print an error message
+          stop("The matrices Syu, Sxu and Suu cannot be calculated from Syy, Syx, Sxx and U alone. Please provide either (X, Y, U) or (Syy, Syx, Sxx, Syu, Sxu, Suu).")
+
+        }
 
       }
 
@@ -805,6 +1468,100 @@ RGM = function(X = NULL, Y = NULL, Syy = NULL, Syx = NULL, Sxx = NULL, Beta = NU
       Syy = Beta %*% Sxx %*% t(Beta)  + Mult_Mat %*% (t(Mult_Mat) * Sigma)
 
 
+
+      # Check whether U or Syu, Sxu and Suu are given
+      if(!is.null(U) || (!is.null(Syu) && !is.null(Sxu) && !is.null(Suu))) {
+
+        # Check whether Syu and Suu are given
+        if(!is.null(Syu) && !is.null(Sxu) && !is.null(Suu)) {
+
+
+          # Check whether Syu is a numeric matrix
+          if(!is.numeric(Syu) || !is.matrix(Syu)){
+
+            # Print an error message
+            stop("Syu should be numeric matrix.")
+
+          }
+
+          # Check whether Sxu is a numeric matrix
+          if(!is.numeric(Sxu) || !is.matrix(Sxu)){
+
+            # Print an error message
+            stop("Sxu should be numeric matrix.")
+
+          }
+
+          # Check whether Suu is a numeric matrix
+          if(!is.numeric(Suu) || !is.matrix(Suu)){
+
+            # Print an error message
+            stop("Suu should be numeric matrix.")
+
+          }
+
+          # Check whether number of rows of Syu is p or not
+          if(nrow(Syu) != p){
+
+            # Print an error message
+            stop("Number of rows of Syu should be equal to number of rows of Beta.")
+
+          }
+
+          # Check whether number of rows of Sxu is k or not
+          if(nrow(Sxu) != k){
+
+            # Print an error message
+            stop("Number of rows of Sxu should be equal to number of rows of Sxx.")
+
+          }
+
+          # Check whether Suu is a square matrix
+          if(nrow(Suu) != ncol(Suu)){
+
+            # Print an error message
+            stop("Number of rows of Suu should be equal to number of coluns of Suu.")
+
+          }
+
+          # Calculate number of columns of Suu
+          l = ncol(Suu)
+
+          # Check whether number of columns of Syu equal to l
+          if(ncol(Syu) != ncol(Suu)){
+
+            # Print an error message
+            stop("Number of columns of Syu should be equal to number of coluns of Suu.")
+
+          }
+
+          # Check whether number of columns of Sxu equal to l
+          if(ncol(Sxu) != ncol(Suu)){
+
+            # Print an error message
+            stop("Number of columns of Sxu should be equal to number of coluns of Suu.")
+
+          }
+
+        } else {
+
+          # Check whether U is a numeric matrix
+          if(!is.numeric(U) || !is.matrix(U)){
+
+            # Print an error message
+            stop("U should be numeric matrix.")
+
+          }
+
+          # Print an error message
+          stop("The matrices Syu, Sxu and Suu cannot be calculated from Sxx, Beta, SigmaHat and U alone. Please provide (Sxx, Beta, SigmaHat, Syu, Sxu, Suu).")
+
+        }
+
+      }
+
+
+
     }
 
 
@@ -873,53 +1630,365 @@ RGM = function(X = NULL, Y = NULL, Syy = NULL, Syx = NULL, Sxx = NULL, Beta = NU
     }
 
 
-    # Apply RGM for Spike and Slab prior and Threshold prior
-    if ("Spike and Slab" %in% prior){
-
-      # Run the algorithm for Spike and Slab prior
-      Output = RGM_SpikeSlab2(Syy, Syx, Sxx, D, n, nIter = nIter, nBurnin = nBurnin, Thin = Thin,
-                              a_rho = aRho, b_rho = bRho, nu_1 = nu1, a_psi =aPsi, b_psi =bPsi,
-                              nu_2 =nu2, a_sigma = aSigma, b_sigma = bSigma, Prop_VarA = PropVarA, Prop_VarB = PropVarB)
 
 
 
-      # Return outputs
-      return(list(AEst = Output$A_Est, BEst = Output$B_Est, zAEst = Output$zA_Est, zBEst = Output$zB_Est,
-                  Graph = create_causal_graph_Y(Output$A_Est, Output$zA_Est),
-                  GammaEst = Output$Gamma_Est, TauEst = Output$Tau_Est, RhoEst = Output$Rho_Est,
-                  PhiEst = Output$Phi_Est, EtaEst = Output$Eta_Est, PsiEst = Output$Psi_Est,
-                  SigmaEst = Output$Sigma_Est,
-                  AccptA = Output$AccptA, AccptB = Output$AccptB,
-                  LLPst = Output$LL_Pst, GammaPst = Output$Gamma_Pst))
+
+
+    # Check whether covariate data is given
+    if(!is.null(Syu) && !is.null(Sxu) && !is.null(Suu)) {
 
 
 
-    } else if ("Threshold" %in% prior){
+      # Check for SigmaStarModel
+      if("SSSL" %in% SigmaStarModel) {
 
-      # Run the algorithm for Threshold prior
-      Output = RGM_Threshold2(Syy, Syx, Sxx, D, n, nIter = nIter, nBurnin = nBurnin, Thin = Thin, nu_1 = nu1, nu_2 =nu2,
-                              a_sigma = aSigma, b_sigma = bSigma, Prop_VarA = PropVarA, Prop_VarB = PropVarB)
+        # Apply RGM for Spike and Slab prior and Threshold prior
+        if ("Spike and Slab" %in% prior){
 
-
-
-      # Return outputs
-      return(list(AEst = Output$A_Est, BEst = Output$B_Est, zAEst = Output$zA_Est, zBEst = Output$zB_Est,
-                  Graph = create_causal_graph_Y(Output$A_Est, Output$zA_Est),
-                  A0Est = Output$A0_Est, B0Est = Output$B0_Est, GammaEst = Output$Gamma_Est, TauEst = Output$Tau_Est,
-                  PhiEst = Output$Phi_Est, EtaEst = Output$Eta_Est, tAEst = Output$tA_Est, tBEst = Output$tB_Est,
-                  SigmaEst = Output$Sigma_Est,
-                  AccptA = Output$AccptA, AccptB = Output$AccptB, AccpttA = Output$Accpt_tA, AccpttB = Output$Accpt_tB,
-                  LLPst = Output$LL_Pst, GammaPst = Output$Gamma_Pst))
+          # Run the algorithm for Spike and Slab prior
+          Output = RGM_SpikeSlab_SSSL_Covariates(Syy, Syx, Sxx, Syu, Sxu, Suu,
+                                                 D, n, nIter = nIter, nBurnin = nBurnin, Thin = Thin,
+                                                 a_rho = aRho, b_rho = bRho, nu_1 = nu1, a_psi = aPsi, b_psi = bPsi,
+                                                 nu_2 = nu2, Prop_VarA = PropVarA, Prop_VarB = PropVarB)
 
 
+          # Return outputs
+          return(list(AEst = Output$A_Est, BEst = Output$B_Est, CEst = Output$C_Est,
+                      zAEst = Output$zA_Est, zBEst = Output$zB_Est,
+                      Graph = create_causal_graph_Y(Output$A_Est, Output$zA_Est),
+                      GammaEst = Output$Gamma_Est, TauEst = Output$Tau_Est, RhoEst = Output$Rho_Est,
+                      PhiEst = Output$Phi_Est, EtaEst = Output$Eta_Est, PsiEst = Output$Psi_Est,
+                      SigmaEst = Output$Sigma_Est, ZEst = Output$Z_Est,
+                      AccptA = Output$AccptA, AccptB = Output$AccptB,
+                      LLPst = Output$LL_Pst, GammaPst = Output$Gamma_Pst))
+
+
+
+        } else if ("Threshold" %in% prior){
+
+          # Run the algorithm for Threshold prior
+          Output = RGM_Threshold_SSSL_Covariates(Syy, Syx, Sxx, Syu, Sxu, Suu,
+                                                 D, n, nIter = nIter, nBurnin = nBurnin, Thin = Thin,
+                                                 nu_1 = nu1, nu_2 = nu2, Prop_VarA = PropVarA, Prop_VarB = PropVarB)
+
+
+
+
+
+          # Return outputs
+          return(list(AEst = Output$A_Est, BEst = Output$B_Est,
+                      CEst = Output$C_Est,
+                      zAEst = Output$zA_Est, zBEst = Output$zB_Est,
+                      Graph = create_causal_graph_Y(Output$A_Est, Output$zA_Est),
+                      A0Est = Output$A0_Est, B0Est = Output$B0_Est, GammaEst = Output$Gamma_Est, TauEst = Output$Tau_Est,
+                      PhiEst = Output$Phi_Est, EtaEst = Output$Eta_Est, tAEst = Output$tA_Est, tBEst = Output$tB_Est,
+                      SigmaEst = Output$Sigma_Est, ZEst = Output$Z_Est,
+                      AccptA = Output$AccptA, AccptB = Output$AccptB, AccpttA = Output$Accpt_tA, AccpttB = Output$Accpt_tB,
+                      LLPst = Output$LL_Pst, GammaPst = Output$Gamma_Pst))
+
+
+        } else {
+
+          # Print an error message
+          stop("Please specify a prior among Threshold prior and Spike and Slab prior.")
+
+
+        }
+
+      } else if ("IW" %in% SigmaStarModel) {
+
+        # Apply RGM for Spike and Slab prior and Threshold prior
+        if ("Spike and Slab" %in% prior){
+
+          # Run the algorithm for Spike and Slab prior
+          Output = RGM_SpikeSlab_IW_Covariates(Syy, Syx, Sxx, Syu, Sxu, Suu,
+                                               D, n, nIter = nIter, nBurnin = nBurnin, Thin = Thin,
+                                               a_rho = aRho, b_rho = bRho, nu_1 = nu1, a_psi = aPsi, b_psi = bPsi,
+                                               nu_2 = nu2, Prop_VarA = PropVarA, Prop_VarB = PropVarB)
+
+
+
+          # Return outputs
+          return(list(AEst = Output$A_Est, BEst = Output$B_Est,
+                      CEst = Output$C_Est,
+                      zAEst = Output$zA_Est, zBEst = Output$zB_Est,
+                      Graph = create_causal_graph_Y(Output$A_Est, Output$zA_Est),
+                      GammaEst = Output$Gamma_Est, TauEst = Output$Tau_Est, RhoEst = Output$Rho_Est,
+                      PhiEst = Output$Phi_Est, EtaEst = Output$Eta_Est, PsiEst = Output$Psi_Est,
+                      SigmaEst = Output$Sigma_Est,
+                      AccptA = Output$AccptA, AccptB = Output$AccptB,
+                      LLPst = Output$LL_Pst, GammaPst = Output$Gamma_Pst))
+
+
+
+        } else if ("Threshold" %in% prior){
+
+          # Run the algorithm for Threshold prior
+          Output = RGM_Threshold_IW_Covariates(Syy, Syx, Sxx, Syu, Sxu, Suu,
+                                               D, n, nIter = nIter, nBurnin = nBurnin, Thin = Thin,
+                                               nu_1 = nu1, nu_2 = nu2, Prop_VarA = PropVarA, Prop_VarB = PropVarB)
+
+
+
+
+
+          # Return outputs
+          return(list(AEst = Output$A_Est, BEst = Output$B_Est,
+                      CEst = Output$C_Est,
+                      zAEst = Output$zA_Est, zBEst = Output$zB_Est,
+                      Graph = create_causal_graph_Y(Output$A_Est, Output$zA_Est),
+                      A0Est = Output$A0_Est, B0Est = Output$B0_Est, GammaEst = Output$Gamma_Est, TauEst = Output$Tau_Est,
+                      PhiEst = Output$Phi_Est, EtaEst = Output$Eta_Est, tAEst = Output$tA_Est, tBEst = Output$tB_Est,
+                      SigmaEst = Output$Sigma_Est,
+                      AccptA = Output$AccptA, AccptB = Output$AccptB, AccpttA = Output$Accpt_tA, AccpttB = Output$Accpt_tB,
+                      LLPst = Output$LL_Pst, GammaPst = Output$Gamma_Pst))
+
+
+        } else {
+
+          # Print an error message
+          stop("Please specify a prior among Threshold prior and Spike and Slab prior.")
+
+
+        }
+
+      } else if ("diagonal" %in% SigmaStarModel) {
+
+
+        # Apply RGM for Spike and Slab prior and Threshold prior
+        if ("Spike and Slab" %in% prior){
+
+          # Run the algorithm for Spike and Slab prior
+          Output = RGM_SpikeSlab_Diag_Covariates(Syy, Syx, Sxx, Syu, Sxu, Suu,
+                                                 D, n, nIter = nIter, nBurnin = nBurnin, Thin = Thin,
+                                                 a_rho = aRho, b_rho = bRho, nu_1 = nu1, a_psi = aPsi, b_psi = bPsi,
+                                                 nu_2 = nu2, a_sigma = aSigma, b_sigma = bSigma, Prop_VarA = PropVarA, Prop_VarB = PropVarB)
+
+
+
+          # Return outputs
+          return(list(AEst = Output$A_Est, BEst = Output$B_Est,
+                      CEst = Output$C_Est,
+                      zAEst = Output$zA_Est, zBEst = Output$zB_Est,
+                      Graph = create_causal_graph_Y(Output$A_Est, Output$zA_Est),
+                      GammaEst = Output$Gamma_Est, TauEst = Output$Tau_Est, RhoEst = Output$Rho_Est,
+                      PhiEst = Output$Phi_Est, EtaEst = Output$Eta_Est, PsiEst = Output$Psi_Est,
+                      SigmaEst = Output$Sigma_Est,
+                      AccptA = Output$AccptA, AccptB = Output$AccptB,
+                      LLPst = Output$LL_Pst, GammaPst = Output$Gamma_Pst))
+
+
+        } else if ("Threshold" %in% prior){
+
+          # Run the algorithm for Threshold prior
+          Output = RGM_Threshold_Diag_Covariates(Syy, Syx, Sxx, Syu, Sxu, Suu,
+                                                 D, n, nIter = nIter, nBurnin = nBurnin, Thin = Thin,
+                                                 nu_1 = nu1, nu_2 = nu2,
+                                                 a_sigma = aSigma, b_sigma = bSigma, Prop_VarA = PropVarA, Prop_VarB = PropVarB)
+
+
+
+
+
+          # Return outputs
+          return(list(AEst = Output$A_Est, BEst = Output$B_Est,
+                      CEst = Output$C_Est,
+                      zAEst = Output$zA_Est, zBEst = Output$zB_Est,
+                      Graph = create_causal_graph_Y(Output$A_Est, Output$zA_Est),
+                      A0Est = Output$A0_Est, B0Est = Output$B0_Est, GammaEst = Output$Gamma_Est, TauEst = Output$Tau_Est,
+                      PhiEst = Output$Phi_Est, EtaEst = Output$Eta_Est, tAEst = Output$tA_Est, tBEst = Output$tB_Est,
+                      SigmaEst = Output$Sigma_Est,
+                      AccptA = Output$AccptA, AccptB = Output$AccptB, AccpttA = Output$Accpt_tA, AccpttB = Output$Accpt_tB,
+                      LLPst = Output$LL_Pst, GammaPst = Output$Gamma_Pst))
+
+
+        } else {
+
+          # Print an error message
+          stop("Please specify a prior among Threshold prior and Spike and Slab prior.")
+
+
+        }
+
+
+      } else {
+
+        # Print an error message
+        stop("Please specify SigmaStarModel as one of: 'SSSL', 'IW', or 'diagonal'.")
+
+      }
 
 
 
     } else {
 
-      # Print an error message
-      stop("Please specify a prior among Threshold prior and Spike and Slab prior.")
+      # Check for SigmaStarModel
+      if("SSSL" %in% SigmaStarModel) {
 
+        # Apply RGM for Spike and Slab prior and Threshold prior
+        if ("Spike and Slab" %in% prior){
+
+          # Run the algorithm for Spike and Slab prior
+          Output = RGM_SpikeSlab_SSSL(Syy, Syx, Sxx, D, n,
+                                      nIter = nIter, nBurnin = nBurnin, Thin = Thin,
+                                      a_rho = aRho, b_rho = bRho, nu_1 = nu1, a_psi = aPsi, b_psi = bPsi,
+                                      nu_2 = nu2, Prop_VarA = PropVarA, Prop_VarB = PropVarB)
+
+
+
+          # Return outputs
+          return(list(AEst = Output$A_Est, BEst = Output$B_Est, zAEst = Output$zA_Est, zBEst = Output$zB_Est,
+                      Graph = create_causal_graph_Y(Output$A_Est, Output$zA_Est),
+                      GammaEst = Output$Gamma_Est, TauEst = Output$Tau_Est, RhoEst = Output$Rho_Est,
+                      PhiEst = Output$Phi_Est, EtaEst = Output$Eta_Est, PsiEst = Output$Psi_Est,
+                      SigmaEst = Output$Sigma_Est, ZEst = Output$Z_Est,
+                      AccptA = Output$AccptA, AccptB = Output$AccptB,
+                      LLPst = Output$LL_Pst, GammaPst = Output$Gamma_Pst))
+
+
+        } else if ("Threshold" %in% prior){
+
+          # Run the algorithm for Threshold prior
+          Output = RGM_Threshold_SSSL(Syy, Syx, Sxx, D, n,
+                                      nIter = nIter, nBurnin = nBurnin, Thin = Thin,
+                                      nu_1 = nu1, nu_2 = nu2, Prop_VarA = PropVarA, Prop_VarB = PropVarB)
+
+
+
+
+
+          # Return outputs
+          return(list(AEst = Output$A_Est, BEst = Output$B_Est, zAEst = Output$zA_Est, zBEst = Output$zB_Est,
+                      Graph = create_causal_graph_Y(Output$A_Est, Output$zA_Est),
+                      A0Est = Output$A0_Est, B0Est = Output$B0_Est, GammaEst = Output$Gamma_Est, TauEst = Output$Tau_Est,
+                      PhiEst = Output$Phi_Est, EtaEst = Output$Eta_Est, tAEst = Output$tA_Est, tBEst = Output$tB_Est,
+                      SigmaEst = Output$Sigma_Est, ZEst = Output$Z_Est,
+                      AccptA = Output$AccptA, AccptB = Output$AccptB, AccpttA = Output$Accpt_tA, AccpttB = Output$Accpt_tB,
+                      LLPst = Output$LL_Pst, GammaPst = Output$Gamma_Pst))
+
+
+        } else {
+
+          # Print an error message
+          stop("Please specify a prior among Threshold prior and Spike and Slab prior.")
+
+
+        }
+
+      } else if ("IW" %in% SigmaStarModel) {
+
+        # Apply RGM for Spike and Slab prior and Threshold prior
+        if ("Spike and Slab" %in% prior){
+
+          # Run the algorithm for Spike and Slab prior
+          Output = RGM_SpikeSlab_IW(Syy, Syx, Sxx, D, n,
+                                    nIter = nIter, nBurnin = nBurnin, Thin = Thin,
+                                    a_rho = aRho, b_rho = bRho, nu_1 = nu1, a_psi = aPsi, b_psi = bPsi,
+                                    nu_2 = nu2, Prop_VarA = PropVarA, Prop_VarB = PropVarB)
+
+
+
+          # Return outputs
+          return(list(AEst = Output$A_Est, BEst = Output$B_Est, zAEst = Output$zA_Est, zBEst = Output$zB_Est,
+                      Graph = create_causal_graph_Y(Output$A_Est, Output$zA_Est),
+                      GammaEst = Output$Gamma_Est, TauEst = Output$Tau_Est, RhoEst = Output$Rho_Est,
+                      PhiEst = Output$Phi_Est, EtaEst = Output$Eta_Est, PsiEst = Output$Psi_Est,
+                      SigmaEst = Output$Sigma_Est,
+                      AccptA = Output$AccptA, AccptB = Output$AccptB,
+                      LLPst = Output$LL_Pst, GammaPst = Output$Gamma_Pst))
+
+
+        } else if ("Threshold" %in% prior){
+
+          # Run the algorithm for Threshold prior
+          Output = RGM_Threshold_IW(Syy, Syx, Sxx, D, n,
+                                    nIter = nIter, nBurnin = nBurnin, Thin = Thin,
+                                    nu_1 = nu1, nu_2 = nu2, Prop_VarA = PropVarA, Prop_VarB = PropVarB)
+
+
+
+
+
+          # Return outputs
+          return(list(AEst = Output$A_Est, BEst = Output$B_Est, zAEst = Output$zA_Est, zBEst = Output$zB_Est,
+                      Graph = create_causal_graph_Y(Output$A_Est, Output$zA_Est),
+                      A0Est = Output$A0_Est, B0Est = Output$B0_Est, GammaEst = Output$Gamma_Est, TauEst = Output$Tau_Est,
+                      PhiEst = Output$Phi_Est, EtaEst = Output$Eta_Est, tAEst = Output$tA_Est, tBEst = Output$tB_Est,
+                      SigmaEst = Output$Sigma_Est,
+                      AccptA = Output$AccptA, AccptB = Output$AccptB, AccpttA = Output$Accpt_tA, AccpttB = Output$Accpt_tB,
+                      LLPst = Output$LL_Pst, GammaPst = Output$Gamma_Pst))
+
+
+        } else {
+
+          # Print an error message
+          stop("Please specify a prior among Threshold prior and Spike and Slab prior.")
+
+
+        }
+
+      } else if ("diagonal" %in% SigmaStarModel) {
+
+
+        # Apply RGM for Spike and Slab prior and Threshold prior
+        if ("Spike and Slab" %in% prior){
+
+          # Run the algorithm for Spike and Slab prior
+          Output = RGM_SpikeSlab_Diag(Syy, Syx, Sxx, D, n,
+                                      nIter = nIter, nBurnin = nBurnin, Thin = Thin,
+                                      a_rho = aRho, b_rho = bRho, nu_1 = nu1,
+                                      a_psi = aPsi, b_psi = bPsi, nu_2 = nu2,
+                                      a_sigma = aSigma, b_sigma = bSigma, Prop_VarA = PropVarA, Prop_VarB = PropVarB)
+
+
+
+          # Return outputs
+          return(list(AEst = Output$A_Est, BEst = Output$B_Est, zAEst = Output$zA_Est, zBEst = Output$zB_Est,
+                      Graph = create_causal_graph_Y(Output$A_Est, Output$zA_Est),
+                      GammaEst = Output$Gamma_Est, TauEst = Output$Tau_Est, RhoEst = Output$Rho_Est,
+                      PhiEst = Output$Phi_Est, EtaEst = Output$Eta_Est, PsiEst = Output$Psi_Est,
+                      SigmaEst = Output$Sigma_Est,
+                      AccptA = Output$AccptA, AccptB = Output$AccptB,
+                      LLPst = Output$LL_Pst, GammaPst = Output$Gamma_Pst))
+
+
+        } else if ("Threshold" %in% prior){
+
+          # Run the algorithm for Threshold prior
+          Output = RGM_Threshold_Diag(Syy, Syx, Sxx, D, n,
+                                      nIter = nIter, nBurnin = nBurnin, Thin = Thin,
+                                      nu_1 = nu1, nu_2 = nu2,
+                                      a_sigma = aSigma, b_sigma = bSigma, Prop_VarA = PropVarA, Prop_VarB = PropVarB)
+
+
+
+
+
+          # Return outputs
+          return(list(AEst = Output$A_Est, BEst = Output$B_Est, zAEst = Output$zA_Est, zBEst = Output$zB_Est,
+                      Graph = create_causal_graph_Y(Output$A_Est, Output$zA_Est),
+                      A0Est = Output$A0_Est, B0Est = Output$B0_Est, GammaEst = Output$Gamma_Est, TauEst = Output$Tau_Est,
+                      PhiEst = Output$Phi_Est, EtaEst = Output$Eta_Est, tAEst = Output$tA_Est, tBEst = Output$tB_Est,
+                      SigmaEst = Output$Sigma_Est,
+                      AccptA = Output$AccptA, AccptB = Output$AccptB, AccpttA = Output$Accpt_tA, AccpttB = Output$Accpt_tB,
+                      LLPst = Output$LL_Pst, GammaPst = Output$Gamma_Pst))
+
+
+        } else {
+
+          # Print an error message
+          stop("Please specify a prior among Threshold prior and Spike and Slab prior.")
+
+
+        }
+
+      } else {
+
+        # Print an error message
+        stop("Please specify SigmaStarModel as one of: 'SSSL', 'IW', or 'diagonal'.")
+
+      }
 
     }
 
@@ -927,7 +1996,7 @@ RGM = function(X = NULL, Y = NULL, Syy = NULL, Syx = NULL, Sxx = NULL, Beta = NU
   } else {
 
     # Print an error message
-    stop("Please give Y or Syy or X, Y or Syy, Syx, Sxx or Sxx, Beta and SigmaHat as input.")
+    stop("Please give (Y) or (Syy) or (X, Y) or (Syy, Syx, Sxx) or (Sxx, Beta, SigmaHat) as input.")
 
 
   }
