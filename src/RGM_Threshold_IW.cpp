@@ -395,7 +395,7 @@ Rcpp::List RGM_Threshold_IW(const arma::mat& S_YY, const arma::mat& S_YX, const 
   // Initialize tA, tB, t0 and t_sd
   double tA = 0;
   double tB = 0;
-  double t0 = 1;
+  double t0 = 0.1;
   double t_sd = 0.1;
 
   // Initialize acceptance counter
