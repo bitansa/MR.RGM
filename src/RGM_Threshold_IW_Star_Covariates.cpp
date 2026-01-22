@@ -311,7 +311,7 @@ Rcpp::List RGM_Threshold_IW_Star_Covariates(const arma::mat& S_YY, const arma::m
 
   // Initialize tA, t0 and t_sd
   double tA = 0;
-  double t0 = 1;
+  double t0 = 0.1;
   double t_sd = 0.1;
 
   // Initialize acceptance counter
