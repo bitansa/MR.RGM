@@ -10,6 +10,8 @@
 
 ## Intended use of the package
 
+## Intended use of the package
+
 The MR.RGM R package presents a crucial advancement in Mendelian
 randomization (MR) studies, providing a robust solution to a common
 challenge. While MR has proven invaluable in establishing causal links
@@ -28,12 +30,19 @@ among response variables.
 
 RGM accommodates both individual-level data and two types of
 summary-level data, making it adaptable to various data availability
-scenarios. This adaptability enhances the package’s utility across
-different research contexts. The outputs of RGM include estimates of
-causal effects, adjacency matrices, and other relevant parameters.
-Together, these outputs contribute to a deeper understanding of the
-intricate relationships within complex biological networks, thereby
-enriching insights derived from MR studies.
+scenarios. In addition, RGM optionally allows the inclusion of observed
+covariates, enabling adjustment for measured confounders when such
+information is available. Covariates can be incorporated using either
+individual-level data or corresponding summary-level matrices.
+
+This adaptability enhances the package’s utility across different
+research contexts. The outputs of RGM include estimates of causal
+effects, adjacency matrices, and other relevant parameters. When a full
+error variance–covariance structure is estimated, off-diagonal elements
+may be interpreted as evidence of unmeasured confounding between
+response variables. Together, these outputs contribute to a deeper
+understanding of the intricate relationships within complex biological
+networks, thereby enriching insights derived from MR studies.
 
 ## Installation instructions
 
@@ -55,26 +64,31 @@ work-space.
 ## Example
 
 We offer a concise demonstration of the capabilities of the RGM function
-within the package, showcasing its effectiveness in computing causal
-interactions among response variables and between responses and
-instrumental variables using simulated data sets. Subsequently, we
-provide an example of how NetworkMotif can be applied, utilizing a
-specified network structure and GammaPst acquired from executing the RGM
-function.
+within the package, showcasing its effectiveness in estimating causal
+interactions among response variables, between responses and
+instrumental variables, and—when available—between responses and
+observed covariates, using simulated data sets. The examples illustrate
+the use of RGM with individual-level data, summary-level data, and
+alternative error variance structures.
+
+Subsequently, we provide an example of how NetworkMotif can be applied,
+utilizing a specified network structure and the posterior samples
+(GammaPst) obtained from executing the RGM function.
 
 ``` r
 
-# Model: Y = AY + BX + E
+# Model: Y = AY + BX + CU + E
 
 # Set seed
 set.seed(9154)
 
 # Number of data points
-n = 10000
+n = 30000
 
-# Number of response variables and number of instrument variables
+# Number of response variables, instruments, and covariates
 p = 5
 k = 6
+l = 2
 
 # Initialize causal interaction matrix between response variables
 A = matrix(sample(c(-0.1, 0.1), p^2, replace = TRUE), p, p)
@@ -83,55 +97,59 @@ A = matrix(sample(c(-0.1, 0.1), p^2, replace = TRUE), p, p)
 diag(A) = 0
 
 # Make the network sparse
-A[sample(which(A!=0), length(which(A!=0))/2)] = 0
+A[sample(which(A != 0), length(which(A != 0)) / 2)] = 0
 
-# Create D matrix (Indicator matrix where each row corresponds to a response variable
-# and each column corresponds to an instrument variable)
+# Create D matrix (Indicator matrix: rows = responses, cols = instruments)
 D = matrix(0, nrow = p, ncol = k)
 
 # Manually assign values to D matrix
-D[1, 1:2] = 1  # First response variable is influenced by the first 2 instruments
-D[2, 3] = 1    # Second response variable is influenced by the 3rd instrument
-D[3, 4] = 1    # Third response variable is influenced by the 4th instrument
-D[4, 5] = 1    # Fourth response variable is influenced by the 5th instrument
-D[5, 6] = 1    # Fifth response variable is influenced by the 6th instrument
+D[1, 1:2] = 1
+D[2, 3]   = 1
+D[3, 4]   = 1
+D[4, 5]   = 1
+D[5, 6]   = 1
 
-
-# Initialize B matrix
-B = matrix(0, p, k)  # Initialize B matrix with zeros
-
-# Calculate B matrix based on D matrix
+# Initialize B matrix (instrument effects)
+B = matrix(0, p, k)
 for (i in 1:p) {
-   for (j in 1:k) {
-     if (D[i, j] == 1) {
-       B[i, j] = 1  # Set B[i, j] to 1 if D[i, j] is 1
-     }
-   }
- }
-
-
-
-# Create variance-covariance matrix
-Sigma = 1 * diag(p)
-
-Mult_Mat = solve(diag(p) - A)
-
-Variance = Mult_Mat %*% Sigma %*% t(Mult_Mat)
-
-# Generate instrument data matrix
-X = matrix(runif(n * k, 0, 5), nrow = n, ncol = k)
-
-# Initialize response data matrix
-Y = matrix(0, nrow = n, ncol = p)
-
-# Generate response data matrix based on instrument data matrix
-for (i in 1:n) {
-
- Y[i, ] = MASS::mvrnorm(n = 1, Mult_Mat %*% B %*% X[i, ], Variance)
-
+  for (j in 1:k) {
+    if (D[i, j] == 1) {
+      B[i, j] = 1
+    }
+  }
 }
 
-# Print true causal interaction matrices between response variables and between response and instrument variables
+# Generate covariate data matrix U (n x l)
+U = matrix(rnorm(n * l), nrow = n, ncol = l)
+
+# Initialize C matrix (covariate effects)
+C = matrix(0, p, l)
+C[sample(length(C), size = ceiling(length(C) / 2))] = 1
+
+# Create a full (non-diagonal) positive definite error covariance matrix Sigma
+R = matrix(rnorm(p * p), p, p)
+Sigma = crossprod(R)                 # SPD
+# Sigma = Sigma / mean(diag(Sigma))    # scale for stability
+
+# Compute (I - A)^{-1}
+Mult_Mat = solve(diag(p) - A)
+
+# Variance of Y
+Variance = Mult_Mat %*% Sigma %*% t(Mult_Mat)
+
+# Generate instrument data matrix X
+X = matrix(runif(n * k, 0, 5), nrow = n, ncol = k)
+
+# Initialize response data matrix Y
+Y = matrix(0, nrow = n, ncol = p)
+
+# Generate response data
+for (i in 1:n) {
+  mu_i = Mult_Mat %*% (B %*% X[i, ] + C %*% U[i, ])
+  Y[i, ] = MASS::mvrnorm(n = 1, mu = mu_i, Sigma = Variance)
+}
+
+# Print true causal interaction matrices
 A
 #>      [,1] [,2] [,3] [,4] [,5]
 #> [1,]  0.0 -0.1  0.0  0.0  0.1
@@ -146,55 +164,49 @@ B
 #> [3,]    0    0    0    1    0    0
 #> [4,]    0    0    0    0    1    0
 #> [5,]    0    0    0    0    0    1
+C
+#>      [,1] [,2]
+#> [1,]    1    0
+#> [2,]    1    0
+#> [3,]    0    1
+#> [4,]    0    0
+#> [5,]    1    1
 ```
 
-We will now apply RGM based on individual level data, summary level data
-and Beta, SigmaHat matrices to show its functionality.
+We will now apply RGM using individual-level data and summary-level data
+to demonstrate its functionality.
 
 ``` r
 
-# Apply RGM on individual level data with Threshold prior
-Output1 = RGM(X = X, Y = Y, D = D, prior = "Threshold")
+# ---------------------------------------------------------
+# Apply RGM on individual-level data with covariates (Spike and Slab prior)
+# Model: Y = AY + BX + CU + E
 
-# Calculate summary level data
-Syy = t(Y) %*% Y / n
+Output1 = RGM(
+  X = X, Y = Y, U = U,
+  D = D, nIter = 50000, nBurnin = 10000, Thin = 10,
+  prior = "Spike and Slab",
+  SigmaStarModel = "IW"
+)
+
+# ---------------------------------------------------------
+# Compute summary-level quantities (including covariates)
+Syy = crossprod(Y) / n        # t(Y) %*% Y / n
 Syx = t(Y) %*% X / n
-Sxx = t(X) %*% X / n
+Sxx = crossprod(X) / n        # t(X) %*% X / n
 
-# Apply RGM on summary level data for Spike and Slab Prior
-Output2 = RGM(Syy = Syy, Syx = Syx, Sxx = Sxx,
-           D = D, n = 10000, prior = "Spike and Slab")
+Syu = t(Y) %*% U / n
+Sxu = t(X) %*% U / n
+Suu = crossprod(U) / n        # t(U) %*% U / n
 
-# Calculate Beta and Sigma_Hat
-# Centralize Data
-Y = t(t(Y) - colMeans(Y))
-X = t(t(X) - colMeans(X))
-
-# Calculate Sxx
-Sxx = t(X) %*% X / n
-
-# Generate Beta matrix and SigmaHat
-Beta = matrix(0, nrow = p, ncol = k)
-SigmaHat = matrix(0, nrow = p, ncol = k)
-
-for (i in 1:p) {
-
-    for (j in 1:k) {
-
-        fit = lm(Y[, i] ~ X[, j])
-
-        Beta[i, j] =  fit$coefficients[2]
-
-        SigmaHat[i, j] = sum(fit$residuals^2) / n
-
-        }
-
- }
-
-
-# Apply RGM on Sxx, Beta and SigmaHat for Spike and Slab Prior
-Output3 = RGM(Sxx = Sxx, Beta = Beta, SigmaHat = SigmaHat,
-           D = D, n = 10000, prior = "Spike and Slab")
+# Apply RGM on summary-level data with covariates (Spike-and-Slab prior)
+Output2 = RGM(
+  Syy = Syy, Syx = Syx, Sxx = Sxx,
+  Syu = Syu, Sxu = Sxu, Suu = Suu,
+  D = D, n = n, nIter = 50000, nBurnin = 10000, Thin = 10,
+  prior = "Spike and Slab",
+  SigmaStarModel = "SSSL"
+)
 ```
 
 We get the estimated causal interaction matrix between response
@@ -203,26 +215,19 @@ variables in the following way:
 ``` r
 
 Output1$AEst
-#>           [,1]        [,2]       [,3]      [,4]       [,5]
-#> [1,] 0.0000000 -0.11032661  0.0000000 0.0000000 0.10676811
-#> [2,] 0.0991208  0.00000000 -0.1104576 0.1002182 0.11012341
-#> [3,] 0.0000000 -0.09370579  0.0000000 0.0000000 0.09747664
-#> [4,] 0.0000000 -0.10185959  0.0000000 0.0000000 0.00000000
-#> [5,] 0.0000000  0.10045256  0.0000000 0.0000000 0.00000000
+#>              [,1]        [,2]        [,3]       [,4]       [,5]
+#> [1,]  0.000000000 -0.05071349 -0.03122890 0.01580550 0.06439107
+#> [2,]  0.092102038  0.00000000 -0.03678640 0.05943408 0.15833616
+#> [3,]  0.001739301 -0.03282699  0.00000000 0.02531819 0.04212612
+#> [4,] -0.004913130 -0.15241568  0.04659638 0.00000000 0.03834960
+#> [5,]  0.000000000  0.13821674 -0.02972008 0.02075432 0.00000000
 Output2$AEst
-#>              [,1]       [,2]          [,3]          [,4]        [,5]
-#> [1,]  0.000000000 -0.1127249 -0.0006355133  0.0012237310 0.107520412
-#> [2,]  0.099881480  0.0000000 -0.1079853541  0.0996589823 0.109275947
-#> [3,] -0.001747246 -0.0929592  0.0000000000 -0.0006473297 0.099778267
-#> [4,] -0.003863658 -0.1030056 -0.0024683725  0.0000000000 0.009191016
-#> [5,]  0.001966818  0.1014136 -0.0055458038 -0.0050688662 0.000000000
-Output3$AEst
-#>             [,1]        [,2]         [,3]          [,4]       [,5]
-#> [1,]  0.00000000 -0.08972628  0.039412442 -0.0006516754 0.09454632
-#> [2,]  0.11040214  0.00000000 -0.112569739  0.0983975424 0.13676682
-#> [3,]  0.01896308 -0.09780459  0.000000000  0.0100459671 0.11765744
-#> [4,]  0.00000000 -0.11255315  0.001661851  0.0000000000 0.01358832
-#> [5,] -0.00174675  0.12947084  0.011533919 -0.0025906139 0.00000000
+#>              [,1]        [,2]         [,3]         [,4]        [,5]
+#> [1,]  0.000000000 -0.08518482 -0.007989256 -0.000943272 0.097420049
+#> [2,]  0.089416927  0.00000000 -0.082740175  0.098186881 0.127370800
+#> [3,]  0.007209473 -0.08076286  0.000000000 -0.000480574 0.077790630
+#> [4,] -0.003015542 -0.11865619  0.022769278  0.000000000 0.003440523
+#> [5,]  0.005426684  0.10729912 -0.002202036  0.001646208 0.000000000
 ```
 
 We get the estimated causal network structure between the response
@@ -234,7 +239,7 @@ Output1$zAEst
 #>      [,1] [,2] [,3] [,4] [,5]
 #> [1,]    0    1    0    0    1
 #> [2,]    1    0    1    1    1
-#> [3,]    0    1    0    0    1
+#> [3,]    0    1    0    0    0
 #> [4,]    0    1    0    0    0
 #> [5,]    0    1    0    0    0
 Output2$zAEst
@@ -244,42 +249,7 @@ Output2$zAEst
 #> [3,]    0    1    0    0    1
 #> [4,]    0    1    0    0    0
 #> [5,]    0    1    0    0    0
-Output3$zAEst
-#>      [,1] [,2] [,3] [,4] [,5]
-#> [1,]    0    1    0    0    1
-#> [2,]    1    0    1    1    1
-#> [3,]    0    1    0    0    1
-#> [4,]    0    1    0    0    0
-#> [5,]    0    1    0    0    0
 ```
-
-We observe that the causal network structures inferred in the three
-outputs mentioned are identical. To gain a clearer understanding of the
-network, we compare the true network structure with the one estimated by
-RGM. Since the networks derived from all three outputs are consistent,
-we plot a single graph representing the estimated causal network.
-
-``` r
-
-# Define a function to create smaller arrowheads
-smaller_arrowheads <- function(graph) {
-  igraph::E(graph)$arrow.size = 0.60  # Adjust the arrow size value as needed
-  return(graph)
-}
-
-# Create a layout for multiple plots
-par(mfrow = c(1, 2))
-
-# Plot the true causal network
-plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix((A != 0) * 1,
-       mode = "directed")), layout = igraph::layout_in_circle,
-          main = "True Causal Network")
-
-# Plot the estimated causal network
-plot(Output1$Graph, main = "Estimated Causal Network")
-```
-
-<img src="man/figures/README-unnamed-chunk-8-1.png" width="100%" />
 
 We get the estimated causal interaction matrix between the response and
 the instrument variables from the outputs in the following way:
@@ -287,26 +257,19 @@ the instrument variables from the outputs in the following way:
 ``` r
 
 Output1$BEst
-#>           [,1]     [,2]      [,3]      [,4]      [,5]      [,6]
-#> [1,] 0.9921448 1.010301 0.0000000 0.0000000 0.0000000 0.0000000
-#> [2,] 0.0000000 0.000000 0.9961312 0.0000000 0.0000000 0.0000000
-#> [3,] 0.0000000 0.000000 0.0000000 0.9989298 0.0000000 0.0000000
-#> [4,] 0.0000000 0.000000 0.0000000 0.0000000 0.9991987 0.0000000
-#> [5,] 0.0000000 0.000000 0.0000000 0.0000000 0.0000000 0.9977224
+#>          [,1]      [,2]      [,3]      [,4]      [,5]      [,6]
+#> [1,] 0.995561 0.9951917 0.0000000 0.0000000 0.0000000 0.0000000
+#> [2,] 0.000000 0.0000000 0.9225429 0.0000000 0.0000000 0.0000000
+#> [3,] 0.000000 0.0000000 0.0000000 0.9522093 0.0000000 0.0000000
+#> [4,] 0.000000 0.0000000 0.0000000 0.0000000 0.9851361 0.0000000
+#> [5,] 0.000000 0.0000000 0.0000000 0.0000000 0.0000000 0.9614003
 Output2$BEst
-#>           [,1]     [,2]      [,3]      [,4]     [,5]     [,6]
-#> [1,] 0.9942219 1.009985 0.0000000 0.0000000 0.000000 0.000000
-#> [2,] 0.0000000 0.000000 0.9931885 0.0000000 0.000000 0.000000
-#> [3,] 0.0000000 0.000000 0.0000000 0.9992243 0.000000 0.000000
-#> [4,] 0.0000000 0.000000 0.0000000 0.0000000 1.000336 0.000000
-#> [5,] 0.0000000 0.000000 0.0000000 0.0000000 0.000000 1.001666
-Output3$BEst
-#>           [,1]     [,2]     [,3]      [,4]      [,5]      [,6]
-#> [1,] 0.9910789 1.006024 0.000000 0.0000000 0.0000000 0.0000000
-#> [2,] 0.0000000 0.000000 0.993928 0.0000000 0.0000000 0.0000000
-#> [3,] 0.0000000 0.000000 0.000000 0.9987596 0.0000000 0.0000000
-#> [4,] 0.0000000 0.000000 0.000000 0.0000000 0.9974289 0.0000000
-#> [5,] 0.0000000 0.000000 0.000000 0.0000000 0.0000000 0.9948345
+#>           [,1]      [,2]      [,3]      [,4]     [,5]      [,6]
+#> [1,] 0.9939785 0.9947419 0.0000000 0.0000000 0.000000 0.0000000
+#> [2,] 0.0000000 0.0000000 0.9774769 0.0000000 0.000000 0.0000000
+#> [3,] 0.0000000 0.0000000 0.0000000 0.9832112 0.000000 0.0000000
+#> [4,] 0.0000000 0.0000000 0.0000000 0.0000000 1.002278 0.0000000
+#> [5,] 0.0000000 0.0000000 0.0000000 0.0000000 0.000000 0.9786314
 ```
 
 We get the estimated graph structure between the response and the
@@ -328,13 +291,27 @@ Output2$zBEst
 #> [3,]    0    0    0    1    0    0
 #> [4,]    0    0    0    0    1    0
 #> [5,]    0    0    0    0    0    1
-Output3$zBEst
-#>      [,1] [,2] [,3] [,4] [,5] [,6]
-#> [1,]    1    1    0    0    0    0
-#> [2,]    0    0    1    0    0    0
-#> [3,]    0    0    0    1    0    0
-#> [4,]    0    0    0    0    1    0
-#> [5,]    0    0    0    0    0    1
+```
+
+The estimated causal effects of covariates on the response variables are
+got in the following way:
+
+``` r
+
+Output1$CEst
+#>              [,1]        [,2]
+#> [1,]  0.975724789  0.08222144
+#> [2,]  0.929505309 -0.13509568
+#> [3,] -0.007161566  1.06636644
+#> [4,]  0.028972576 -0.10922169
+#> [5,]  0.958154798  1.03687457
+Output2$CEst
+#>             [,1]        [,2]
+#> [1,] 0.978004115  0.02280010
+#> [2,] 0.971112347 -0.05197381
+#> [3,] 0.001827472  1.02906778
+#> [4,] 0.025793746 -0.04766733
+#> [5,] 0.987528882  1.00505903
 ```
 
 We can plot the log-likelihoods from the outputs in the following way:
@@ -352,18 +329,18 @@ plot(Output2$LLPst, type = 'l', xlab = "Iterations", ylab = "Log-likelihood")
 
 <img src="man/figures/README-unnamed-chunk-11-2.png" width="100%" />
 
-``` r
-plot(Output3$LLPst, type = 'l', xlab = "Iterations", ylab = "Log-likelihood")
-```
-
-<img src="man/figures/README-unnamed-chunk-11-3.png" width="100%" />
-
 Next, we present the implementation of the NetworkMotif function. We
 begin by defining a random subgraph among the response variables.
 Subsequently, we collect GammaPst arrays from various outputs and
 proceed to execute NetworkMotif based on these arrays.
 
 ``` r
+
+# Define a function to create smaller arrowheads
+smaller_arrowheads <- function(graph) {
+  igraph::E(graph)$arrow.size = 0.60  # Adjust the arrow size value as needed
+  return(graph)
+}
 
 # Start with a random subgraph
 Gamma = matrix(0, nrow = p, ncol = p)
@@ -383,15 +360,12 @@ plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix(Gamma,
 # Store the GammaPst arrays from outputs
 GammaPst1 = Output1$GammaPst
 GammaPst2 = Output2$GammaPst
-GammaPst3 = Output3$GammaPst
 
 # Get the posterior probabilities of Gamma with these GammaPst matrices
 NetworkMotif(Gamma = Gamma, GammaPst = GammaPst1)
-#> [1] 1
+#> [1] 0.22825
 NetworkMotif(Gamma = Gamma, GammaPst = GammaPst2)
-#> [1] 0.37325
-NetworkMotif(Gamma = Gamma, GammaPst = GammaPst3)
-#> [1] 0.461375
+#> [1] 0.32175
 ```
 
 ## Expanded Simulation Setup
@@ -430,6 +404,8 @@ simulation setup with the following new elements:
 Here is the updated R code reflecting these changes:
 
 ``` r
+
+# (No covariates in this example) Model: Y = AY + BX + E
 
 # Load necessary libraries
 library(MASS)
@@ -471,7 +447,7 @@ D = matrix(0, nrow = p, ncol = k)
 # Assign values to D matrix using a loop
 for (run in 1:p) {
   
-  D[run, ((run - 1) * 100 + 1) : (run * 100)] = 1
+  D[run, ((run - 1) * num_snps_per_y + 1) : (run * num_snps_per_y)] = 1
   
 }
 
@@ -489,6 +465,7 @@ for (i in 1:p) {
 
 
 # Calculate Variance-Covariance matrix
+# Error variance model used to generate Y (diagonal => independent errors across responses)
 Sigma = diag(p)
 Mult_Mat = solve(diag(p) - A)
 Variance = Mult_Mat %*% Sigma %*% t(Mult_Mat)
@@ -509,6 +486,8 @@ Syy = t(Y) %*% Y / n
 Syx = t(Y) %*% X / n
 Sxx = t(X) %*% X / n
 
+# PCA-based IV compression:
+# mimic many weak SNP instruments per response; keep top PCs to reduce dimension
 # Perform PCA for each response variable to get top 20 PCs
 top_snps_list = list()
 for (i in 1:p) {
@@ -535,8 +514,9 @@ for (run in 1:p) {
   
 }
 
-# Apply RGM on summary level data for Spike and Slab Prior using the compact_X matrix
-Output = RGM(Syy = Syy, Syx = Syx_compact, Sxx = Sxx_compact, D = D_New, n = n, prior = "Spike and Slab")
+# Apply RGM on summary-level data (Spike-and-Slab prior)
+# Since errors were generated independently (Sigma diagonal), set SigmaStarModel = "diagonal"
+Output = RGM(Syy = Syy, Syx = Syx_compact, Sxx = Sxx_compact, D = D_New, n = n, prior = "Spike and Slab", SigmaStarModel = "diagonal")
 
 # Print estimated causal interaction matrices
 Output$AEst
@@ -557,6 +537,11 @@ Output$zAEst
 # Create a layout for multiple plots
 par(mfrow = c(1, 2))
 
+smaller_arrowheads <- function(graph) {
+  igraph::E(graph)$arrow.size <- 0.6
+  graph
+}
+
 # Plot the true causal network
 plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix((A != 0) * 1, mode = "directed")),
      layout = igraph::layout_in_circle, main = "True Causal Network")
@@ -569,19 +554,24 @@ plot(Output$Graph, main = "Estimated Causal Network")
 
 **Conclusion**
 
-Although we have mimicked a real-world setup where there are numerous
-instrumental variables (IVs), each explaining only a small portion of
-the trait variance, our approach still yields very promising results.
-This demonstrates that our method is robust even in complex scenarios
-with many IVs.
+Although we have mimicked a realistic setting in which there are many
+instrumental variables (IVs), each explaining only a small fraction of
+the trait variance, our approach continues to yield very promising
+results. This demonstrates that MR.RGM is robust even in complex,
+high-dimensional scenarios commonly encountered in modern Mendelian
+randomization studies.
 
-The dimensionality reduction technique we employed, specifically using
-Principal Component Analysis (PCA) to select the top principal
-components as IVs, proves to be effective. This approach can be broadly
-applied to similar problems where dimensionality reduction is necessary.
-By leveraging PCA or other dimensionality reduction methods, researchers
-can efficiently manage large sets of IVs and apply our algorithm to gain
-valuable insights into causal relationships.
+The dimensionality reduction strategy adopted here—using Principal
+Component Analysis (PCA) to extract a compact set of representative
+instruments—proves to be effective in stabilizing inference while
+preserving relevant variation. This workflow is broadly applicable to
+settings with large numbers of weak or correlated IVs, such as
+genome-wide association studies (GWAS).
+
+More generally, by combining flexible causal network modeling with
+principled dimensionality reduction, MR.RGM provides a practical and
+scalable framework for investigating complex causal relationships in
+high-dimensional biological systems.
 
 ## References
 
