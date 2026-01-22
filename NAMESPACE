@@ -2,5 +2,6 @@
 
 export(NetworkMotif)
 export(RGM)
+importFrom(GIGrvg,rgig)
 importFrom(Rcpp,sourceCpp)
 useDynLib(MR.RGM, .registration = TRUE)
