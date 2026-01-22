@@ -557,9 +557,9 @@ Rcpp::List RGM_SpikeSlab_SSSL_Star_Covariates(const arma::mat& S_YY, const arma:
     }
 
     // Check if `i` is divisible by 100 and print progress
-    if (i % 100 == 0) {
-      Rcpp::Rcout << "Iterations " << i << " done." << std::endl;
-    }
+    //if (i % 100 == 0) {
+    //Rcpp::Rcout << "Iterations " << i << " done." << std::endl;
+    //}
 
 
   }
