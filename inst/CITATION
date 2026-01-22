@@ -1,0 +1,38 @@
+citHeader("To cite MR.RGM in publications, please use:")
+
+bibentry(
+  bibtype = "Article",
+  title   = "MR.RGM: an R package for fitting Bayesian multivariate bidirectional Mendelian randomization networks",
+  author  = c(
+    person("Bitan", "Sarkar"),
+    person("Yang", "Ni")
+  ),
+  journal = "Bioinformatics",
+  year    = 2025,
+  volume  = 41,
+  number  = 4,
+  pages   = "btaf130",
+  doi     = "10.1093/bioinformatics/btaf130",
+  textVersion =
+    "Sarkar, B. and Ni, Y. (2025). MR.RGM: an R package for fitting Bayesian multivariate bidirectional Mendelian randomization networks. Bioinformatics, 41(4), btaf130."
+)
+
+citHeader("If you use the reciprocal graphical model methodology, please also cite:")
+
+bibentry(
+  bibtype = "Article",
+  title   = "Reciprocal graphical models for integrative gene regulatory network analysis",
+  author  = c(
+    person("Yang", "Ni"),
+    person("Yuan", "Ji"),
+    person("Peter", "Muller")
+  ),
+  journal = "Bayesian Analysis",
+  year    = 2018,
+  volume  = 13,
+  number  = 4,
+  pages   = "1095--1110",
+  doi     = "10.1214/17-BA1087",
+  textVersion =
+    "Ni, Y., Ji, Y., and Muller, P. (2018). Reciprocal graphical models for integrative gene regulatory network analysis. Bayesian Analysis, 13(4), 1095–1110."
+)
