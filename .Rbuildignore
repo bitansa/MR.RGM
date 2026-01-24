@@ -3,3 +3,7 @@
 ^LICENSE\.md$
 ^README\.Rmd$
 ^\.github$
+^reproducibility$
+^\.DS_Store$
+^\.Rhistory$
+^\.RData$
