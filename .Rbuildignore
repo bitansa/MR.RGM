@@ -3,7 +3,7 @@
 ^LICENSE\.md$
 ^README\.Rmd$
 ^\.github$
-^reproducibility$
+^reproducibility(/.*)?$
 ^\.DS_Store$
 ^\.Rhistory$
 ^\.RData$
