@@ -1,0 +1,225 @@
+# GTEx Real Data Analysis (GTEx v7 — Muscle Skeletal)
+
+This folder contains the **real-data analysis pipeline for GTEx v7 (muscle skeletal tissue)** used in the MR.RGM / MR.RGM+ paper.
+
+The scripts in this folder:
+- fit the GTEx model using **MR.RGM+ with confounders**,
+- extract posterior inclusion probabilities (PIPs) for **causal edges** and **confounding links**, and generate the   **full inferred causal–confounding network**, and
+- compute **network motif posterior probabilities** and generate the **motif figures** reported in the manuscript.
+
+---
+
+## Folder contents
+
+- **GTEx_ModelFitting.R**  
+  Fits **MR.RGM+ with confounders** on GTEx skeletal muscle data and produces all objects required for downstream analysis.
+
+- **GTEx_Plot.R**  
+  Extracts **posterior inclusion probabilities (PIPs)** for causal and confounding edges, provides examples for querying PIPs between gene pairs, and plots the inferred network.
+
+- **GTEx_NetworkMotif.R**  
+  Generates three motif figures (feedback, feedforward, cascade) and computes **motif posterior probabilities** using the `NetworkMotif()` function.
+
+---
+
+## Data availability
+
+The GTEx-derived data used in this analysis are archived on **Zenodo**:
+
+- **Zenodo Link:** `https://doi.org/10.5281/zenodo.18476623`
+
+This Zenodo record contains two archives:
+
+1. **GTEx.zip**  
+   Preprocessed genotype and gene expression matrices derived from **GTEx v7 muscle skeletal tissue**, prepared for direct use in the scripts in this folder.
+
+2. **GTEx_Analysis_v7_eQTL.tar.gz**  
+   Public GTEx v7 eQTL summary files for muscle skeletal tissue, including significant variant–gene pairs and eGenes, originally downloaded from the **GTEx Portal**.
+
+---
+
+## Download and setup
+
+1. Download both archives from Zenodo:
+   - `GTEx.zip`
+   - `GTEx_Analysis_v7_eQTL.tar.gz`
+
+2. Create **one local parent folder** (location of your choice).
+
+3. Extract **both** archives into the **same** parent folder.
+
+After extraction, your directory **must** look like:
+
+```text
+GTEX_FOLDER_PATH/
+├── GTEx/
+└── GTEx_Analysis_v7_eQTL/
+```
+
+## Where
+
+- `GTEX_FOLDER_PATH` is the **parent folder** you created.
+- It must contain **both**:
+  - `GTEx/`
+  - `GTEx_Analysis_v7_eQTL/`
+
+---
+
+## Recommended execution order
+
+1. `GTEx_ModelFitting.R`
+2. `GTEx_Plot.R`
+3. `GTEx_NetworkMotif.R`
+
+---
+
+## 1) Run `GTEx_ModelFitting.R`
+
+### Step 1 — set the data path
+
+Open `GTEx_ModelFitting.R` and update:
+
+```r
+GTEX_FOLDER_PATH <- "PATH/TO/YOUR/GTEx_PARENT_FOLDER"
+```
+
+### Data path requirement
+
+This path must point to the folder containing:
+
+- `GTEx/`
+- `GTEx_Analysis_v7_eQTL/`
+
+---
+
+### What this script does
+
+- Loads genotype and expression matrices from **GTEx.zip**
+- Loads public GTEx v7 eQTL summary files
+- Matches common donor IDs across genotype, expression, and covariates
+- Selects a pathway-based gene set mapped to GTEx gene symbols
+- Selects top cis-eQTL variants (by `pval_nominal`) for each gene
+- Constructs:
+  - outcome matrix **Y**
+  - genotype matrix **X**
+  - covariate matrix **`U = [SEX (binary), AGE (ordinal)]`**
+- Fits **MR.RGM+ with confounders** using a full **D = 1** structure
+
+---
+
+### Objects created in R
+
+After successful execution, the following objects are available:
+
+- **`Output_GTEx`**  
+  MR.RGM+ fit object containing posterior samples and estimates
+
+- **`gene_names_final`**  
+  Final gene labels used for plotting and motif analysis
+
+---
+
+### Dataset size used in the paper
+
+- **18 genes**
+- **62 SNPs**
+- **332 individuals**
+
+---
+
+## 2) Run `GTEx_Plot.R`
+
+### Required objects
+
+This script assumes the following objects already exist:
+
+- `Output_GTEx`
+- `gene_names_final`
+
+---
+
+### What this script does
+
+- Extracts posterior inclusion probabilities (PIPs):
+  - Causal edges from `GammaEst`
+  - Confounding links from `ZEst`
+- Demonstrates how to query:
+  - directed causal PIPs: **Gene_From → Gene_To**
+  - undirected confounding PIPs: **Gene1 — Gene2**
+- Plots the inferred network:
+  - **Blue arrows** = causal edges
+  - **Red curved arcs** = confounding links
+
+---
+
+### Thresholds used in the paper
+
+- `thr_dir = 0.85`
+- `thr_conf = 0.50`
+
+These can be modified in the script.
+
+---
+
+## 3) Run `GTEx_NetworkMotif.R`
+
+### Required objects
+
+This script also requires:
+
+- `Output_GTEx`
+- `gene_names_final`
+
+---
+
+### What this script does
+
+#### Motif figures (used in the paper)
+
+Generates and saves three motif figures:
+
+- Feedback loop
+- Feedforward loop
+- Cascade
+
+---
+
+#### Motif posterior probabilities
+
+Computes motif probabilities using:
+
+```r
+NetworkMotif(Gamma0, Output_GTEx$GammaPst)
+```
+
+Where:
+
+- **`Gamma0`** is a binary adjacency matrix encoding the motif
+- **`Output_GTEx$GammaPst`** contains posterior samples from the MR.RGM+ fit
+
+---
+
+### Matrix convention
+
+In MR.RGM output matrices:
+
+- **rows = to**
+- **columns = from**
+
+So:
+
+```r
+Gamma[to, from] = 1
+```
+
+
+represents the directed edge:
+
+**from → to**
+
+---
+
+### Notes
+
+- Original GTEx data were generated by the **GTEx Consortium**.
+- This repository redistributes **derived and reorganized data products** strictly for **methodological reproducibility**.
