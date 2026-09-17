@@ -2,13 +2,12 @@
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
 # MR.RGM
-
+[![CRAN status](https://www.r-pkg.org/badges/version/MR.RGM)](https://CRAN.R-project.org/package=MR.RGM)
+[![CRAN downloads](https://cranlogs.r-pkg.org/badges/grand-total/MR.RGM)](https://CRAN.R-project.org/package=MR.RGM)
 <!-- badges: start -->
 
 [![R-CMD-check](https://github.com/bitansa/MR.RGM/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/bitansa/MR.RGM/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
-
-## Intended use of the package
 
 ## Intended use of the package
 
@@ -46,7 +45,7 @@ networks, thereby enriching insights derived from MR studies.
 
 ## Installation instructions
 
-You can install MR.RGM R package from CRAN with:
+You can install the released version of [MR.RGM from CRAN](https://CRAN.R-project.org/package=MR.RGM) with:
 
 ``` r
 
@@ -410,7 +409,6 @@ Here is the updated R code reflecting these changes:
 # Load necessary libraries
 library(MASS)
 library(igraph)
-#> Warning: package 'igraph' was built under R version 4.3.3
 #> 
 #> Attaching package: 'igraph'
 #> The following objects are masked from 'package:stats':
