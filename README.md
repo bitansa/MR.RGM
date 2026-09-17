@@ -2,11 +2,11 @@
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
 # MR.RGM
+
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/bitansa/MR.RGM/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/bitansa/MR.RGM/actions/workflows/R-CMD-check.yaml)
 [![CRAN status](https://www.r-pkg.org/badges/version/MR.RGM)](https://CRAN.R-project.org/package=MR.RGM)
 [![CRAN downloads](https://cranlogs.r-pkg.org/badges/grand-total/MR.RGM)](https://CRAN.R-project.org/package=MR.RGM)
-<!-- badges: start -->
-
-[![R-CMD-check](https://github.com/bitansa/MR.RGM/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/bitansa/MR.RGM/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 ## Intended use of the package
