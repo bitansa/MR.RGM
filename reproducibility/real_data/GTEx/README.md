@@ -26,7 +26,7 @@ The scripts in this folder:
 
 The GTEx-derived data used in this analysis are archived on **Zenodo**:
 
-- DOI: **10.5281/zenodo.1847662**  
+- DOI: **10.5281/zenodo.18476623**  
 - Download link (DOI landing page): **https://doi.org/10.5281/zenodo.18476623**
 
 This Zenodo record contains two archives:

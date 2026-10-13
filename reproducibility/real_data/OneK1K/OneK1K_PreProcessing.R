@@ -13,7 +13,7 @@ setwd(data_dir)
 library(GenomicRanges)
 
 ## ---- Load data ----
-load("donor_b_cell_bitan.rda")
+load("donor_b_cell.rda")
 
 # donor      : donor-level covariates (including genotype PCs)
 # genotype   : genotype matrix (VCF-style encoding)
