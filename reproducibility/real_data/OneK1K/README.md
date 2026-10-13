@@ -11,7 +11,7 @@ This folder contains the complete workflow to reproduce the **OneK1K B-cell** re
 ## Contents
 
 - `OneK1K_PreProcessing.R`  
-  Loads the OneK1K B-cell dataset (`donor_b_cell_bitan.rda`) and performs:
+  Loads the OneK1K B-cell dataset (`donor_b_cell.rda`) and performs:
   - promoter-region construction (±200 kb),
   - donor filtering using library-size outlier rules,
   - library-size normalization of expression,
@@ -47,7 +47,7 @@ The OneK1K B-cell dataset used by these scripts is available on Zenodo:
 - DOI: **10.5281/zenodo.18489688**  
 - Download link (DOI landing page): **https://doi.org/10.5281/zenodo.18489688**
 
-Download `donor_b_cell_bitan.rda` from the Zenodo record and save it into a local folder on your machine.
+Download `donor_b_cell.rda` from the Zenodo record and save it into a local folder on your machine.
 
 ---
 
@@ -64,7 +64,7 @@ setwd(data_dir)
 
 That folder **must contain**:
 
-- `donor_b_cell_bitan.rda`
+- `donor_b_cell.rda`
 
 ### 1) Run preprocessing
 
