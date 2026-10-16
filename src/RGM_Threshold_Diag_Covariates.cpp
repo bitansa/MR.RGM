@@ -1,3 +1,16 @@
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// RGM_Threshold_Diag_Covariates.cpp  --  MCMC sampler called by RGM()
+//
+// Model         : (I - A) Y_i = B X_i + C U_i + E_i,   E_i ~ N_p(0, Sigma)
+// Instruments   : X (k instruments); D (p x k) marks which instrument may affect which response
+// Covariates    : U (l measured covariates), C | Sigma ~ MN(0, Sigma, TAU I_l), TAU = 2
+// Graph prior   : threshold on A: A = A0 * 1(|A0| > tA), A0 ~ N(0, tau), sqrt(tau) ~ C+(0, 1), tA ~ U(0, 0.1)
+//                 and on B (entries with D = 1): B = B0 * 1(|B0| > tB), B0 ~ N(0, eta), sqrt(eta) ~ C+(0, 1), tB ~ U(0, 0.1)
+// Error model   : diagonal Sigma, sigma_jj ~ IG(a_sigma, b_sigma)  (no unmeasured confounding)
+// Input         : summary statistics S_YY, S_YX, S_XX, S_YU, S_XU, S_UU  (each = t(.) %*% . / n)
+// Update order  : B (Metropolis, entry-wise) -> tB (Metropolis) -> C (Gibbs) -> Sigma (Gibbs) -> A (Metropolis, entry-wise) -> tA (Metropolis)
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
 #include <RcppArmadillo.h>
 // [[Rcpp::depends(RcppArmadillo)]]
 using namespace Rcpp;
@@ -151,7 +164,7 @@ double LL_Diag(const arma::mat& A, const arma::mat& B, const arma::mat& C, const
 
 
   // Calculate log-likelihood
-  double LL = N * real(arma::log_det(Mult_Mat)) - N / 2 * accu(log(1/Sigma_Inv)) - Sum / 2 - N / 2 * log(2 * arma::datum::pi);
+  double LL = N * real(arma::log_det(Mult_Mat)) - N / 2 * accu(log(1/Sigma_Inv)) - Sum / 2 - N * p / 2 * log(2 * arma::datum::pi);   // Gaussian constant for n observations of p responses
 
   // Return log-likelihood
   return LL;
@@ -263,8 +276,13 @@ Rcpp::List Sample_A_Diag(const arma::mat& S_YY, const arma::mat& S_YX, const arm
   // Modify the copy with the proposed a value
   A_new(i, j) = (fabs(a_new) > tA) * a_new;
 
-  // Modify logdet
-  double logdet_new = logdet + log(fabs(1 + ((fabs(a) > tA) * a - (fabs(a_new) > tA) * a_new) * InvMat(j, i)));
+  // Change of the (thresholded) entry A(i, j): delta = A(i, j) - A_new(i, j), so that I - A_new = (I - A) + delta * e_i e_j^T.
+  // Computed here, before a is overwritten on acceptance.
+  double delta = (fabs(a) > tA) * a - (fabs(a_new) > tA) * a_new;
+  double denom = 1 + delta * InvMat(j, i);
+
+  // Matrix determinant lemma: log|det(I - A_new)| = log|det(I - A)| + log|1 + delta * (I - A)^{-1}(j, i)|
+  double logdet_new = logdet + log(fabs(denom));
 
 
   // Calculate new trace values
@@ -282,7 +300,7 @@ Rcpp::List Sample_A_Diag(const arma::mat& S_YY, const arma::mat& S_YX, const arm
   double Target1 = Target_A(a_new, N, gamma, tau, nu_1, Trace4_New, Trace5_New, Trace6_New, Trace7_New, Trace8_New, logdet_new);
   double Target2 = Target_A(a, N, gamma, tau, nu_1, Trace4, Trace5, Trace6, Trace7, Trace8, logdet);
 
-  // Calculate r i.e. the differnce between two target values
+  // Calculate r i.e. the difference between two target values
   double r = Target1 - Target2;
 
   // Sample u from Uniform(0, 1)
@@ -302,8 +320,8 @@ Rcpp::List Sample_A_Diag(const arma::mat& S_YY, const arma::mat& S_YX, const arm
 
     logdet = logdet_new;
 
-    InvMat = InvMat - (((fabs(a) > tA) * a - (fabs(a_new) > tA) * a_new) / (1 + ((fabs(a) > tA) * a - (fabs(a_new) > tA) * a_new)
-                                                                              * InvMat(j, i))) * (InvMat.col(i) * InvMat.row(j));
+    // Sherman-Morrison update of (I - A)^{-1} (uses delta and denom from before the update)
+    InvMat = InvMat - (delta / denom) * (InvMat.col(i) * InvMat.row(j));
 
   }
 
@@ -382,7 +400,7 @@ Rcpp::List RGM_Threshold_Diag_Covariates(const arma::mat& S_YY, const arma::mat&
   arma::mat B_Pseudo = arma::zeros(p, k);
 
   // Initialize Sigma_Inv
-  arma::colvec Sigma_Inv = Rcpp::rgamma(p, a_sigma, 1 / b_sigma);
+  arma::colvec Sigma_Inv = arma::ones(p);   // start at unit error variances (a draw from the vague IG(a_sigma, b_sigma) prior can be numerically 0 or infinite)
 
 
   // Initialize Gamma, Phi, Tau and Eta matrices
@@ -412,7 +430,7 @@ Rcpp::List RGM_Threshold_Diag_Covariates(const arma::mat& S_YY, const arma::mat&
   double Accpt_tB = 0;
 
   // Calculate number of posterior samples
-  int nPst = std::floor((nIter - nBurnin) / Thin);
+  int nPst = (nIter - nBurnin) / Thin;   // integer division
 
   // Initiate Itr to index the posterior samples
   int Itr = 0;
@@ -510,6 +528,9 @@ Rcpp::List RGM_Threshold_Diag_Covariates(const arma::mat& S_YY, const arma::mat&
 
       tB = tB_new;
 
+      // Refresh the edge indicators so that Phi matches the new threshold tB
+      Phi = arma::conv_to<arma::mat>::from(arma::abs(B_Pseudo) > tB) % D;
+
       Accpt_tB = Accpt_tB + 1;
 
     }
@@ -533,7 +554,7 @@ Rcpp::List RGM_Threshold_Diag_Covariates(const arma::mat& S_YY, const arma::mat&
       + arma::accu(C.row(j) * C.row(j).t()) / TAU;
 
       // Sample Sigma_Inv
-      Sigma_Inv(j) = 1 / Sample_Sigma_Diag(n, z_sum, a_sigma, b_sigma);
+      Sigma_Inv(j) = 1 / Sample_Sigma_Diag(n + l, z_sum, a_sigma, b_sigma);  // n + l: prior of C row j adds l/2 to the shape
 
     }
 
@@ -620,13 +641,19 @@ Rcpp::List RGM_Threshold_Diag_Covariates(const arma::mat& S_YY, const arma::mat&
 
       tA = tA_new;
 
+      // Refresh the edge indicators so that Gamma matches the new threshold tA
+      Gamma = arma::conv_to<arma::mat>::from(arma::abs(A_Pseudo) > tA);
+      Gamma.diag().zeros();
+
       Accpt_tA = Accpt_tA + 1;
 
     }
 
 
     // Store posterior samples
-    if((i > nBurnin) && (i % Thin == 0)){
+    // Keep every Thin-th draw after burn-in: iterations nBurnin + Thin, nBurnin + 2 * Thin, ...
+    // (exactly nPst draws for any nBurnin; identical to i % Thin == 0 when Thin divides nBurnin)
+    if((i > nBurnin) && ((i - nBurnin) % Thin == 0)){
 
       A_Pst.slice(Itr) = A;
       A0_Pst.slice(Itr) = A_Pseudo;

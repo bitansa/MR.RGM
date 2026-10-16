@@ -22,8 +22,8 @@ RGM(
   nIter = 10000,
   nBurnin = 2000,
   Thin = 1,
-  prior = c("Threshold", "Spike and Slab"),
-  SigmaStarModel = c("diagonal", "IW", "SSSL"),
+  prior = c("Spike and Slab", "Threshold"),
+  SigmaStarModel = c("SSSL", "IW", "diagonal"),
   aRho = 3,
   bRho = 1,
   nu1 = 0.001,
@@ -37,13 +37,13 @@ RGM(
 )
 }
 \arguments{
-\item{X}{A matrix of dimension n * k. Each row represents a distinct observation, and each column corresponds to a specific instrumental variable. The default value is set to NULL.}
+\item{X}{A matrix of dimension n * k. Each row represents a distinct observation, and each column corresponds to a specific instrumental variable. The default value is set to NULL. The model has no intercept: if the responses have non-zero means not explained by X and U (typical for real data), center the columns (scaling is also recommended) or include a column of ones in U.}
 
-\item{Y}{A matrix of dimension n * p. Each row represents a specific observation, and each column corresponds to a particular response variable. The default value is set to NULL.}
+\item{Y}{A matrix of dimension n * p. Each row represents a specific observation, and each column corresponds to a particular response variable. The default value is set to NULL. The model has no intercept: if the responses have non-zero means not explained by X and U (typical for real data), center the columns (scaling is also recommended) or include a column of ones in U.}
 
-\item{U}{A matrix of dimension n * l. Each row represents a distinct observation, and each column corresponds to a covariate. The default value is set to NULL.}
+\item{U}{A matrix of dimension n * l. Each row represents a distinct observation, and each column corresponds to a covariate. The default value is set to NULL. The model has no intercept: if the responses have non-zero means not explained by X and U (typical for real data), center the columns (scaling is also recommended) or include a column of ones in U.}
 
-\item{Syy}{A matrix of dimension p * p, where "p" is the number of response variables. It is calculated as t(Y) \%*\% Y / n, where "Y" represents the response data matrix and "n" is the number of observations.}
+\item{Syy}{A matrix of dimension p * p, where "p" is the number of response variables. It is calculated as t(Y) \%*\% Y / n, where "Y" represents the response data matrix and "n" is the number of observations. Because the model has no intercept, summary-level matrices from real data should be computed from centered variables (covariance-type matrices).}
 
 \item{Syx}{A matrix of dimension p * k, where "p" is the number of response variables, and "k" is the number of instrumental variables. It is calculated as t(Y) \%*\% X / n, where "Y" represents the response data matrix, "X" represents the instrumental data matrix, and "n" is the number of observations.}
 
@@ -55,7 +55,7 @@ RGM(
 
 \item{Suu}{A matrix of dimension l * l, where "l" is the number of covariates. It is calculated as t(U) \%*\% U / n, where "U" represents the covariate matrix and "n" is the number of observations.}
 
-\item{Beta}{A matrix of dimension p * k, where each row corresponds to a specific response variable and each column pertains to an instrumental variable. Each entry represents the regression coefficient of the response variable on the instrumental variable. When using Beta as input, ensure that both Y (response data) and X (instrument data) are centered before calculating Beta, Sxx, and SigmaHat.}
+\item{Beta}{A matrix of dimension p * k, where each row corresponds to a specific response variable and each column pertains to an instrumental variable. Each entry represents the regression coefficient of the response variable on the instrumental variable. When using Beta as input, ensure that both Y (response data) and X (instrument data) are centered before calculating Beta, Sxx, and SigmaHat. The conversion to summary statistics treats the marginal regression coefficients as joint effects, which is exact when the instruments are uncorrelated; use (Syy, Syx, Sxx) when the instruments are correlated.}
 
 \item{SigmaHat}{A matrix of dimension p * k. Each row corresponds to a specific response variable, and each column pertains to an instrumental variable. Each entry represents the mean square error of the regression between the response and the instrumental variable. As with Beta, ensure that both Y and X are centered before calculating SigmaHat.}
 
@@ -71,7 +71,7 @@ RGM(
 
 \item{prior}{A character input specifying the prior assumption on the graph structure. Options are \code{"Threshold"} and \code{"Spike and Slab"}. The default option is \code{"Spike and Slab"}.}
 
-\item{SigmaStarModel}{A character input specifying the assumed structure of the error covariance matrix in the model. It provides three options: \code{"SSSL"} (stochastic spike-and-slab prior for correlated errors), \code{"IW"} (Inverse Wishart prior for correlated errors), or \code{"diagonal"} (diagonal error covariance for independent errors). The default option is \code{"SSSL"}.}
+\item{SigmaStarModel}{A character input specifying the assumed structure of the error covariance matrix in the model. It provides three options: \code{"SSSL"} (stochastic spike-and-slab prior for correlated errors), \code{"IW"} (Inverse Wishart prior for correlated errors), or \code{"diagonal"} (diagonal error covariance for independent errors). The default option is \code{"SSSL"}. The \code{"SSSL"} prior uses fixed spike and slab variances (0.005 and 5) for the error covariances and assumes responses on roughly unit scale; center and scale the data before fitting (a warning is issued when the second moments of the responses are below 0.01 or above 100).}
 
 \item{aRho}{A positive scalar specifying the first shape parameter of the Beta prior on the inclusion probability of edges in matrix A under the spike-and-slab prior. The default value is set to 3.}
 
@@ -125,7 +125,7 @@ For the latter input, data centralization is necessary. Users can select any of 
 the covariate summary matrices Syu, Sxu, and Suu must be provided explicitly. Covariate information is optional and the method remains valid in its absence. Crucial inputs encompass "D" (a matrix indicating which IV is affecting which response) and "n" (total observations, only required for summary level data), amplified by customizable parameters that refine analysis. Additionally, users can tailor the analysis by setting parameters such as "nIter" (number of MCMC iterations),
 "nBurnin" (number of discarded samples during burn-in for convergence), and "Thin" (thinning of posterior samples). These customizable parameters enhance the precision and relevance of the analysis. RGM provides essential causal effect/strength estimates between response variables, between response and instrument variables and between response and covariates. Moreover, it furnishes adjacency matrices, visually mapping causal graph structures. These outputs empower researchers to
 untangle intricate relationships within biological networks, fostering a holistic understanding of complex systems. The function also returns a graph object representing the estimated causal network between the responses. This graph consists of directed edges that indicate causal effects, with effect sizes displayed on the edges. The edges are determined based on a threshold of 0.5 for inclusion. Users can visualize the network by plotting this object,
-which helps in interpreting the causal relationships between response variables. The output includes AEst, BEst, CEst, A0Est, B0Est, GammaEst, TauEst, PhiEst, EtaEst, tAEst, tBEst, SigmaEst, ZEst, RhoEst, and PsiEst, representing the posterior means of the corresponding quantities. Additionally, LLPst and GammaPst represent posterior samples. The adjacency matrices zAEst and zBEst are obtained by thresholding GammaEst and TauEst, respectively. When a full error variance–covariance matrix
+which helps in interpreting the causal relationships between response variables. The output includes AEst, BEst, CEst, A0Est, B0Est, GammaEst, TauEst, PhiEst, EtaEst, tAEst, tBEst, SigmaEst, ZEst, RhoEst, and PsiEst, representing the posterior means of the corresponding quantities. Additionally, LLPst and GammaPst represent posterior samples. The adjacency matrices zAEst and zBEst are obtained by thresholding GammaEst and PhiEst at 0.5, respectively. When a full error variance–covariance matrix
 is estimated, the off-diagonal elements of SigmaEst may be interpreted as evidence of unmeasured confounding between responses.
 }
 \examples{

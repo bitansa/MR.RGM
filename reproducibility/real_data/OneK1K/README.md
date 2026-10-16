@@ -1,161 +1,48 @@
-# OneK1K (B cells) — Reproducibility scripts (MR.RGM+)
+# OneK1K B cells (B-cell receptor pathway)
 
-This folder contains the complete workflow to reproduce the **OneK1K B-cell** real-data analysis results reported in the manuscript, including:
-- preprocessing the Zenodo dataset,
-- fitting **MR.RGM+**,
-- querying/plotting posterior inclusion probabilities (PIPs) for **causal** and **confounding** links, and
-- computing posterior probabilities of selected **network motifs**.
+Reproduces the OneK1K analysis of the manuscript: MR.RGM+ with covariates on 66 B-cell receptor pathway genes.
 
----
+| Script | Purpose |
+|---|---|
+| `OneK1K_PreProcessing.R` | Load data, cis windows, donor filtering, log expression, genotype dosages |
+| `OneK1K_ModelFitting.R` | Instrument selection, preprocessing, MR.RGM+ fit → `output/OneK1K_fit.rds` |
+| `OneK1K_Results.R` | All tables (`tables/`) and figures (`figures/`) of the manuscript, generated from the fit |
+| `../real_data_functions.R` | Shared helpers (preprocessing, tables, network figures, modules, motifs) |
 
-## Contents
+## Data
 
-- `OneK1K_PreProcessing.R`  
-  Loads the OneK1K B-cell dataset (`donor_b_cell.rda`) and performs:
-  - promoter-region construction (±200 kb),
-  - donor filtering using library-size outlier rules,
-  - library-size normalization of expression,
-  - conversion of genotype strings to numeric dosages,
-  - SNP filtering using a non-zero dosage frequency threshold.
+Zenodo, DOI (always resolves to the latest version): **10.5281/zenodo.18489687**  
+<https://doi.org/10.5281/zenodo.18489687>
 
-- `OneK1K_ModelFitting.R`  
-  Runs **MR.RGM+** on the processed dataset:
-  - selects cis-SNPs (top up to 15 per gene by association p-value),
-  - constructs matrices **Y** (expression), **X** (genotypes), **U** (covariates),
-  - computes summary-statistic matrices (Syy, Syx, Sxx, Syu, Sxu, Suu),
-  - fits the model via `MR.RGM::RGM()` and creates `Output_OneK1K`.
+Download `donor_b_cell.rda` into a folder of your choice (`data_dir`).
 
-- `OneK1K_Plot.R`  
-  Uses the fitted output to:
-  - extract/query **PIPs** for any **causal edge** (`GammaEst[to, from]`) and any **confounding link** (`ZEst[g1, g2]`),
-  - plot the **9 cluster subnetworks** shown in the manuscript figure using default thresholds  
-    **causal PIP ≥ 0.50** and **confounding PIP ≥ 0.48** (editable in the script).
-
-- `OneK1K_NetworkMotif.R`  
-  Plots three canonical motifs (saved as PDFs) and computes the posterior probability of each motif using  
-  `MR.RGM::NetworkMotif()` with posterior samples `Output_OneK1K$GammaPst`:
-  - a 3-cycle feedback loop,
-  - a feedforward loop,
-  - a 3-node cascade.
-
----
-
-## Data download (Zenodo)
-
-The OneK1K B-cell dataset used by these scripts is available on Zenodo:
-
-- DOI: **10.5281/zenodo.18489688**  
-- Download link (DOI landing page): **https://doi.org/10.5281/zenodo.18489688**
-
-Download `donor_b_cell.rda` from the Zenodo record and save it into a local folder on your machine.
-
----
-
-## How to run
-
-### 0) Set your local data path (required)
-In `OneK1K_PreProcessing.R`, set:
+## Run (one R session)
 
 ```r
-# Replace with the local path where the Zenodo files were saved
-data_dir <- "PATH_TO_ZENODO_DATA_FOLDER"
-setwd(data_dir)
-```
-
-That folder **must contain**:
-
-- `donor_b_cell.rda`
-
-### 1) Run preprocessing
-
-```r
+setwd("path/to/MR.RGM/reproducibility/real_data/OneK1K")
+data_dir <- "path/to/folder/with/donor_b_cell.rda"
 source("OneK1K_PreProcessing.R")
+source("OneK1K_ModelFitting.R")   # slow: SNP-wise regressions and MCMC; saves output/OneK1K_fit.rds
+source("OneK1K_Results.R")        # tables/ and figures/ (needs only the saved fit)
 ```
 
-This creates key objects used downstream, including:
+## Analysis settings
 
-- `RNA.count.adj` 
-- `genotype.mat`  
-- `Subsetted_SNP_Names`  
-- `gene.promoter.ref`  
-- `updated donor`, `vcf.ref`, etc.
+* **Donors:** relative library size > 0.25 and ≤ median + 3 MAD.
+* **Expression:** library-size normalised, log1p.
+* **Genotypes:** dosages 0/1/2 (missing calls set to 0); SNPs with non-zero dosage in > 5% of donors.
+* **Genes:** B-cell receptor pathway nodes mapped to gene symbols (`tables/onek_label_map.tex`); 11 genes
+  without sufficient cis-SNP coverage removed.
+* **Instruments:** for each gene, the 15 SNPs within ±200 kb of the TSS with the smallest p-value in
+  log-expression ~ SNP + age + sex + PC1 + PC2 + PC3; every SNP is allowed to affect every gene (MR.RGM+, D = 1).
+* **Preprocessing:** covariates SEX (male = 1), AGE (decade bins 1–7), PC1–PC3; every column of expression,
+  genotypes and covariates centered and scaled.
+* **Model:** spike-and-slab prior, SSSL error covariance; 50,000 iterations, 10,000 burn-in, thinning 10
+  (4,000 posterior samples, as for GTEx and the simulations); seed 12345.
+* **Reporting:** causal edges with PIP ≥ 0.50 (median probability model, the rule used in the simulations) and
+  confounding links with PIP ≥ 0.50 (`ONEK_THR_DIR`, `ONEK_THR_CONF`). Prior inclusion probabilities are 0.75 (causal) and 0.5
+  (confounding); `tables/onek_threshold_sweep.csv` gives edge counts and Bayes factors at several thresholds.
+  Module panels are the Louvain communities (≥ 3 genes) of the displayed network.
 
----
-
-### 2) Fit MR.RGM+  
-
-```r
-source("OneK1K_ModelFitting.R")
-```
-
-This fits the model and creates:
-
-- `Output_OneK1K`  
-  (contains `AEst`, `GammaEst`, `ZEst`, `SigmaEst`, and posterior samples such as `GammaPst`)
-- `gene_names_pathway_use`  
-  (the final gene list used for plotting/motifs)
-
----
-
-### 3) Query PIPs + plot 9 subnetworks 
-
-```r
-source("OneK1K_Plot.R")
-```
-
-This script:
-
-- shows examples for extracting PIPs of a causal edge and a confounding pair,  
-- generates the 9 cluster plots (thresholds can be changed inside the script).
-
-**Interpretation reminder**
-
-- Causal edge PIP: `GammaEst[to, from]` corresponds to `from → to`  
-- Confounding link PIP: `ZEst[g1, g2]` (symmetric / undirected)
-
----
-
-### 4) Plot motifs + compute motif posterior probabilities 
-
-```r
-source("OneK1K_NetworkMotif.R")
-```
-
-This writes three PDF files in the working directory:
-
-- `motif_onek_feedback.pdf`  
-- `motif_onek_feedforward.pdf` 
-- `motif_onek_cascade.pdf`  
-
-and prints the posterior probabilities of these motifs (computed from `GammaPst`).
-
----
-
-**Notes**
-
-- **Order matters:**  
-  `OneK1K_PreProcessing.R` and `OneK1K_ModelFitting.R` must be run before  
-  `OneK1K_Plot.R` and `OneK1K_NetworkMotif.R`.
-
-- **Packages:**  
-  These scripts require R packages including  
-  `MR.RGM`, `GenomicRanges`, and (for plotting)  
-  `ggraph`, `tidygraph`, `scales`, `ggplot2`, `dplyr`, `igraph`.
-
-- **Runtime:**  
-  The cis-SNP selection step in `OneK1K_ModelFitting.R` can be slow because it fits many linear models (up to 15 per gene across genes).
-
----
-
-**Expected outputs**
-
-After running all scripts, you should have:
-
-- a fitted model object: `Output_OneK1K`
-- PIP querying + cluster network plots  
-  (displayed / optionally saved if you set `out_file`)
-- motif PDFs:
-  - `motif_onek_feedback.pdf`  
-  - `motif_onek_feedforward.pdf`  
-  - `motif_onek_cascade.pdf`  
-- printed motif posterior probabilities from `NetworkMotif()`
+Original OneK1K data were generated by the OneK1K Consortium; the Zenodo record redistributes derived data for
+methodological reproducibility only.

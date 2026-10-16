@@ -1,3 +1,16 @@
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// RGM_SpikeSlab_Diag_Covariates.cpp  --  MCMC sampler called by RGM()
+//
+// Model         : (I - A) Y_i = B X_i + C U_i + E_i,   E_i ~ N_p(0, Sigma)
+// Instruments   : X (k instruments); D (p x k) marks which instrument may affect which response
+// Covariates    : U (l measured covariates), C | Sigma ~ MN(0, Sigma, TAU I_l), TAU = 2
+// Graph prior   : spike-and-slab on A: a ~ gamma N(0, tau) + (1 - gamma) N(0, nu_1 tau), gamma ~ Bern(rho), rho ~ Beta(a_rho, b_rho), sqrt(tau) ~ C+(0, 1)
+//                 and on B (entries with D = 1): b ~ phi N(0, eta) + (1 - phi) N(0, nu_2 eta), phi ~ Bern(psi), psi ~ Beta(a_psi, b_psi), sqrt(eta) ~ C+(0, 1)
+// Error model   : diagonal Sigma, sigma_jj ~ IG(a_sigma, b_sigma)  (no unmeasured confounding)
+// Input         : summary statistics S_YY, S_YX, S_XX, S_YU, S_XU, S_UU  (each = t(.) %*% . / n)
+// Update order  : B (Metropolis, entry-wise) -> C (Gibbs) -> Sigma (Gibbs) -> A (Metropolis, entry-wise)
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
 #include <RcppArmadillo.h>
 // [[Rcpp::depends(RcppArmadillo)]]
 using namespace Rcpp;
@@ -110,16 +123,13 @@ double Sample_Eta(double b, double phi, double eta, double nu_2) {
 // Sample Gamma
 double Sample_Gamma(double a, double tau, double rho, double nu_1) {
 
-  // Calculate acceptance probability
-  double p = exp(-0.5 * (a * a / tau)) * rho / (exp(-0.5 * (a * a / tau)) * rho
-                                                  + 1 / sqrt(nu_1) * exp(-0.5 * (a * a / (nu_1 * tau))) * (1 - rho));
+  // P(gamma = 1 | a, tau, rho) = rho N(a; 0, tau) / {rho N(a; 0, tau) + (1 - rho) N(a; 0, nu_1 * tau)}.
+  // Computed on the log scale (logistic form), which avoids 0/0 when both densities underflow.
+  double log_slab  = log(rho) - 0.5 * a * a / tau;
+  double log_spike = log(1 - rho) - 0.5 * log(nu_1) - 0.5 * a * a / (nu_1 * tau);
+  double p = 1 / (1 + exp(log_spike - log_slab));
 
-  // Check if p is NaN and assign 0.5 for it
-  if (std::isnan(p)) {
-    p = 0.5;  // Set p to 0.5 if NaN is encountered
-  }
-
-  // Sample Gamma from binomial distribution
+  // Sample Gamma from Bernoulli(p)
   double Gamma = Rcpp::rbinom(1, 1, p)(0);
 
   // Return Gamma
@@ -132,16 +142,13 @@ double Sample_Gamma(double a, double tau, double rho, double nu_1) {
 // Sample Phi
 double Sample_Phi(double b, double eta, double psi, double nu_2) {
 
-  // Calculate acceptance probability
-  double p = exp(-0.5 * (b * b / eta)) * psi / (exp(-0.5 * (b * b / eta)) * psi
-                                                  + 1 / sqrt(nu_2) * exp(-0.5 * (b * b / (nu_2 * eta))) * (1 - psi));
+  // P(phi = 1 | b, eta, psi) = psi N(b; 0, eta) / {psi N(b; 0, eta) + (1 - psi) N(b; 0, nu_2 * eta)}.
+  // Computed on the log scale (logistic form), which avoids 0/0 when both densities underflow.
+  double log_slab  = log(psi) - 0.5 * b * b / eta;
+  double log_spike = log(1 - psi) - 0.5 * log(nu_2) - 0.5 * b * b / (nu_2 * eta);
+  double p = 1 / (1 + exp(log_spike - log_slab));
 
-  // Check if p is NaN and assign 0.5 for it
-  if (std::isnan(p)) {
-    p = 0.5;  // Set p to 0.5 if NaN is encountered
-  }
-
-  // Sample Phi from binomial distribution
+  // Sample Phi from Bernoulli(p)
   double Phi = Rcpp::rbinom(1, 1, p)(0);
 
   // Return Phi
@@ -179,7 +186,7 @@ double LL_Diag(const arma::mat& A, const arma::mat& B, const arma::mat& C, const
 
 
     // Calculate log-likelihood
-    double LL = N * real(arma::log_det(Mult_Mat)) - N / 2 * accu(log(1/Sigma_Inv)) - Sum / 2 - N / 2 * log(2 * arma::datum::pi);
+    double LL = N * real(arma::log_det(Mult_Mat)) - N / 2 * accu(log(1/Sigma_Inv)) - Sum / 2 - N * p / 2 * log(2 * arma::datum::pi);   // Gaussian constant for n observations of p responses
 
     // Return log-likelihood
     return LL;
@@ -291,8 +298,13 @@ Rcpp::List Sample_A_Diag(const arma::mat& S_YY, const arma::mat& S_YX, const arm
   // Modify the copy with the proposed a value
   A_new(i, j) = (fabs(a_new) > tA) * a_new;
 
-  // Modify logdet
-  double logdet_new = logdet + log(fabs(1 + ((fabs(a) > tA) * a - (fabs(a_new) > tA) * a_new) * InvMat(j, i)));
+  // Change of the (thresholded) entry A(i, j): delta = A(i, j) - A_new(i, j), so that I - A_new = (I - A) + delta * e_i e_j^T.
+  // Computed here, before a is overwritten on acceptance.
+  double delta = (fabs(a) > tA) * a - (fabs(a_new) > tA) * a_new;
+  double denom = 1 + delta * InvMat(j, i);
+
+  // Matrix determinant lemma: log|det(I - A_new)| = log|det(I - A)| + log|1 + delta * (I - A)^{-1}(j, i)|
+  double logdet_new = logdet + log(fabs(denom));
 
 
   // Calculate new trace values
@@ -310,7 +322,7 @@ Rcpp::List Sample_A_Diag(const arma::mat& S_YY, const arma::mat& S_YX, const arm
   double Target1 = Target_A(a_new, N, gamma, tau, nu_1, Trace4_New, Trace5_New, Trace6_New, Trace7_New, Trace8_New, logdet_new);
   double Target2 = Target_A(a, N, gamma, tau, nu_1, Trace4, Trace5, Trace6, Trace7, Trace8, logdet);
 
-  // Calculate r i.e. the differnce between two target values
+  // Calculate r i.e. the difference between two target values
   double r = Target1 - Target2;
 
   // Sample u from Uniform(0, 1)
@@ -330,8 +342,8 @@ Rcpp::List Sample_A_Diag(const arma::mat& S_YY, const arma::mat& S_YX, const arm
 
     logdet = logdet_new;
 
-    InvMat = InvMat - (((fabs(a) > tA) * a - (fabs(a_new) > tA) * a_new) / (1 + ((fabs(a) > tA) * a - (fabs(a_new) > tA) * a_new)
-                                                                              * InvMat(j, i))) * (InvMat.col(i) * InvMat.row(j));
+    // Sherman-Morrison update of (I - A)^{-1} (uses delta and denom from before the update)
+    InvMat = InvMat - (delta / denom) * (InvMat.col(i) * InvMat.row(j));
 
   }
 
@@ -406,7 +418,7 @@ Rcpp::List RGM_SpikeSlab_Diag_Covariates(const arma::mat& S_YY, const arma::mat&
   arma::mat C = arma::zeros(p, l);
 
   // Initialize Sigma_Inv
-  arma::colvec Sigma_Inv = Rcpp::rgamma(p, a_sigma, 1 / b_sigma);
+  arma::colvec Sigma_Inv = arma::ones(p);   // start at unit error variances (a draw from the vague IG(a_sigma, b_sigma) prior can be numerically 0 or infinite)
 
   // Initialize Rho, Psi, Gamma, Phi, Tau and Eta matrices
   arma::mat Rho = arma::zeros(p, p);
@@ -429,7 +441,7 @@ Rcpp::List RGM_SpikeSlab_Diag_Covariates(const arma::mat& S_YY, const arma::mat&
   double AccptB = 0;
 
   // Calculate number of posterior samples
-  int nPst = std::floor((nIter - nBurnin) / Thin);
+  int nPst = (nIter - nBurnin) / Thin;   // integer division
 
   // Initialize Itr to index the posterior samples
   int Itr = 0;
@@ -529,7 +541,7 @@ Rcpp::List RGM_SpikeSlab_Diag_Covariates(const arma::mat& S_YY, const arma::mat&
       + arma::accu(C.row(j) * C.row(j).t()) / TAU;
 
       // Sample Sigma_Inv
-      Sigma_Inv(j) = 1 / Sample_Sigma_Diag(n, z_sum, a_sigma, b_sigma);
+      Sigma_Inv(j) = 1 / Sample_Sigma_Diag(n + l, z_sum, a_sigma, b_sigma);  // n + l: prior of C row j adds l/2 to the shape
 
     }
 
@@ -602,7 +614,9 @@ Rcpp::List RGM_SpikeSlab_Diag_Covariates(const arma::mat& S_YY, const arma::mat&
 
 
     // Store posterior samples
-    if((i > nBurnin) && (i % Thin == 0)){
+    // Keep every Thin-th draw after burn-in: iterations nBurnin + Thin, nBurnin + 2 * Thin, ...
+    // (exactly nPst draws for any nBurnin; identical to i % Thin == 0 when Thin divides nBurnin)
+    if((i > nBurnin) && ((i - nBurnin) % Thin == 0)){
 
       A_Pst.slice(Itr) = A;
       B_Pst.slice(Itr) = B;

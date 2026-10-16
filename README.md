@@ -52,6 +52,17 @@ You can install the released version of [MR.RGM from CRAN](https://CRAN.R-projec
     install.packages("MR.RGM")
 ```
 
+You can install the development version (0.1.2, the version used for the analyses in `reproducibility/`) from GitHub with:
+
+``` r
+
+    # install.packages("remotes")
+    remotes::install_github("bitansa/MR.RGM")
+
+```
+
+The model has no intercept and the `"SSSL"` error model assumes responses on roughly unit scale, so center and scale real data before fitting (see `?RGM`).
+
 Once the MR.RGM package is installed load the library in the R
 work-space.
 

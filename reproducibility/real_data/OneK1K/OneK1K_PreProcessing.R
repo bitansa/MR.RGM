@@ -1,97 +1,61 @@
-## =========================================================
-## OneK1K real data analysis: setup + preprocessing
-## - Downloads data from Zenodo (zip), extracts, sets wd
-## - Loads donor/genotype/RNA objects
-## - Library-size normalization + donor filtering
-## - Genotype conversion to numeric + MAF-like filtering
-## =========================================================
+###############################################################################
+## OneK1K_PreProcessing.R  —  B-cell data from Zenodo (donor_b_cell.rda)
+##
+## Steps
+##   1) Load donor covariates, genotypes, SNP and gene annotation, RNA counts
+##   2) cis windows: promoter +/- 200 kb around each gene's TSS
+##   3) Donor filtering on relative library size (> 0.25 and <= median + 3 MAD)
+##   4) Expression: library-size normalisation, then log1p (Version 4)
+##   5) Genotypes: VCF strings -> dosage 0/1/2 (missing './.' set to 0, as in the
+##      original analysis); keep SNPs with non-zero dosage in > 5% of donors
+##
+## Creates: donor, gene.ref, vcf.ref, gene.promoter.ref, RNA.log, genotype.mat,
+##          Subsetted_SNP_Names                       -> then run OneK1K_ModelFitting.R
+##
+## Usage: set data_dir to the folder containing donor_b_cell.rda (Zenodo record
+## 10.5281/zenodo.18489687), then source("OneK1K_PreProcessing.R") from this folder.
+###############################################################################
 
-# Replace with the local path where the Zenodo files were saved
-data_dir <- "PATH_TO_ZENODO_DATA_FOLDER"
-setwd(data_dir)
+suppressPackageStartupMessages(library(GenomicRanges))
+if (!exists("data_dir")) data_dir <- "PATH_TO_ZENODO_DATA_FOLDER"
+rda <- file.path(data_dir, "donor_b_cell.rda")
+if (!file.exists(rda)) stop("Set data_dir to the folder containing donor_b_cell.rda.")
+load(rda)
 
-library(GenomicRanges)
-
-## ---- Load data ----
-load("donor_b_cell.rda")
-
-# donor      : donor-level covariates (including genotype PCs)
-# genotype   : genotype matrix (VCF-style encoding)
-# vcf.ref    : SNP information (IDs and genomic coordinates)
-# RNA.count  : gene expression counts aggregated by donor
-# gene.ref   : gene annotations (symbols and coordinates)
-
-# Expecting these objects to exist after load:
-# donor, genotype, vcf.ref, RNA.count, gene.ref
 required_objs <- c("donor", "genotype", "vcf.ref", "RNA.count", "gene.ref")
 missing <- required_objs[!vapply(required_objs, exists, logical(1))]
-if (length(missing) > 0) stop("Missing objects in .rda: ", paste(missing, collapse = ", "))
+if (length(missing)) stop("Missing objects in donor_b_cell.rda: ", paste(missing, collapse = ", "))
+message(sprintf("Loaded: %d donors, %d SNPs, %d genes", nrow(donor), nrow(genotype), nrow(RNA.count)))
 
-## Quick checks
-message("Dimensions:")
-message("  donor:     ", paste(dim(donor), collapse = " x "))
-message("  genotype:  ", paste(dim(genotype), collapse = " x "))
-message("  RNA.count: ", paste(dim(RNA.count), collapse = " x "))
-
-## ---- 2) Define gene promoter regions (cis window) ----
-# Promoters +/- 200kb around TSS
+## ---- 2) cis windows -----------------------------------------------------------
 gene.promoter.ref <- promoters(gene.ref, upstream = 200000, downstream = 200000)
 
-## ---- 3) Library size normalization + donor filtering ----
-# Library size per donor relative to the median
-lib.size <- colSums(RNA.count) / median(colSums(RNA.count))
-hist(lib.size, main = "Library size (relative)", xlab = "Relative library size")
-
-# Filter outliers:
-# - Keep donors within median + 3*MAD
-# - Also remove extremely small library size donors (<= 0.25)
+## ---- 3) Donor filtering on library size --------------------------------------
+lib.size   <- colSums(RNA.count) / median(colSums(RNA.count))
 donor.keep <- (lib.size <= median(lib.size) + 3 * mad(lib.size)) & (lib.size > 0.25)
+donor      <- donor[donor.keep, ]
+genotype   <- genotype[, donor.keep]
+RNA.count  <- RNA.count[, donor.keep]
+message(sprintf("Donors kept after library-size filtering: %d", sum(donor.keep)))
 
-# Apply filter consistently across all donor-indexed objects
-donor     <- donor[donor.keep, ]
-genotype  <- genotype[, donor.keep]
-RNA.count <- RNA.count[, donor.keep]
-rm(donor.keep)
-
-# Recompute library size after filtering
+## ---- 4) Expression: library-size normalisation + log1p --------------------------
 lib.size <- colSums(RNA.count) / median(colSums(RNA.count))
-hist(lib.size, main = "Library size after filtering", xlab = "Relative library size")
+RNA.log  <- log1p(sweep(RNA.count, 2, lib.size, "/"))           # genes x donors
 
-# Normalize RNA counts by library size (simple scaling)
-RNA.count.adj <- sweep(RNA.count, 2, lib.size, "/")
-
-## ---- 4) Convert genotype strings to numeric dosage ----
-# genotype is assumed to be a character matrix with values like:
-# './.' , '0/0', '0/1', '1/1'
-genotype.mat <- matrix(NA_real_, nrow = nrow(genotype), ncol = ncol(genotype))
-
-# Map common genotype encodings
-genotype.mat[genotype == "./."] <- 0   # missing treated as 0 (keep your original behavior)
+## ---- 5) Genotypes -----------------------------------------------------------------
+genotype.mat <- matrix(NA_real_, nrow(genotype), ncol(genotype))
+genotype.mat[genotype == "./."] <- 0
 genotype.mat[genotype == "0/0"] <- 0
 genotype.mat[genotype == "0/1"] <- 1
 genotype.mat[genotype == "1/1"] <- 2
-
-# Optional sanity check: any unexpected encodings?
 unexpected <- unique(genotype[is.na(genotype.mat)])
-unexpected <- unexpected[!is.na(unexpected)]
-if (length(unexpected) > 0) {
-  warning("Unexpected genotype strings encountered (not mapped): ",
-          paste(head(unexpected, 10), collapse = ", "),
-          if (length(unexpected) > 10) " ...")
-}
+if (length(unexpected)) warning("Unmapped genotype strings: ", paste(head(unexpected, 10), collapse = ", "))
+message(sprintf("Missing genotype calls ('./.', set to 0): %.3f%%", 100 * mean(genotype == "./.")))
 
-## ---- 5) SNP filtering (keep SNPs with >5% non-zero dosage) ----
-# Your original logic: keep SNPs where mean(x>0) > 0.05
 SNP.keep <- apply(genotype.mat, 1, function(x) mean(x > 0, na.rm = TRUE)) > 0.05
-message("SNPs kept: ", sum(SNP.keep), " / ", length(SNP.keep))
-
 Subsetted_SNP_Names <- vcf.ref$ID[SNP.keep]
-
-# Subset all SNP-indexed objects consistently
-genotype     <- genotype[SNP.keep, ]
 genotype.mat <- genotype.mat[SNP.keep, ]
 vcf.ref      <- vcf.ref[SNP.keep, ]
-rm(SNP.keep)
-
-## Done
-message("Finished preprocessing.")
+message(sprintf("SNPs kept (non-zero dosage in > 5%% of donors): %d", sum(SNP.keep)))
+rm(genotype, RNA.count, lib.size, donor.keep, SNP.keep)
+message("Preprocessing finished. Next: source('OneK1K_ModelFitting.R')")
