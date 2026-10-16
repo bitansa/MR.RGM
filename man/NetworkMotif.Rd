@@ -21,7 +21,7 @@ Specifically, it determines the proportion of posterior samples that contains th
 \examples{
 
 
-#' # ---------------------------------------------------------
+# ---------------------------------------------------------
 
 # Example 1:
 # Run NetworkMotif to do uncertainty quantification for a given network among the response variable

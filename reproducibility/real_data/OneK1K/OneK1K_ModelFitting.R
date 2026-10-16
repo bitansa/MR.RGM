@@ -1,32 +1,38 @@
-## =========================================================
-## OneK1K_ModelFitting.R
+###############################################################################
+## OneK1K_ModelFitting.R  —  OneK1K B cells, MR.RGM+ with covariates
 ##
-## Purpose:
-##   Run MR.RGM on the OneK1K B-cell dataset.
+## Prerequisite: OneK1K_PreProcessing.R (same R session)
 ##
-## Prerequisite:
-##   Run `OneK1K_PreProcessing.R` first (it should create / load):
-##     - donor, gene.ref, vcf.ref, gene.promoter.ref
-##     - RNA.count.adj, genotype.mat, Subsetted_SNP_Names
+## Steps
+##   1) B-cell receptor pathway node labels and the gene symbols used in the data;
+##      genes without sufficient cis-SNP coverage are removed (fixed list)
+##   2) Instruments: for each gene, the 15 cis-SNPs (promoter +/- 200 kb) with the
+##      smallest p-value in  log-expression ~ SNP + age + sex + PC1 + PC2 + PC3
+##   3) Preprocessing (Version 4): log1p expression (from preprocessing), genotypes and
+##      covariates [SEX (male = 1), AGE (decade bins 1-7), PC1-PC3]; every column
+##      centered and scaled
+##   4) Fit MR.RGM+ (all SNPs allowed for all genes, D = 1) from summary statistics
+##   5) Save the fit and everything needed to interpret it to output/OneK1K_fit.rds
 ##
-## Output:
-##   Output_OneK1K (results from RGM)
-## =========================================================
+## Usage (this folder):
+##   data_dir <- "path/to/zenodo/folder"; source("OneK1K_PreProcessing.R")
+##   source("OneK1K_ModelFitting.R")      # slow: many SNP-wise regressions + MCMC
+##   source("OneK1K_Results.R")
+###############################################################################
 
-library(MR.RGM)
-library(GenomicRanges)
-library(dplyr)
+suppressPackageStartupMessages({ library(MR.RGM); library(GenomicRanges); library(dplyr) })
+source("../real_data_functions.R")
 
-## ---- 0) Ensure preprocessed objects exist ----
-needed <- c("donor", "gene.ref", "vcf.ref", "gene.promoter.ref",
-            "RNA.count.adj", "genotype.mat", "Subsetted_SNP_Names")
+needed <- c("donor", "gene.ref", "vcf.ref", "gene.promoter.ref", "RNA.log", "genotype.mat", "Subsetted_SNP_Names")
 missing <- needed[!vapply(needed, exists, logical(1))]
-if (length(missing) > 0) {
-  stop("Missing objects. Run `OneK1K_PreProcessing.R` first.\nMissing: ",
-       paste(missing, collapse = ", "))
-}
+if (length(missing)) stop("Run OneK1K_PreProcessing.R first. Missing: ", paste(missing, collapse = ", "))
 
-## ---- 1) Gene lists: pathway names + dataset gene symbols ----
+## Settings (reported in the manuscript)
+TOP_PER_GENE <- 15
+MCMC <- list(nIter = 50000, nBurnin = 10000, Thin = 10)    # 4,000 posterior samples; same chain as GTEx and the simulations
+SEED <- 12345
+
+## ---- 1) Genes ------------------------------------------------------------------
 gene_names_pathway <- c(
   "CD19", "BCR", "AG", "BCAP", "P85", "PI3K", "FGR2B", "SHIP", "DOK3", "PTEN",
   "SHP2", "LYN", "SHP1", "CD22", "CD45", "CBP/PAG", "CSK", "PIR-B", "BAM32",
@@ -36,9 +42,7 @@ gene_names_pathway <- c(
   "RAS", "RAP", "RIAM", "PYK2", "HS1", "MEKK", "MEK", "P38", "JNK", "NFAT",
   "CALCINEURIN", "CAM", "CAMK", "C-RAF", "MEK1/2", "ERK1/2", "CD40", "FOXO",
   "ETS1", "OCT2", "BFL1", "BCL-XL", "ELK1", "BCL6", "EGR1", "JUN", "ATF2",
-  "CREB", "MEF2C", "PIP3", "RAPL"
-)
-
+  "CREB", "MEF2C", "PIP3", "RAPL")
 gene_names_dataset <- c(
   "CD19", "BCR", "CD79A", "PIK3AP1", "PIK3R1", "PIK3CA", "FCGR2B", "INPP5D",
   "DOK3", "PTEN", "PTPN11", "LYN", "PTPN6", "CD22", "PTPRC", "PAG1", "CSK",
@@ -49,123 +53,64 @@ gene_names_dataset <- c(
   "MAP3K1", "MAP2K1", "MAPK14", "MAPK8", "NFATC1", "PPP3CA", "CALM1", "CAMK1",
   "RAF1", "MAP2K2", "MAPK1", "CD40", "FOXO1", "ETS1", "POU2F2", "BCL2A1",
   "BCL2L1", "ELK1", "BCL6", "EGR1", "JUN", "ATF2", "CREB1", "MEF2C", "PREX1",
-  "RASSF3"
-)
-
+  "RASSF3")
 stopifnot(length(gene_names_pathway) == length(gene_names_dataset))
+genes_to_remove <- c("CD79A", "DOK3", "PTEN", "PTPN11", "PTPN6", "CDC42", "MTOR", "PPP3CA", "FOXO1", "POU2F2", "ELK1")
+keep    <- !(gene_names_dataset %in% genes_to_remove)
+symbols <- gene_names_dataset[keep]
+labels  <- gene_names_pathway[keep]
+gene_idx <- match(symbols, gene.ref$gene_name)
+if (anyNA(gene_idx)) stop("Genes not found in gene.ref: ", paste(symbols[is.na(gene_idx)], collapse = ", "))
 
-## ---- 2) Remove genes with insufficient SNP coverage (pre-determined) ----
-genes_to_remove <- c(
-  "CD79A", "DOK3", "PTEN", "PTPN11", "PTPN6",
-  "CDC42", "MTOR", "PPP3CA", "FOXO1", "POU2F2", "ELK1"
-)
-
-idx_remove <- which(gene_names_dataset %in% genes_to_remove)
-
-gene_names_dataset_use <- gene_names_dataset[-idx_remove]
-gene_names_pathway_use <- gene_names_pathway[-idx_remove]
-
-## ---- 3) Map genes to indices in gene.ref ----
-gene_idx <- match(gene_names_dataset_use, gene.ref$gene_name)
-if (anyNA(gene_idx)) {
-  missing_genes <- gene_names_dataset_use[is.na(gene_idx)]
-  stop("These genes were not found in gene.ref$gene_name: ",
-       paste(missing_genes, collapse = ", "))
+## ---- 2) Instruments: top cis-SNPs per gene -------------------------------------
+cov_df <- data.frame(age = donor$age, sex = donor$sex, PC1 = donor$PC1, PC2 = donor$PC2, PC3 = donor$PC3)
+top_snp_list <- setNames(vector("list", length(symbols)), symbols)
+for (g in seq_along(symbols)) {
+  snp_idx <- which(countOverlaps(vcf.ref, gene.promoter.ref[gene_idx[g]]) > 0)
+  if (!length(snp_idx)) next
+  y <- RNA.log[gene_idx[g], ]
+  pv <- vapply(snp_idx, function(s)
+    summary(lm(y ~ genotype.mat[s, ] + age + sex + PC1 + PC2 + PC3, data = cov_df))$coefficients[2, 4], numeric(1))
+  ord <- order(pv)
+  top_snp_list[[g]] <- vcf.ref$ID[snp_idx[ord[seq_len(min(TOP_PER_GENE, length(ord)))]]]
 }
+snps <- unique(unlist(top_snp_list))
+if (!length(snps)) stop("No SNPs selected.")
+snp_idx2 <- match(snps, Subsetted_SNP_Names)
+if (anyNA(snp_idx2)) stop("Selected SNPs not found: ", paste(head(snps[is.na(snp_idx2)], 20), collapse = ", "))
 
-## ---- 4) For each gene, select top cis SNPs (up to 15) by association p-value ----
-# NOTE: This can be slow because it fits many linear models.
-top_snp_list <- vector("list", length(gene_names_dataset_use))
-names(top_snp_list) <- gene_names_dataset_use
+## ---- 3) Matrices and preprocessing -----------------------------------------------
+Y_log <- t(RNA.log[gene_idx, , drop = FALSE]);        colnames(Y_log) <- symbols
+X_raw <- t(genotype.mat[snp_idx2, , drop = FALSE]);   colnames(X_raw) <- snps
+age_bin <- cut(donor$age, breaks = c(-Inf, 30, 40, 50, 60, 70, 80, Inf), right = FALSE, labels = FALSE)
+U_raw <- cbind(SEX = as.numeric(donor$sex == "male"), AGE = age_bin, PC1 = donor$PC1, PC2 = donor$PC2, PC3 = donor$PC3)
+if (anyNA(U_raw)) stop("Missing covariate values.")
 
-for (g in gene_names_dataset_use) {
+Y <- standardize_cols(Y_log, "Expression")
+X <- standardize_cols(X_raw, "Genotypes")
+U <- standardize_cols(U_raw, "Covariates")
+if (ncol(Y) != length(symbols)) stop("A gene had zero variance and was dropped; labels would no longer match.")
+S <- summary_stats(Y, X, U)
+message(sprintf("OneK1K: n = %d donors, p = %d genes, k = %d SNPs, l = %d covariates", S$n, ncol(Y), ncol(X), ncol(U)))
 
-  g_idx <- which(gene.ref$gene_name == g)
+## ---- 4) Fit MR.RGM+ ---------------------------------------------------------------
+set.seed(SEED)
+fit <- RGM(Syy = S$Syy, Syx = S$Syx, Sxx = S$Sxx, Syu = S$Syu, Sxu = S$Sxu, Suu = S$Suu,
+           D = matrix(1, ncol(Y), ncol(X)), n = S$n,
+           nIter = MCMC$nIter, nBurnin = MCMC$nBurnin, Thin = MCMC$Thin,
+           prior = "Spike and Slab", SigmaStarModel = "SSSL")
 
-  # SNPs overlapping promoter window
-  snp_idx <- which(countOverlaps(vcf.ref, gene.promoter.ref[g_idx]) > 0)
-
-  if (length(snp_idx) == 0) {
-    top_snp_list[[g]] <- character(0)
-    next
-  }
-
-  # Compute p-values for SNP ~ expression (adjusting for covariates)
-  pvals <- rep(NA_real_, length(snp_idx))
-
-  for (j in seq_along(snp_idx)) {
-    fit <- lm(
-      RNA.count.adj[g_idx, ] ~ genotype.mat[snp_idx[j], ] +
-        donor$age + donor$sex + donor$PC1 + donor$PC2 + donor$PC3
-    )
-    # p-value for SNP effect (2nd coefficient)
-    pvals[j] <- summary(fit)$coefficients[2, 4]
-  }
-
-  # Take top 15 by smallest p-value
-  ord <- order(pvals)
-  k <- min(15, length(ord))
-  top_snp_list[[g]] <- vcf.ref$ID[snp_idx[ord[1:k]]]
-}
-
-unique_snps <- unique(unlist(top_snp_list))
-if (length(unique_snps) == 0) stop("No SNPs selected. Check promoter overlaps / inputs.")
-
-## ---- 5) Build matrices Y (expression) and X (genotypes) ----
-# Y: n x p (donors x genes)
-Y <- t(RNA.count.adj[gene_idx, , drop = FALSE])
-
-# X: n x q (donors x SNPs)
-snp_idx2 <- match(unique_snps, Subsetted_SNP_Names)
-if (anyNA(snp_idx2)) {
-  missing_snps <- unique_snps[is.na(snp_idx2)]
-  stop("These selected SNP IDs were not found in Subsetted_SNP_Names: ",
-       paste(head(missing_snps, 30), collapse = ", "),
-       if (length(missing_snps) > 30) " ...")
-}
-X <- t(genotype.mat[snp_idx2, , drop = FALSE])
-
-## ---- 6) Build covariate matrix U ----
-# Sex: binary indicator (MALE = 1, FEMALE = 0)
-# Age: categorical bins
-# PCs: top genotype principal components
-U <- donor %>%
-  mutate(
-    MALE = ifelse(sex == "male", 1, 0),
-    AGE = case_when(
-      age < 30 ~ 1,
-      age >= 30 & age < 40 ~ 2,
-      age >= 40 & age < 50 ~ 3,
-      age >= 50 & age < 60 ~ 4,
-      age >= 60 & age < 70 ~ 5,
-      age >= 70 & age < 80 ~ 6,
-      age >= 80 ~ 7
-    )
-  ) %>%
-  dplyr::select(MALE, AGE, PC1, PC2, PC3) %>%
-  as.matrix()
-
-## ---- 7) Compute summary-statistic matrices ----
-n <- nrow(Y)
-
-Syy <- crossprod(Y) / n
-Syx <- crossprod(Y, X) / n
-Sxx <- crossprod(X) / n
-Syu <- crossprod(Y, U) / n
-Sxu <- crossprod(X, U) / n
-Suu <- crossprod(U) / n
-
-## ---- 8) Run RGM ----
-set.seed(12345)
-
-D_mat <- matrix(1, nrow = nrow(Syy), ncol = ncol(Sxx))
-
-Output_OneK1K <- RGM(
-  Syy = Syy, Syx = Syx, Sxx = Sxx,
-  Syu = Syu, Sxu = Sxu, Suu = Suu,
-  D   = D_mat, n = n,
-  nIter = 50000, nBurnin = 10000, Thin = 10,
-  prior = "Spike and Slab",
-  SigmaStarModel = "SSSL"
-)
-
+## ---- 5) Save -------------------------------------------------------------------------
+dir.create("output", showWarnings = FALSE)
+OneK1K_fit <- list(
+  fit = fit, labels = labels, symbols = symbols, snps = colnames(X), top_snps = top_snp_list,
+  n = S$n, p = ncol(Y), k = ncol(X), l = ncol(U),
+  settings = list(top_per_gene = TOP_PER_GENE, mcmc = MCMC, seed = SEED, cis_window = "+/- 200 kb",
+                  expression = "library-size normalised, log1p, centered and scaled",
+                  genotypes  = "dosage (0/1/2; missing set to 0), centered and scaled",
+                  covariates = "SEX (male = 1), AGE (decade bins 1-7), PC1-PC3; centered and scaled",
+                  D = "all ones (MR.RGM+)", prior = "Spike and Slab", SigmaStarModel = "SSSL"),
+  package_version = as.character(packageVersion("MR.RGM")),
+  session_info = sessionInfo())
+saveRDS(OneK1K_fit, file.path("output", "OneK1K_fit.rds"))
+message("Saved output/OneK1K_fit.rds")

@@ -1,3 +1,16 @@
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// RGM_SpikeSlab_SSSL_Star_Covariates.cpp  --  MCMC sampler called by RGM()
+//
+// Model         : (I - A) Y_i = C U_i + E_i,   E_i ~ N_p(0, Sigma)
+// Instruments   : none (response-only model)
+// Covariates    : U (l measured covariates), C | Sigma ~ MN(0, Sigma, TAU I_l), TAU = 2
+// Graph prior   : spike-and-slab on A: a ~ gamma N(0, tau) + (1 - gamma) N(0, nu_1 tau), gamma ~ Bern(rho), rho ~ Beta(a_rho, b_rho), sqrt(tau) ~ C+(0, 1)
+// Error model   : full Sigma, stochastic-search spike-and-slab: sigma_jk ~ N(0, v1^2) if z_jk = 1, N(0, v0^2) if z_jk = 0,
+//                 sigma_jj ~ Exp(lambda / 2), z_jk ~ Bern(pi); v0^2 = 0.005, v1^2 = 5, lambda = 1, pi = 0.5 (assumes unit-scale data)
+// Input         : summary statistics S_YY, S_YU, S_UU  (each = t(.) %*% . / n)
+// Update order  : C (Gibbs) -> Sigma, Z (Gibbs) -> A (Metropolis, entry-wise)
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
 #include <RcppArmadillo.h>
 // [[Rcpp::depends(RcppArmadillo)]]
 using namespace Rcpp;
@@ -76,16 +89,13 @@ double Sample_Tau(double a, double gamma, double tau, double nu_1) {
 // Sample Gamma
 double Sample_Gamma(double a, double tau, double rho, double nu_1) {
 
-  // Calculate acceptance probability
-  double p = exp(-0.5 * (a * a / tau)) * rho / (exp(-0.5 * (a * a / tau)) * rho
-                                                  + 1 / sqrt(nu_1) * exp(-0.5 * (a * a / (nu_1 * tau))) * (1 - rho));
+  // P(gamma = 1 | a, tau, rho) = rho N(a; 0, tau) / {rho N(a; 0, tau) + (1 - rho) N(a; 0, nu_1 * tau)}.
+  // Computed on the log scale (logistic form), which avoids 0/0 when both densities underflow.
+  double log_slab  = log(rho) - 0.5 * a * a / tau;
+  double log_spike = log(1 - rho) - 0.5 * log(nu_1) - 0.5 * a * a / (nu_1 * tau);
+  double p = 1 / (1 + exp(log_spike - log_slab));
 
-  // Check if p is NaN and assign 0 for it
-  if (std::isnan(p)) {
-    p = 0;  // Set p to 0 if NaN is encountered
-  }
-
-  // Sample Gamma from binomial distribution
+  // Sample Gamma from Bernoulli(p)
   double Gamma = Rcpp::rbinom(1, 1, p)(0);
 
   // Return Gamma
@@ -138,7 +148,7 @@ arma::mat Sample_Sigma_Full(const arma::mat& Sigma, const arma::mat& S, const ar
     arma::mat V11 = V.submat(not_col_index, not_col_index);
     arma::colvec v12 = V.submat(not_col_index, arma::uvec{static_cast<unsigned int>(i)});
 
-    // Calculate Sigmma_11 inverse
+    // Calculate Sigma_11 inverse
     arma::mat Sigma11_Inv = arma::inv(Sigma11);
 
 
@@ -187,31 +197,24 @@ arma::mat Sample_Z(const arma::mat& Sigma, double pi, double v0_square, double v
   // Number of nodes
   int p = Sigma.n_cols;
 
-  // Initiate Z
+  // Initiate Z (the diagonal is not used)
   arma::mat Z = arma::ones(p, p);
 
-  // Run a loop to update Z
+  // Update each off-diagonal indicator given the current Sigma
   for (int i = 0; i < p - 1; ++i) {
 
     for (int j = i + 1; j < p; ++j) {
 
-      // Get the corresponding Sigma Value
+      // Get the corresponding Sigma value
       double sigma_ij = Sigma(i, j);
 
-      // Calculate the probability
-      double prob = (1 / sqrt(v1_square) * exp(-0.5 * (sigma_ij * sigma_ij / v1_square)) * pi) /
-        (1 / sqrt(v1_square) * exp(-0.5 * (sigma_ij * sigma_ij / v1_square)) * pi
-           + 1 / sqrt(v0_square) * exp(-0.5 * (sigma_ij * sigma_ij / v0_square)) * (1 - pi));
+      // P(z_ij = 1 | sigma_ij) = pi N(sigma_ij; 0, v1^2) / {pi N(sigma_ij; 0, v1^2) + (1 - pi) N(sigma_ij; 0, v0^2)},
+      // computed on the log scale (logistic form), which avoids 0/0 when both densities underflow.
+      double log_slab  = log(pi) - 0.5 * log(v1_square) - 0.5 * sigma_ij * sigma_ij / v1_square;
+      double log_spike = log(1 - pi) - 0.5 * log(v0_square) - 0.5 * sigma_ij * sigma_ij / v0_square;
+      double prob = 1 / (1 + exp(log_spike - log_slab));
 
-      // Check if prob is NaN and assign 0 for it
-      if (std::isnan(prob)) {
-        prob = 0;  // Set prob to 0 if NaN is encountered
-      }
-
-      //double prob = R::dnorm(sigma_ij, 0, sqrt(v1_square), FALSE) * pi /
-      //(R::dnorm(sigma_ij, 0, sqrt(v1_square), FALSE) * pi + R::dnorm(sigma_ij, 0, sqrt(v0_square), FALSE) * (1 - pi));
-
-      // Sample from bernoulli distribution
+      // Sample from Bernoulli(prob)
       Z(i, j) = Rcpp::rbinom(1, 1, prob)(0);
 
       Z(j, i) = Z(i, j);
@@ -243,7 +246,7 @@ double LL_Full_Star(const arma::mat& A, const arma::mat& C, const arma::mat& S_Y
                - 2 * N * arma::trace(S_YU * C.t() * Sigma_Inv * Mult_Mat);
 
   // Calculate log-likelihood
-  double LL = N * real(arma::log_det(Mult_Mat)) + N / 2 * real(arma::log_det(Sigma_Inv)) - Sum / 2 - N / 2 * log(2 * arma::datum::pi);
+  double LL = N * real(arma::log_det(Mult_Mat)) + N / 2 * real(arma::log_det(Sigma_Inv)) - Sum / 2 - N * p / 2 * log(2 * arma::datum::pi);   // Gaussian constant for n observations of p responses
 
   // Return log-likelihood
   return LL;
@@ -286,8 +289,13 @@ Rcpp::List Sample_A_Full_Star(const arma::mat& S_YY, const arma::mat& S_YU, cons
   // Modify the copy with the proposed a value
   A_new(i, j) = (fabs(a_new) > tA) * a_new;
 
-  // Modify logdet
-  double logdet_new = logdet + log(fabs(1 + ((fabs(a) > tA) * a - (fabs(a_new) > tA) * a_new) * InvMat(j, i)));
+  // Change of the (thresholded) entry A(i, j): delta = A(i, j) - A_new(i, j), so that I - A_new = (I - A) + delta * e_i e_j^T.
+  // Computed here, before a is overwritten on acceptance.
+  double delta = (fabs(a) > tA) * a - (fabs(a_new) > tA) * a_new;
+  double denom = 1 + delta * InvMat(j, i);
+
+  // Matrix determinant lemma: log|det(I - A_new)| = log|det(I - A)| + log|1 + delta * (I - A)^{-1}(j, i)|
+  double logdet_new = logdet + log(fabs(denom));
 
 
   // Calculate new trace values
@@ -302,7 +310,7 @@ Rcpp::List Sample_A_Full_Star(const arma::mat& S_YY, const arma::mat& S_YU, cons
   double Target1 = Target_A_Star(a_new, N, gamma, tau, nu_1, Trace4_New, Trace5_New, Trace6_New, Trace8_New, logdet_new);
   double Target2 = Target_A_Star(a, N, gamma, tau, nu_1, Trace4, Trace5, Trace6, Trace8, logdet);
 
-  // Calculate r i.e. the differnce between two target values
+  // Calculate r i.e. the difference between two target values
   double r = Target1 - Target2;
 
   // Sample u from Uniform(0, 1)
@@ -321,8 +329,8 @@ Rcpp::List Sample_A_Full_Star(const arma::mat& S_YY, const arma::mat& S_YU, cons
 
     logdet = logdet_new;
 
-    InvMat = InvMat - (((fabs(a) > tA) * a - (fabs(a_new) > tA) * a_new) / (1 + ((fabs(a) > tA) * a -
-      (fabs(a_new) > tA) * a_new) * InvMat(j, i))) * (InvMat.col(i) * InvMat.row(j));
+    // Sherman-Morrison update of (I - A)^{-1} (uses delta and denom from before the update)
+    InvMat = InvMat - (delta / denom) * (InvMat.col(i) * InvMat.row(j));
 
   }
 
@@ -417,7 +425,7 @@ Rcpp::List RGM_SpikeSlab_SSSL_Star_Covariates(const arma::mat& S_YY, const arma:
   double AccptA = 0;
 
   // Calculate number of posterior samples
-  int nPst = std::floor((nIter - nBurnin) / Thin);
+  int nPst = (nIter - nBurnin) / Thin;   // integer division
 
   // Initialize Itr to index the posterior samples
   int Itr = 0;
@@ -463,7 +471,7 @@ Rcpp::List RGM_SpikeSlab_SSSL_Star_Covariates(const arma::mat& S_YY, const arma:
       - n * C * S_YU.t() * MultMat.t() + C * C.t() / TAU;
 
     // Update Sigma
-    Sigma = Sample_Sigma_Full(Sigma, S, Z, lambda, v0_square, v1_square, n);
+    Sigma = Sample_Sigma_Full(Sigma, S, Z, lambda, v0_square, v1_square, n + l);  // n + l: C ~ MN(0, Sigma, TAU I_l) contributes |Sigma|^(-l/2)
 
     // Calculate Sigma_Inv
     Sigma_Inv = arma::inv(Sigma);
@@ -539,7 +547,9 @@ Rcpp::List RGM_SpikeSlab_SSSL_Star_Covariates(const arma::mat& S_YY, const arma:
 
 
     // Store posterior samples
-    if((i > nBurnin) && (i % Thin == 0)){
+    // Keep every Thin-th draw after burn-in: iterations nBurnin + Thin, nBurnin + 2 * Thin, ...
+    // (exactly nPst draws for any nBurnin; identical to i % Thin == 0 when Thin divides nBurnin)
+    if((i > nBurnin) && ((i - nBurnin) % Thin == 0)){
 
       A_Pst.slice(Itr) = A;
       C_Pst.slice(Itr) = C;

@@ -1,226 +1,63 @@
-# GTEx Real Data Analysis (GTEx v7 — Muscle Skeletal)
+# GTEx v7 skeletal muscle (mTOR pathway)
 
-This folder contains the **real-data analysis pipeline for GTEx v7 (muscle skeletal tissue)** used in the MR.RGM / MR.RGM+ paper.
+Reproduces the GTEx analysis of the manuscript: MR.RGM+ with covariates on 18 mTOR-pathway genes.
 
-The scripts in this folder:
-- fit the GTEx model using **MR.RGM+ with confounders**,
-- extract posterior inclusion probabilities (PIPs) for **causal edges** and **confounding links**, and generate the   **full inferred causal–confounding network**, and
-- compute **network motif posterior probabilities** and generate the **motif figures** reported in the manuscript.
+| Script | Purpose |
+|---|---|
+| `GTEx_ModelFitting.R` | Data, instrument selection, preprocessing, MR.RGM+ fit → `output/GTEx_fit.rds` |
+| `GTEx_Results.R` | All tables (`tables/`) and figures (`figures/`) of the manuscript, generated from the fit |
+| `../real_data_functions.R` | Shared helpers (preprocessing, tables, network figure, motifs) |
 
----
+## Data
 
-## Folder contents
+Zenodo, DOI (always resolves to the latest version): **10.5281/zenodo.18476622**  
+<https://doi.org/10.5281/zenodo.18476622>
 
-- **GTEx_ModelFitting.R**  
-  Fits **MR.RGM+ with confounders** on GTEx skeletal muscle data and produces all objects required for downstream analysis.
+Download both archives into one folder and extract them there:
 
-- **GTEx_Plot.R**  
-  Extracts **posterior inclusion probabilities (PIPs)** for causal and confounding edges, provides examples for querying PIPs between gene pairs, and plots the inferred network.
-
-- **GTEx_NetworkMotif.R**  
-  Generates three motif figures (feedback, feedforward, cascade) and computes **motif posterior probabilities** using the `NetworkMotif()` function.
-
----
-
-## Data availability
-
-The GTEx-derived data used in this analysis are archived on **Zenodo**:
-
-- DOI: **10.5281/zenodo.18476623**  
-- Download link (DOI landing page): **https://doi.org/10.5281/zenodo.18476623**
-
-This Zenodo record contains two archives:
-
-1. **GTEx.zip**  
-   Preprocessed genotype and gene expression matrices derived from **GTEx v7 muscle skeletal tissue**, prepared for direct use in the scripts in this folder.
-
-2. **GTEx_Analysis_v7_eQTL.tar.gz**  
-   Public GTEx v7 eQTL summary files for muscle skeletal tissue, including significant variant–gene pairs and eGenes, originally downloaded from the **GTEx Portal**.
-
----
-
-## Download and setup
-
-1. Download both archives from Zenodo:
-   - `GTEx.zip`
-   - `GTEx_Analysis_v7_eQTL.tar.gz`
-
-2. Create **one local parent folder** (location of your choice).
-
-3. Extract **both** archives into the **same** parent folder.
-
-After extraction, your directory **must** look like:
+```bash
+unzip GTEx.zip                         # creates GTEx/
+tar -xzf GTEx_Analysis_v7_eQTL.tar.gz  # creates GTEx_Analysis_v7_eQTL/
+```
 
 ```text
 GTEX_FOLDER_PATH/
 ├── GTEx/
+│   ├── geno450_snp012x_maf_GT_015.mat
+│   ├── donorid_450.txt
+│   └── GTEx_v7_4_tissues/
+│       ├── GTEx_v7_Muscle_Skeletal_564_491.mat
+│       └── Covariates_New/GTEx_v7_Annotations_SubjectPhenotypesDS.txt
 └── GTEx_Analysis_v7_eQTL/
+    ├── Muscle_Skeletal.v7.signif_variant_gene_pairs.txt.gz
+    └── Muscle_Skeletal.v7.egenes.txt.gz
 ```
 
-## Where
-
-- `GTEX_FOLDER_PATH` is the **parent folder** you created.
-- It must contain **both**:
-  - `GTEx/`
-  - `GTEx_Analysis_v7_eQTL/`
-
----
-
-## Recommended execution order
-
-1. `GTEx_ModelFitting.R`
-2. `GTEx_Plot.R`
-3. `GTEx_NetworkMotif.R`
-
----
-
-## 1) Run `GTEx_ModelFitting.R`
-
-### Step 1 — set the data path
-
-Open `GTEx_ModelFitting.R` and update:
+## Run
 
 ```r
-GTEX_FOLDER_PATH <- "PATH/TO/YOUR/GTEx_PARENT_FOLDER"
+setwd("path/to/MR.RGM/reproducibility/real_data/GTEx")
+GTEX_FOLDER_PATH <- "path/to/GTEX_FOLDER_PATH"
+source("GTEx_ModelFitting.R")   # saves output/GTEx_fit.rds
+source("GTEx_Results.R")        # tables/ and figures/
 ```
 
-### Data path requirement
+## Analysis settings
 
-This path must point to the folder containing:
+* **Donors:** individuals with both genotype and skeletal-muscle expression data.
+* **Genes:** mTOR-pathway nodes mapped to gene symbols (`tables/gtex_label_map.tex`); kept if listed as
+  GTEx eGenes with at least one significant variant–gene pair.
+* **Instruments:** for each gene, the 25 cis-eQTL variants with the smallest `pval_nominal`; every variant is
+  allowed to affect every gene (MR.RGM+, D = 1).
+* **Preprocessing:** expression log2(x + 1); genotypes as dosages; covariates SEX (male = 1) and AGE
+  (decade bins 1–6). Every column is centered and scaled (no intercept is needed; all variables are on the
+  scale assumed by the prior hyperparameters).
+* **Model:** spike-and-slab prior, SSSL error covariance; 50,000 iterations, 10,000 burn-in, thinning 10; seed 123.
+* **Reporting:** causal edges with PIP ≥ `GTEX_THR_DIR`, confounding links with PIP ≥ `GTEX_THR_CONF` (defaults 0.85 / 0.50).
+  Prior inclusion probabilities are 0.75 (causal edges) and 0.5 (confounding links);
+  `tables/gtex_threshold_sweep.csv` gives the number of edges and the implied Bayes factor at several thresholds.
+* **Motifs:** every feedback loop, feed-forward loop and cascade among the reported edges is scored with
+  `NetworkMotif()`; the most probable motif of each type is drawn.
 
-- `GTEx/`
-- `GTEx_Analysis_v7_eQTL/`
-
----
-
-### What this script does
-
-- Loads genotype and expression matrices from **GTEx.zip**
-- Loads public GTEx v7 eQTL summary files
-- Matches common donor IDs across genotype, expression, and covariates
-- Selects a pathway-based gene set mapped to GTEx gene symbols
-- Selects top cis-eQTL variants (by `pval_nominal`) for each gene
-- Constructs:
-  - outcome matrix **Y**
-  - genotype matrix **X**
-  - covariate matrix **`U = [SEX (binary), AGE (ordinal)]`**
-- Fits **MR.RGM+ with confounders** using a full **D = 1** structure
-
----
-
-### Objects created in R
-
-After successful execution, the following objects are available:
-
-- **`Output_GTEx`**  
-  MR.RGM+ fit object containing posterior samples and estimates
-
-- **`gene_names_final`**  
-  Final gene labels used for plotting and motif analysis
-
----
-
-### Dataset size used in the paper
-
-- **18 genes**
-- **62 SNPs**
-- **332 individuals**
-
----
-
-## 2) Run `GTEx_Plot.R`
-
-### Required objects
-
-This script assumes the following objects already exist:
-
-- `Output_GTEx`
-- `gene_names_final`
-
----
-
-### What this script does
-
-- Extracts posterior inclusion probabilities (PIPs):
-  - Causal edges from `GammaEst`
-  - Confounding links from `ZEst`
-- Demonstrates how to query:
-  - directed causal PIPs: **Gene_From → Gene_To**
-  - undirected confounding PIPs: **Gene1 — Gene2**
-- Plots the inferred network:
-  - **Blue arrows** = causal edges
-  - **Red curved arcs** = confounding links
-
----
-
-### Thresholds used in the paper
-
-- `thr_dir = 0.85`
-- `thr_conf = 0.50`
-
-These can be modified in the script.
-
----
-
-## 3) Run `GTEx_NetworkMotif.R`
-
-### Required objects
-
-This script also requires:
-
-- `Output_GTEx`
-- `gene_names_final`
-
----
-
-### What this script does
-
-#### Motif figures (used in the paper)
-
-Generates and saves three motif figures:
-
-- Feedback loop
-- Feedforward loop
-- Cascade
-
----
-
-#### Motif posterior probabilities
-
-Computes motif probabilities using:
-
-```r
-NetworkMotif(Gamma0, Output_GTEx$GammaPst)
-```
-
-Where:
-
-- **`Gamma0`** is a binary adjacency matrix encoding the motif
-- **`Output_GTEx$GammaPst`** contains posterior samples from the MR.RGM+ fit
-
----
-
-### Matrix convention
-
-In MR.RGM output matrices:
-
-- **rows = to**
-- **columns = from**
-
-So:
-
-```r
-Gamma[to, from] = 1
-```
-
-
-represents the directed edge:
-
-**from → to**
-
----
-
-### Notes
-
-- Original GTEx data were generated by the **GTEx Consortium**.
-- This repository redistributes **derived and reorganized data products** strictly for **methodological reproducibility**.
+Original GTEx data were generated by the GTEx Consortium; the Zenodo record redistributes derived data for
+methodological reproducibility only.

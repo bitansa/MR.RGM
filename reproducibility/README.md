@@ -6,9 +6,25 @@ It is organized into two main components:
 
 ```text
 reproducibility/
+├── package_check/   quick check that the installed MR.RGM recovers a known network (run first)
 ├── simulation/
 └── real_data/
 ```
+
+**Package version.** The results in the manuscript (Version 4) were produced with MR.RGM 0.1.2
+(`remotes::install_github("bitansa/MR.RGM")` until 0.1.2 is on CRAN). Check with `packageVersion("MR.RGM")`.
+Every script saves the package version with its results.
+
+**Data.** The real-data scripts read the data from the Zenodo records given in each subfolder README;
+set the data folder at the top of each script (`GTEX_FOLDER_PATH`, `data_dir`). Nothing else is path-specific.
+
+---
+
+## package_check/
+
+`check_recovery.R` fits all 24 sampler variants (two graph priors x three error models x with/without
+instruments x with/without covariates) to one simulated data set with a known cyclic network and reports
+AUC and mean absolute error of the causal effects (about 10 minutes).
 
 ---
 

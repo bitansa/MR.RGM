@@ -6,19 +6,19 @@
 #'              the covariate summary matrices Syu, Sxu, and Suu must be provided explicitly. Covariate information is optional and the method remains valid in its absence. Crucial inputs encompass "D" (a matrix indicating which IV is affecting which response) and "n" (total observations, only required for summary level data), amplified by customizable parameters that refine analysis. Additionally, users can tailor the analysis by setting parameters such as "nIter" (number of MCMC iterations),
 #'              "nBurnin" (number of discarded samples during burn-in for convergence), and "Thin" (thinning of posterior samples). These customizable parameters enhance the precision and relevance of the analysis. RGM provides essential causal effect/strength estimates between response variables, between response and instrument variables and between response and covariates. Moreover, it furnishes adjacency matrices, visually mapping causal graph structures. These outputs empower researchers to
 #'              untangle intricate relationships within biological networks, fostering a holistic understanding of complex systems. The function also returns a graph object representing the estimated causal network between the responses. This graph consists of directed edges that indicate causal effects, with effect sizes displayed on the edges. The edges are determined based on a threshold of 0.5 for inclusion. Users can visualize the network by plotting this object,
-#'              which helps in interpreting the causal relationships between response variables. The output includes AEst, BEst, CEst, A0Est, B0Est, GammaEst, TauEst, PhiEst, EtaEst, tAEst, tBEst, SigmaEst, ZEst, RhoEst, and PsiEst, representing the posterior means of the corresponding quantities. Additionally, LLPst and GammaPst represent posterior samples. The adjacency matrices zAEst and zBEst are obtained by thresholding GammaEst and TauEst, respectively. When a full error variance–covariance matrix
+#'              which helps in interpreting the causal relationships between response variables. The output includes AEst, BEst, CEst, A0Est, B0Est, GammaEst, TauEst, PhiEst, EtaEst, tAEst, tBEst, SigmaEst, ZEst, RhoEst, and PsiEst, representing the posterior means of the corresponding quantities. Additionally, LLPst and GammaPst represent posterior samples. The adjacency matrices zAEst and zBEst are obtained by thresholding GammaEst and PhiEst at 0.5, respectively. When a full error variance–covariance matrix
 #'              is estimated, the off-diagonal elements of SigmaEst may be interpreted as evidence of unmeasured confounding between responses.
 #'
-#' @param X A matrix of dimension n * k. Each row represents a distinct observation, and each column corresponds to a specific instrumental variable. The default value is set to NULL.
-#' @param Y A matrix of dimension n * p. Each row represents a specific observation, and each column corresponds to a particular response variable. The default value is set to NULL.
-#' @param U A matrix of dimension n * l. Each row represents a distinct observation, and each column corresponds to a covariate. The default value is set to NULL.
-#' @param Syy A matrix of dimension p * p, where "p" is the number of response variables. It is calculated as t(Y) %*% Y / n, where "Y" represents the response data matrix and "n" is the number of observations.
+#' @param X A matrix of dimension n * k. Each row represents a distinct observation, and each column corresponds to a specific instrumental variable. The default value is set to NULL. The model has no intercept: if the responses have non-zero means not explained by X and U (typical for real data), center the columns (scaling is also recommended) or include a column of ones in U.
+#' @param Y A matrix of dimension n * p. Each row represents a specific observation, and each column corresponds to a particular response variable. The default value is set to NULL. The model has no intercept: if the responses have non-zero means not explained by X and U (typical for real data), center the columns (scaling is also recommended) or include a column of ones in U.
+#' @param U A matrix of dimension n * l. Each row represents a distinct observation, and each column corresponds to a covariate. The default value is set to NULL. The model has no intercept: if the responses have non-zero means not explained by X and U (typical for real data), center the columns (scaling is also recommended) or include a column of ones in U.
+#' @param Syy A matrix of dimension p * p, where "p" is the number of response variables. It is calculated as t(Y) %*% Y / n, where "Y" represents the response data matrix and "n" is the number of observations. Because the model has no intercept, summary-level matrices from real data should be computed from centered variables (covariance-type matrices).
 #' @param Syx A matrix of dimension p * k, where "p" is the number of response variables, and "k" is the number of instrumental variables. It is calculated as t(Y) %*% X / n, where "Y" represents the response data matrix, "X" represents the instrumental data matrix, and "n" is the number of observations.
 #' @param Sxx A matrix of dimension k * k, where "k" is the number of instrumental variables. It is derived as t(X) %*% X / n, where "X" represents the instrumental data matrix and "n" is the number of observations.
 #' @param Syu A matrix of dimension p * l, where "p" is the number of response variables and "l" is the number of covariates. It is calculated as t(Y) %*% U / n, where "Y" represents the response data matrix, "U" represents the covariate matrix, and "n" is the number of observations.
 #' @param Sxu A matrix of dimension k * l, where "k" is the number of instrumental variables and "l" is the number of covariates. It is calculated as t(X) %*% U / n, where "X" represents the instrument data matrix, "U" represents the covariate matrix, and "n" is the number of observations.
 #' @param Suu A matrix of dimension l * l, where "l" is the number of covariates. It is calculated as t(U) %*% U / n, where "U" represents the covariate matrix and "n" is the number of observations.
-#' @param Beta A matrix of dimension p * k, where each row corresponds to a specific response variable and each column pertains to an instrumental variable. Each entry represents the regression coefficient of the response variable on the instrumental variable. When using Beta as input, ensure that both Y (response data) and X (instrument data) are centered before calculating Beta, Sxx, and SigmaHat.
+#' @param Beta A matrix of dimension p * k, where each row corresponds to a specific response variable and each column pertains to an instrumental variable. Each entry represents the regression coefficient of the response variable on the instrumental variable. When using Beta as input, ensure that both Y (response data) and X (instrument data) are centered before calculating Beta, Sxx, and SigmaHat. The conversion to summary statistics treats the marginal regression coefficients as joint effects, which is exact when the instruments are uncorrelated; use (Syy, Syx, Sxx) when the instruments are correlated.
 #' @param SigmaHat A matrix of dimension p * k. Each row corresponds to a specific response variable, and each column pertains to an instrumental variable. Each entry represents the mean square error of the regression between the response and the instrumental variable. As with Beta, ensure that both Y and X are centered before calculating SigmaHat.
 #' @param D A binary indicator matrix of dimension p * k, where each row corresponds to a response variable, and each column corresponds to an instrumental variable. The entry `D[i, j]` is 1 if instrumental variable j affects response variable i, and 0 otherwise. For each response variable, there must be at least one instrumental variable that affects only that response (i.e., for each row in D, there must be at least one column with 1, and that column must have zeros in all other rows). If you use `Syy`, `Beta`, and `SigmaHat` as inputs, this condition must be satisfied to run this algorithm. If this condition is not met, an error will be thrown. However, if using `X`, `Y` or `Syy`, `Syx`, `Sxx` as inputs, a warning will be issued if the condition is violated, but the method will still proceed.
 #' @param n A positive integer input representing the count of data points or observations in the dataset. This input is only required when summary level data is used as input.
@@ -26,7 +26,7 @@
 #' @param nBurnin A non-negative integer input representing the number of samples to be discarded during the burn-in phase of MCMC sampling. It's important that nBurnin is less than nIter. The default value is set to 2000.
 #' @param Thin A positive integer input denoting the thinning factor applied to posterior samples. Thinning reduces the number of samples retained from the MCMC process for efficiency. Thin should not exceed (nIter - nBurnin). The default value is set to 1.
 #' @param prior A character input specifying the prior assumption on the graph structure. Options are \code{"Threshold"} and \code{"Spike and Slab"}. The default option is \code{"Spike and Slab"}.
-#' @param SigmaStarModel A character input specifying the assumed structure of the error covariance matrix in the model. It provides three options: \code{"SSSL"} (stochastic spike-and-slab prior for correlated errors), \code{"IW"} (Inverse Wishart prior for correlated errors), or \code{"diagonal"} (diagonal error covariance for independent errors). The default option is \code{"SSSL"}.
+#' @param SigmaStarModel A character input specifying the assumed structure of the error covariance matrix in the model. It provides three options: \code{"SSSL"} (stochastic spike-and-slab prior for correlated errors), \code{"IW"} (Inverse Wishart prior for correlated errors), or \code{"diagonal"} (diagonal error covariance for independent errors). The default option is \code{"SSSL"}. The \code{"SSSL"} prior uses fixed spike and slab variances (0.005 and 5) for the error covariances and assumes responses on roughly unit scale; center and scale the data before fitting (a warning is issued when the second moments of the responses are below 0.01 or above 100).
 #' @param aRho A positive scalar specifying the first shape parameter of the Beta prior on the inclusion probability of edges in matrix A under the spike-and-slab prior. The default value is set to 3.
 #' @param bRho A positive scalar specifying the second shape parameter of the Beta prior on the inclusion probability of edges in matrix A under the spike-and-slab prior. The default value is set to 1.
 #' @param nu1 A positive scalar input representing the multiplication factor in the variance of the spike part in the spike and slab distribution of matrix A. The default value is set to 0.001.
@@ -450,8 +450,12 @@
 #' \strong{13(4)}, 1095-1110.
 #' \doi{10.1214/17-BA1087}.
 RGM = function(X = NULL, Y = NULL, U = NULL, Syy = NULL, Syx = NULL, Sxx = NULL, Syu = NULL, Sxu = NULL, Suu = NULL, Beta = NULL, SigmaHat = NULL,
-               D, n, nIter = 10000, nBurnin = 2000, Thin = 1, prior = c("Threshold", "Spike and Slab"), SigmaStarModel = c("diagonal", "IW", "SSSL"),
+               D, n, nIter = 10000, nBurnin = 2000, Thin = 1, prior = c("Spike and Slab", "Threshold"), SigmaStarModel = c("SSSL", "IW", "diagonal"),
                aRho = 3, bRho = 1, nu1 = 0.001, aPsi = 0.5, bPsi = 0.5, nu2 = 0.0001, aSigma = 0.01, bSigma = 0.01, PropVarA = 0.01, PropVarB = 0.01){
+
+  # Resolve the prior and the error-covariance model (the first option is the default)
+  prior = match.arg(prior)
+  SigmaStarModel = match.arg(SigmaStarModel)
 
   # Check whether Y or Syy is given as data input
   if((!is.null(Y) && is.null(X)) || (!is.null(Syy) && is.null(Syx) && is.null(Sxx))){
@@ -697,6 +701,9 @@ RGM = function(X = NULL, Y = NULL, U = NULL, Syy = NULL, Syx = NULL, Sxx = NULL,
     }
 
 
+
+    # Warn if the SSSL hyperparameters do not match the scale of the responses
+    check_sssl_scale(Syy, SigmaStarModel)
 
     # Check whether covariate data is given
     if(!is.null(Syu) && !is.null(Suu)) {
@@ -1635,6 +1642,9 @@ RGM = function(X = NULL, Y = NULL, U = NULL, Syy = NULL, Syx = NULL, Sxx = NULL,
 
 
 
+    # Warn if the SSSL hyperparameters do not match the scale of the responses
+    check_sssl_scale(Syy, SigmaStarModel)
+
     # Check whether covariate data is given
     if(!is.null(Syu) && !is.null(Sxu) && !is.null(Suu)) {
 
@@ -2000,5 +2010,33 @@ RGM = function(X = NULL, Y = NULL, U = NULL, Syy = NULL, Syx = NULL, Sxx = NULL,
 
 
   }
+
+}
+
+
+
+# Internal: the SSSL prior on the error covariance uses fixed spike and slab variances
+# (v0^2 = 0.005, v1^2 = 5) and an exponential prior on the variances, which assume that the
+# responses are on roughly unit scale. On very different scales the data cannot move the
+# inclusion probabilities of the error covariances away from their prior value 0.5.
+check_sssl_scale = function(Syy, SigmaStarModel) {
+
+  if (SigmaStarModel == "SSSL") {
+
+    # Second moments of the responses
+    v = diag(Syy)
+
+    if (any(v > 100) || any(v < 0.01)) {
+
+      warning("SigmaStarModel = \"SSSL\" assumes responses on roughly unit scale (second moments of the responses range from ",
+              signif(min(v), 3), " to ", signif(max(v), 3), "). Center and scale the responses (and instruments/covariates) ",
+              "before fitting; otherwise the inclusion probabilities of the error covariances (ZEst) stay close to their prior value 0.5.",
+              call. = FALSE)
+
+    }
+
+  }
+
+  invisible(NULL)
 
 }

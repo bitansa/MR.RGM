@@ -15,7 +15,7 @@
 #' @examples
 #'
 #'
-#'#' # ---------------------------------------------------------
+#' # ---------------------------------------------------------
 #'
 #' # Example 1:
 #' # Run NetworkMotif to do uncertainty quantification for a given network among the response variable
