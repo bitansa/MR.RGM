@@ -1,6 +1,7 @@
 ## Submission
 
-This is an update of MR.RGM (0.1.2 to 0.1.3); the changes are listed in NEWS.md.
+This is an update of MR.RGM from 0.1.1, the version on CRAN, to 0.1.3 (0.1.2 was released on GitHub only); the changes
+of both versions are listed in NEWS.md.
 
 ## Test environments
 

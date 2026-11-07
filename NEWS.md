@@ -119,6 +119,8 @@
 
 # MR.RGM 0.1.2
 
+Released on GitHub only; not submitted to CRAN.
+
 ## Bug fixes
 
 * **Update of A (all 24 samplers).** Each proposal for an entry of `A` uses the log-determinant
