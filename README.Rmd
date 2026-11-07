@@ -429,7 +429,7 @@ In this setting, with many instruments each explaining a small fraction of the v
 
 ## Reproducibility and data
 
-The scripts that reproduce every simulation, table and figure of the accompanying methods paper, with instructions, are in [`reproducibility/`](reproducibility/README.md). The preprocessed OneK1K B-cell data used in its application are archived on Zenodo, <https://doi.org/10.5281/zenodo.18489687>, and the result files of the paper, from which the scripts regenerate
+The scripts that reproduce every simulation, table and figure of the accompanying methods paper, with instructions, are in [`reproducibility/`](https://github.com/bitansa/MR.RGM/tree/master/reproducibility). The preprocessed OneK1K B-cell data used in its application are archived on Zenodo, <https://doi.org/10.5281/zenodo.18489687>, and the result files of the paper, from which the scripts regenerate
 every table and figure, at <https://doi.org/10.5281/zenodo.24043120>. To cite the package, run `citation("MR.RGM")`.
 
 ## References
