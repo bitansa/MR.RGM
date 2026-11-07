@@ -1,0 +1,47 @@
+{
+  "title": "MR.RGM: Bayesian Multivariable Bidirectional Mendelian Randomization",
+  "upload_type": "software",
+  "description": "R package for Bayesian reciprocal graphical models with instrumental variables: estimation of the direct causal effects among several responses, which may form directed cycles, of the instrument effects, which may violate the exclusion restrictions, and of the structure of unmeasured confounding among the responses, from individual-level or summary-level data. The repository includes the scripts that reproduce the simulations, tables and figures of the accompanying methods paper.",
+  "creators": [
+    {
+      "name": "Sarkar, Bitan",
+      "affiliation": "Texas A&M University",
+      "orcid": "0009-0000-5178-5934"
+    },
+    {
+      "name": "Ni, Yang",
+      "affiliation": "The University of Texas at Austin",
+      "orcid": "0000-0003-0636-2363"
+    }
+  ],
+  "license": "GPL-3.0-or-later",
+  "keywords": [
+    "instrumental variables",
+    "Mendelian randomization",
+    "reciprocal graphical models",
+    "directed cyclic graphs",
+    "unmeasured confounding",
+    "Bayesian inference",
+    "R package"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "10.1093/bioinformatics/btaf130",
+      "relation": "isDescribedBy",
+      "resource_type": "publication-article",
+      "scheme": "doi"
+    },
+    {
+      "identifier": "10.5281/zenodo.18489687",
+      "relation": "isReferencedBy",
+      "resource_type": "dataset",
+      "scheme": "doi"
+    },
+    {
+      "identifier": "10.5281/zenodo.24043120",
+      "relation": "isReferencedBy",
+      "resource_type": "dataset",
+      "scheme": "doi"
+    }
+  ]
+}
