@@ -8,3 +8,24 @@
 src/*.o
 src/*.so
 src/*.dll
+# outputs of the reproducibility scripts (results, figures, tables and logs are deposited on Zenodo, not in the repository)
+**/_Archive*/
+**/results_*/
+reproducibility/**/output/
+reproducibility/**/figures/
+reproducibility/**/figures_smoke/
+reproducibility/**/tables/
+reproducibility/**/tables_smoke/
+**/*_smoke.csv
+**/*_smoke.txt
+**/runtime_partial*.rds
+**/Runtime Analysis/*_all_runs.csv
+**/*.log
+reproducibility/package_check/check_recovery_results.csv
+reproducibility/package_check/check_design_matched_*.csv
+reproducibility/package_check/check_design_matched_*.rds
+**/cluster/logs/
+**/cluster/tasks_*.csv
+**/cluster/check_results.csv
+**/Runtime Analysis/cluster_parts/
+**/*.tmp[0-9]*

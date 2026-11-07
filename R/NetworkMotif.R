@@ -1,122 +1,47 @@
-#' Estimating the uncertainty of a specified network
+#' Posterior probability of a network motif
 #'
-#' @description The NetworkMotif function facilitates uncertainty quantification.
-#'              Specifically, it determines the proportion of posterior samples that contains the given network structure. To use this function, users may use the GammaPst output obtained from the RGM function.
+#' @description \code{NetworkMotif} quantifies the uncertainty of a given network structure among the response
+#'              variables: it returns the proportion of posterior draws in which every edge of the motif is present,
+#'              that is, the posterior probability that all edges of the motif are present simultaneously. The input
+#'              draws are the \code{GammaPst} output of \code{\link{RGM}}.
 #'
-#' @param Gamma A matrix of dimension p * p that signifies a specific network structure among the response variables, where p represents the number of response variables. This matrix is the focus of uncertainty quantification.
-#' @param GammaPst An array of dimension p * p * n_pst, where n_pst is the number of posterior samples and p denotes the number of response variables. It comprises the posterior samples of the causal network among the response variables. This input might be obtained from the RGM function. Initially, execute the RGM function and save the resulting GammaPst. Subsequently, utilize this stored GammaPst as input for this function.
+#' @param Gamma A p * p binary matrix (numeric 0/1 or logical) with a zero diagonal, specifying the motif: \code{Gamma[i, j] = 1} for the directed edge from response j
+#'              to response i (the same orientation as \code{A} and \code{GammaEst} in \code{\link{RGM}}). Entries equal to
+#'              0 are ignored, so the motif can be any subgraph (a single edge, a cascade, a feed-forward loop, a
+#'              feedback loop, ...); only the presence of the specified edges is required, not the absence of others.
+#' @param GammaPst A p * p * n_pst array of posterior draws of the causal edge indicators, the \code{GammaPst} component
+#'              returned by \code{\link{RGM}}.
 #'
-#' @return The NetworkMotif function calculates the uncertainty quantification for the provided network structure. A value close to 1 indicates that the given network structure is frequently observed in the posterior samples, while a value close to 0 suggests that the given network structure is rarely observed in the posterior samples.
+#' @return A number between 0 and 1: the proportion of posterior draws that contain all edges of \code{Gamma}.
 #'
 #'
 #'
 #' @export
 #'
 #' @examples
-#'
-#'
-#' # ---------------------------------------------------------
-#'
-#' # Example 1:
-#' # Run NetworkMotif to do uncertainty quantification for a given network among the response variable
-#'
-#' # Data Generation
+#' # Simulate a cascade Y1 -> Y2 -> Y3 with two own instruments per response
 #' set.seed(9154)
+#' n = 2000; p = 3; k = 6
+#' A = matrix(0, p, p); A[2, 1] = 0.3; A[3, 2] = -0.3     # A[i, j]: effect of Y_j on Y_i
+#' D = matrix(0, p, k)
+#' for (i in 1:p) D[i, (2 * i - 1):(2 * i)] = 1
+#' X = matrix(rnorm(n * k), n, k)
+#' Y = (X %*% t(D) + matrix(rnorm(n * p), n, p)) %*% t(solve(diag(p) - A))
+#' X = scale(X); Y = scale(Y)                              # the model has no intercept
 #'
-#' # Number of data points
-#' n = 10000
+#' # Fit MR.RGM (a short chain to keep the example fast; the defaults are the recommended length)
+#' fit = RGM(X = X, Y = Y, D = D, nIter = 2000, nBurnin = 1000, Thin = 2)
 #'
-#' # Number of response variables and number of instrument variables
-#' p = 3
-#' k = 4
+#' # Posterior probability of the cascade Y1 -> Y2 -> Y3 (both edges present)
+#' Gamma = matrix(0, p, p); Gamma[2, 1] = 1; Gamma[3, 2] = 1
+#' NetworkMotif(Gamma = Gamma, GammaPst = fit$GammaPst)
 #'
-#' # Initialize causal interaction matrix between response variables
-#' A = matrix(sample(c(-0.1, 0.1), p^2, replace = TRUE), p, p)
-#'
-#' # Diagonal entries of A matrix will always be 0
-#' diag(A) = 0
-#'
-#' # Make the network sparse
-#' A[sample(which(A!=0), length(which(A!=0))/2)] = 0
-#'
-#' # Create D matrix (Indicator matrix where each row corresponds to a response variable
-#' # and each column corresponds to an instrument variable)
-#' D = matrix(0, nrow = p, ncol = k)
-#'
-#' # Manually assign values to D matrix
-#' D[1, 1:2] = 1  # First response variable is influenced by the first 2 instruments
-#' D[2, 3] = 1    # Second response variable is influenced by the 3rd instrument
-#' D[3, 4] = 1    # Third response variable is influenced by the 4th instrument
-#'
-#'
-#' # Initialize B matrix
-#' B = matrix(0, p, k)  # Initialize B matrix with zeros
-#'
-#' # Calculate B matrix based on D matrix
-#' for (i in 1:p) {
-#'   for (j in 1:k) {
-#'     if (D[i, j] == 1) {
-#'       B[i, j] = 1  # Set B[i, j] to 1 if D[i, j] is 1
-#'     }
-#'   }
-#' }
-#'
-#' Sigma = diag(p)
-#'
-#' Mult_Mat = solve(diag(p) - A)
-#'
-#' Variance = Mult_Mat %*% Sigma %*% t(Mult_Mat)
-#'
-#' # Generate instrument data matrix
-#' X = matrix(rnorm(n * k, 0, 1), nrow = n, ncol = k)
-#'
-#' # Initialize response data matrix
-#' Y = matrix(0, nrow = n, ncol = p)
-#'
-#' # Generate response data matrix based on instrument data matrix
-#' for (i in 1:n) {
-#'
-#'     Y[i, ] = MASS::mvrnorm(n = 1, Mult_Mat %*% B %*% X[i, ], Variance)
-#'
-#' }
-#'
-#'
-#' # Apply RGM on individual level data with Spike and Slab Prior
-#' Output = RGM(X = X, Y = Y, D = D, prior = "Spike and Slab", SigmaStarModel = "diagonal")
-#'
-#' # Store GammaPst
-#' GammaPst = Output$GammaPst
-#'
-#' # Define a function to create smaller arrowheads
-#' smaller_arrowheads = function(graph) {
-#'     igraph::E(graph)$arrow.size = 1  # Adjust the arrow size value as needed
-#'     return(graph)
-#' }
-#'
-#'
-#' # Plot the true graph structure between response variables
-#' plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix((A != 0) * 1,
-#'   mode = "directed")), layout = igraph::layout_in_circle, main = "True Graph")
-#'
-#' # Start with a random subgraph
-#' Gamma = matrix(0, nrow = p, ncol = p)
-#' Gamma[2, 1] = 1
-#'
-#' # Plot the subgraph to get an idea about the causal network
-#' plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix(Gamma,
-#'          mode = "directed")), layout = igraph::layout_in_circle,
-#'             main = "Subgraph")
-#'
-#'
-#' # Do uncertainty quantification for the subgraph
-#' NetworkMotif(Gamma = Gamma, GammaPst = GammaPst)
-#'
-#'
-#'
-#'
+#' # Posterior probability of the feedback loop Y1 -> Y2 -> Y3 -> Y1
+#' Gamma[1, 3] = 1
+#' NetworkMotif(Gamma = Gamma, GammaPst = fit$GammaPst)
 #'
 #' @references
-#' Ni, Y., Ji, Y., & Müller, P. (2018).
+#' Ni, Y., Ji, Y., & M\enc{ü}{ue}ller, P. (2018).
 #' Reciprocal graphical models for integrative gene regulatory network analysis.
 #' \emph{Bayesian Analysis},
 #' \strong{13(4)}, 1095-1110.
@@ -126,7 +51,7 @@ NetworkMotif = function(Gamma, GammaPst) {
   # Check whether GammaPst is a numeric array with three dimensions
   if (!is.numeric(GammaPst) || !is.array(GammaPst) || length(dim(GammaPst)) != 3) {
 
-    # Print an error message
+    # Stop with an error
     stop("GammaPst must be a numeric array with three dimensions.")
 
   }
@@ -137,15 +62,18 @@ NetworkMotif = function(Gamma, GammaPst) {
   # Check whether number of rows of GammaPst is same as number of columns of GammaPst
   if(ncol(GammaPst) != p){
 
-    # Print an error message
+    # Stop with an error
     stop("Number of rows and columns of GammaPst should be equal.")
 
   }
 
+  # A logical motif matrix is accepted
+  if (is.logical(Gamma) && is.matrix(Gamma)) Gamma = Gamma * 1
+
   # Check whether Gamma is a numeric matrix
   if(!is.numeric(Gamma) || !is.matrix(Gamma)){
 
-    # Print an error message
+    # Stop with an error
     stop("Gamma should be a numeric matrix.")
 
   }
@@ -153,10 +81,28 @@ NetworkMotif = function(Gamma, GammaPst) {
   # Check whether Gamma is a square matrix with dimension p * p
   if((nrow(Gamma) != p) || (ncol(Gamma) != p)) {
 
-    # Print an error message
+    # Stop with an error
     stop("Gamma should be a square matrix with number of rows and columns equal to number of rows of GammaPst.")
 
   }
+
+  # Entries of Gamma other than 0 and 1 are not meaningful
+  if (!all(Gamma %in% c(0, 1))) {
+
+    # Stop with an error
+    stop("Gamma should contain only 0 and 1 (1 marks the edges of the motif).")
+
+  }
+
+  # The motif cannot contain self-loops
+  if (any(diag(Gamma) != 0)) stop("Gamma must have a zero diagonal (no self-loops).")
+
+  # The draws must be binary, with at least one draw
+  if (dim(GammaPst)[3] < 1) stop("GammaPst contains no posterior draws.")
+  if (!all(GammaPst %in% c(0, 1))) stop("GammaPst should contain only 0 and 1 (the GammaPst component returned by RGM()).")
+
+  # A motif without edges is present in every draw
+  if (!any(Gamma == 1)) return(1)
 
   # Return Network Motif
   return(NetworkMotif_cpp(Gamma = Gamma, Gamma_Pst = GammaPst))

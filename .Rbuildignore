@@ -7,3 +7,6 @@
 ^\.DS_Store$
 ^\.Rhistory$
 ^\.RData$
+^_Archive.*$
+^\.gitignore$
+^cran-comments\.md$

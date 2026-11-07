@@ -3,26 +3,22 @@
 //
 // Model         : (I - A) Y_i = C U_i + E_i,   E_i ~ N_p(0, Sigma)
 // Instruments   : none (response-only model)
-// Covariates    : U (l measured covariates), C | Sigma ~ MN(0, Sigma, TAU I_l), TAU = 2
+// Covariates    : U (l measured covariates), C | Sigma ~ MN(0, Sigma, TAU I_l), TAU (RGM(): tauC, default 2)
 // Graph prior   : threshold on A: A = A0 * 1(|A0| > tA), A0 ~ N(0, tau), sqrt(tau) ~ C+(0, 1), tA ~ U(0, 0.1)
 // Error model   : full Sigma ~ IW(p + 1, I_p)
 // Input         : summary statistics S_YY, S_YU, S_UU  (each = t(.) %*% . / n)
-// Update order  : C (Gibbs) -> Sigma (Gibbs) -> A (Metropolis, entry-wise) -> tA (Metropolis)
+// Update order  : C (Gibbs) -> Sigma (Gibbs) -> A (adaptive random-walk Metropolis, entry-wise) -> tA (Metropolis)
+// Proposals     : adaptive during the burn-in, frozen after it (rgm_mcmc.h); starting values in rgm_mcmc.h
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include <RcppArmadillo.h>
+#include "rgm_mcmc.h"   // adaptive proposals, Gibbs update of B, starting values
 // [[Rcpp::depends(RcppArmadillo)]]
 using namespace Rcpp;
 
-// For Inverse Wishart distribution
-#include <RcppDist.h>
-// [[Rcpp::depends(RcppDist)]]
 
 
-// Inverse Wishart sampler adapted from:
-// Frank DiTraglia, econ722 repository
-// https://github.com/fditraglia/econ722
-// License: GPL-2.0
+// Inverse-Wishart draws: Bartlett decomposition (rinvwish below).
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -73,33 +69,27 @@ double Sample_Tau(double a, double gamma, double tau, double nu_1) {
 
 
 
-// Sample from inverse wishart distribution
-// From github fditraglia/econ722/RcppArmadillo/InverseWishartSampler/InverseWishart.cpp
+// Draw from the inverse-Wishart distribution IW(v, S) (density proportional to
+// |Sigma|^{-(v + p + 1)/2} exp{-tr(S Sigma^{-1})/2}) by the Bartlett decomposition: with L the lower Cholesky
+// factor of S^{-1} and T lower triangular with T(i, i)^2 ~ chi-square(v - i) (i = 0, ..., p - 1) and standard normal
+// entries below the diagonal, W = L T T' L' is Wishart(v, S^{-1}) and W^{-1} is IW(v, S).
 arma::mat rinvwish(double v, arma::mat S){
 
-  RNGScope scope;
-
-  // Dimension of matrix S
   int p = S.n_rows;
-
   arma::mat L = chol(inv_sympd(S), "lower");
-  arma::mat sim(p, p, arma::fill::zeros);
-  arma::mat A(p,p, arma::fill::zeros);
+  arma::mat T(p, p, arma::fill::zeros);
 
   for(int i = 0; i < p; i++){
-    int df = v - (i + 1) + 1; //zero-indexing
-    A(i,i) = sqrt(R::rchisq(df));
+    T(i, i) = sqrt(R::rchisq(v - i));
   }
-
   for(int row = 1; row < p; row++){
     for(int col = 0; col < row; col++){
-      A(row, col) = R::rnorm(0,1);
+      T(row, col) = R::rnorm(0, 1);
     }
   }
 
-  arma::mat LA_inv = inv(trimatl(trimatl(L) * trimatl(A)));
-  sim = LA_inv.t() * LA_inv;
-  return sim;
+  arma::mat LT_inv = inv(trimatl(trimatl(L) * trimatl(T)));
+  return LT_inv.t() * LT_inv;
 
 }
 
@@ -145,7 +135,7 @@ double tn_pdf(double x, double mu, double sigma, double a, double b) {
 
 
 
-// Calculate log-likelihood for the model when Y and U are there and Sigma is full
+// Calculate log-likelihood for the model when Y and U are observed and Sigma is full
 double LL_Full_Star(const arma::mat& A, const arma::mat& C, const arma::mat& S_YY, const arma::mat& S_YU,
                     const arma::mat& S_UU, const arma::mat& Sigma_Inv, double p, double N) {
 
@@ -166,7 +156,7 @@ double LL_Full_Star(const arma::mat& A, const arma::mat& C, const arma::mat& S_Y
 }
 
 
-// Calculate target value for a particular A for the model when Y and U are there
+// Calculate target value for a particular A for the model when Y and U are observed
 double Target_A_Star(double a, double N, double gamma, double tau, double nu_1, double Trace4, double Trace5, double Trace6, double Trace8, double logdet) {
 
   // Calculate Sum term inside exponential in likelihood
@@ -182,7 +172,7 @@ double Target_A_Star(double a, double N, double gamma, double tau, double nu_1, 
 
 
 
-// Sample a particular entry of matrix A for the model when Y and U are there and Sigma is a full matrix
+// Sample a particular entry of matrix A for the model when Y and U are observed and Sigma is a full matrix
 Rcpp::List Sample_A_Full_Star(const arma::mat& S_YY, const arma::mat& S_YU, const arma::mat& A, const arma::mat& A_Pseudo, double i, double j,
                               const arma::mat& Sigma_Inv, double N, double p, const arma::mat& C, double gamma, double tau, double nu_1,
                               double prop_var1, double tA, double Trace4, double Trace5, double Trace6, double Trace8, arma::mat& InvMat, double logdet) {
@@ -256,7 +246,7 @@ Rcpp::List Sample_A_Full_Star(const arma::mat& S_YY, const arma::mat& S_YU, cons
 
 // Sample from matrix variate normal
 arma::mat rmatrixvarnorm(const arma::mat& M, const arma::mat& U, const arma::mat& V) {
-  Rcpp::RNGScope scope; // Ensures R's RNG is used
+  Rcpp::RNGScope scope; // Synchronizes the state of R's random number generator
   int n = M.n_rows;
   int p = M.n_cols;
 
@@ -267,7 +257,7 @@ arma::mat rmatrixvarnorm(const arma::mat& M, const arma::mat& U, const arma::mat
   // Generate matrix Z of independent standard normal random variables
   arma::mat Z = arma::randn(n, p); // Z ~ N(0, I)
 
-  // Compute the sample from matrix-variate normal distribution: X = M + U_chol * Z * V_chol.t()
+  // Compute the sample from matrix-variate normal distribution: X = M + U_chol^T * Z * V_chol (U = U_chol^T U_chol, V = V_chol^T V_chol)
   arma::mat X = M + U_chol.t() * Z * V_chol;
 
   return X;
@@ -292,12 +282,12 @@ arma::mat rmatrixvarnorm(const arma::mat& M, const arma::mat& U, const arma::mat
 
 
 
-// Do MCMC sampling with threshold prior for the model when Y and U are there and Sigma is full with IW prior on it
+// Do MCMC sampling with threshold prior for the model when Y and U are observed and Sigma is full with IW prior on it
 // [[Rcpp::export]]
 Rcpp::List RGM_Threshold_IW_Star_Covariates(const arma::mat& S_YY, const arma::mat& S_YU, const arma::mat& S_UU,
                                               double n, int nIter, int nBurnin,
                                               int Thin, double nu_1 = 0.0001,
-                                              double Prop_VarA = 0.01, double TAU = 2){
+                                              double Prop_VarA = -1, double TAU = 2){
 
 
   // Calculate number of nodes from S_YY matrix
@@ -306,7 +296,7 @@ Rcpp::List RGM_Threshold_IW_Star_Covariates(const arma::mat& S_YY, const arma::m
   // Calculate number of columns of S_UU
   int l = S_UU.n_cols;
 
-  // Take b_Tilde = p + 1 (b_Tilde should be greater than p-1; p+1 is taken to ensure mean is not infinity)
+  // Prior degrees of freedom b_Tilde = p + 1: Sigma ~ IW(p + 1, I_p), a proper prior (b_Tilde > p - 1) without a finite mean
   int b_Tilde = p + 1;
 
   // Initialize A, C and A_Pseudo matrices
@@ -315,14 +305,15 @@ Rcpp::List RGM_Threshold_IW_Star_Covariates(const arma::mat& S_YY, const arma::m
   arma::mat A_Pseudo = arma::zeros(p, p);
 
   // Initialize Sigma
-  arma::mat Sigma = riwish(b_Tilde, arma::eye(p, p));
+  // Start at the residual second-moment matrix of the starting values (A = 0)
+  arma::mat Sigma = rgm::Start_Sigma(S_YY);
 
   // Initialize Gamma and Tau matrices
   arma::mat Gamma = arma::ones(p, p);
   arma::mat Tau = arma::ones(p, p);
 
 
-  // Make the diagonals of Gamma and Tau matrices to be 0
+  // Set the diagonals of Gamma and Tau to 0
   Gamma.diag().zeros();
   Tau.diag().zeros();
 
@@ -338,7 +329,7 @@ Rcpp::List RGM_Threshold_IW_Star_Covariates(const arma::mat& S_YY, const arma::m
   // Calculate number of posterior samples
   int nPst = (nIter - nBurnin) / Thin;   // integer division
 
-  // Initiate Itr to index the posterior samples
+  // Initialize Itr to index the posterior samples
   int Itr = 0;
 
   // Initialize posterior arrays and matrices
@@ -356,11 +347,18 @@ Rcpp::List RGM_Threshold_IW_Star_Covariates(const arma::mat& S_YY, const arma::m
   // Calculate Sigma_Inv
   arma::mat Sigma_Inv = arma::inv(Sigma);
 
-  // Caculate the sub matrix to sample C
+  // Calculate the sub matrix to sample C
   arma::mat SubMat_C = arma::inv(n * S_UU + arma::eye(l, l) / TAU);
+
+  // Adaptive random-walk proposals (rgm_mcmc.h): one scale per entry, tuned during the burn-in, then frozen.
+  // Prop_VarA > 0: starting proposal variance of every entry; <= 0: automatic start.
+  rgm::RWAdapt adA(rgm::Initial_PropVar(Prop_VarA, arma::colvec(Sigma_Inv.diag()), arma::colvec(S_YY.diag()), n), rgm::OffDiag_Mask(p), nBurnin);
 
   // Run a loop to do MCMC sampling
   for(int i = 1; i <= nIter; i++){
+
+    // allow the user to interrupt a long run
+    if (i % 100 == 0) Rcpp::checkUserInterrupt();
 
     // Calculate I_p - A
     arma::mat MultMat = arma::eye(p, p) - A;
@@ -379,7 +377,7 @@ Rcpp::List RGM_Threshold_IW_Star_Covariates(const arma::mat& S_YY, const arma::m
         + n * C * S_UU * C.t() - n * MultMat * S_YU * C.t() - n * C * S_YU.t() * MultMat.t()
         + C * C.t() / TAU + arma::eye(p, p);
 
-    // In order to make param2 completely symmetric, some entries are slightly different
+    // Symmetrize param2 (rounding can make it slightly asymmetric)
     param2 = 0.5 * (param2 + param2.t());
 
     Sigma = rinvwish(param1, param2);
@@ -404,7 +402,7 @@ Rcpp::List RGM_Threshold_IW_Star_Covariates(const arma::mat& S_YY, const arma::m
 
         for (int l = 0; l < p; l++) {
 
-          // Don't update the diagonal entries
+          // Do not update the diagonal entries
           if (l != j) {
 
             // Update Tau
@@ -412,17 +410,18 @@ Rcpp::List RGM_Threshold_IW_Star_Covariates(const arma::mat& S_YY, const arma::m
 
             // Sample a
             Rcpp::List Output2 = Sample_A_Full_Star(S_YY, S_YU, A, A_Pseudo, j, l, Sigma_Inv, n, p, C, 1, Tau(j, l), nu_1,
-                                                    Prop_VarA, tA, Trace4, Trace5, Trace6, Trace8, InvMat, logdet);
+                                                    adA.var(j, l), tA, Trace4, Trace5, Trace6, Trace8, InvMat, logdet);
 
 
             double a = Output2[0];
 
 
             // Update Acceptance counter
+            adA.record(j, l, A_Pseudo(j, l) != a);
             if (A_Pseudo(j, l) != a) {
 
-              // Increase AccptA
-              AccptA = AccptA + 1;
+              // Increase AccptA (acceptance rate reported over the iterations after burn-in)
+              if (i > nBurnin) AccptA = AccptA + 1;
 
               // Update Trace values
               Trace4 = Output2[1];
@@ -473,12 +472,15 @@ Rcpp::List RGM_Threshold_IW_Star_Covariates(const arma::mat& S_YY, const arma::m
         Gamma = arma::conv_to<arma::mat>::from(arma::abs(A_Pseudo) > tA);
         Gamma.diag().zeros();
 
-        Accpt_tA = Accpt_tA + 1;
+        if (i > nBurnin) Accpt_tA = Accpt_tA + 1;
 
       }
 
 
-      // Store posterior samples
+      // Adapt the proposal scales (burn-in only)
+    adA.end_iteration(i);
+
+    // Store posterior samples
       // Keep every Thin-th draw after burn-in: iterations nBurnin + Thin, nBurnin + 2 * Thin, ...
     // (exactly nPst draws for any nBurnin; identical to i % Thin == 0 when Thin divides nBurnin)
     if((i > nBurnin) && ((i - nBurnin) % Thin == 0)){
@@ -497,10 +499,6 @@ Rcpp::List RGM_Threshold_IW_Star_Covariates(const arma::mat& S_YY, const arma::m
 
       }
 
-      // Check if `i` is divisible by 100 and print progress
-      //if (i % 100 == 0) {
-      //Rcpp::Rcout << "Iterations " << i << " done." << std::endl;
-      //}
 
 
   }
@@ -520,16 +518,21 @@ Rcpp::List RGM_Threshold_IW_Star_Covariates(const arma::mat& S_YY, const arma::m
 
 
   // Return outputs
-  return Rcpp::List::create(Rcpp::Named("A_Est") = A_Est,
+  Rcpp::List out = Rcpp::List::create(Rcpp::Named("A_Est") = A_Est,
                             Rcpp::Named("C_Est") = C_Est,
                             Rcpp::Named("zA_Est") = zA_Est,
                             Rcpp::Named("A0_Est") = A0_Est,
                             Rcpp::Named("Gamma_Est") = Gamma_Est, Rcpp::Named("Tau_Est") = Tau_Est,
                             Rcpp::Named("tA_Est") = tA_Est,
                             Rcpp::Named("Sigma_Est") = Sigma_Est,
-                            Rcpp::Named("AccptA") = AccptA / (p * (p - 1) * nIter) * 100,
-                            Rcpp::Named("Accpt_tA") = Accpt_tA / (nIter) * 100,
+                            Rcpp::Named("AccptA") = AccptA / (static_cast<double>(p) * (p - 1) * (nIter - nBurnin)) * 100,
+                            Rcpp::Named("Accpt_tA") = Accpt_tA / static_cast<double>(nIter - nBurnin) * 100,
                             Rcpp::Named("LL_Pst") = LL_Pst, Rcpp::Named("Gamma_Pst") = Gamma_Pst);
+
+  // Tuned (frozen) proposal variances of the random-walk updates
+  out["PropVarA"] = adA.variances();
+
+  return out;
 
 
 

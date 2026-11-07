@@ -7,10 +7,12 @@
 // Graph prior   : spike-and-slab on A: a ~ gamma N(0, tau) + (1 - gamma) N(0, nu_1 tau), gamma ~ Bern(rho), rho ~ Beta(a_rho, b_rho), sqrt(tau) ~ C+(0, 1)
 // Error model   : diagonal Sigma, sigma_jj ~ IG(a_sigma, b_sigma)  (no unmeasured confounding)
 // Input         : summary statistics S_YY  (each = t(.) %*% . / n)
-// Update order  : Sigma (Gibbs) -> A (Metropolis, entry-wise)
+// Update order  : Sigma (Gibbs) -> A (adaptive random-walk Metropolis, entry-wise)
+// Proposals     : adaptive during the burn-in, frozen after it (rgm_mcmc.h); starting values in rgm_mcmc.h
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include <RcppArmadillo.h>
+#include "rgm_mcmc.h"   // adaptive proposals, Gibbs update of B, starting values
 // [[Rcpp::depends(RcppArmadillo)]]
 using namespace Rcpp;
 
@@ -83,11 +85,18 @@ double Sample_Tau(double a, double gamma, double tau, double nu_1) {
 // Sample Gamma
 double Sample_Gamma(double a, double tau, double rho, double nu_1) {
 
-  // P(gamma = 1 | a, tau, rho) = rho N(a; 0, tau) / {rho N(a; 0, tau) + (1 - rho) N(a; 0, nu_1 * tau)}.
-  // Computed on the log scale (logistic form), which avoids 0/0 when both densities underflow.
-  double log_slab  = log(rho) - 0.5 * a * a / tau;
-  double log_spike = log(1 - rho) - 0.5 * log(nu_1) - 0.5 * a * a / (nu_1 * tau);
-  double p = 1 / (1 + exp(log_spike - log_slab));
+  // P(gamma = 1 | a, tau, rho) = rho N(a; 0, tau) / {rho N(a; 0, tau) + (1 - rho) N(a; 0, nu_1 * tau)}
+  //                            = 1 / (1 + exp(-d)),  d = log(rho / (1 - rho)) + log(nu_1) / 2 + (a^2 / tau) (1 / nu_1 - 1) / 2.
+  // a^2 / tau is set to 0 when a = 0 exactly (an entry that has not left its starting value), so that
+  // tau = 0 or tau = Inf cannot produce 0/0; d = +/-Inf gives p = 1 or 0.
+  double q = (a == 0) ? 0.0 : a * a / tau;
+  double d = log(rho) - log(1 - rho) + 0.5 * log(nu_1) + 0.5 * q * (1 / nu_1 - 1);
+  double p = 1 / (1 + exp(-d));
+
+  // Only possible if rho is exactly 0 or 1 and q is infinite: fall back to the prior probability
+  if (std::isnan(p)) {
+    p = rho;
+  }
 
   // Sample Gamma from Bernoulli(p)
   double Gamma = Rcpp::rbinom(1, 1, p)(0);
@@ -118,7 +127,7 @@ double Sample_Sigma_Diag(double n, double z_sum, double a_sigma, double b_sigma)
 
 
 
-// Calculate log-likelihood for the model when only Y is there and Sigma is diagonal
+// Calculate log-likelihood for the model when only Y is observed and Sigma is diagonal
 double LL_Diag_Star(const arma::mat& A, const arma::mat& S_YY, const arma::colvec& Sigma_Inv, double p, double N) {
 
   // Calculate (I_p - A)
@@ -138,7 +147,7 @@ double LL_Diag_Star(const arma::mat& A, const arma::mat& S_YY, const arma::colve
 
 
 
-// Calculate target value for a particular A for the model when only Y is there
+// Calculate target value for a particular A for the model when only Y is observed
 double Target_A_Star(double a, double N, double gamma, double tau, double nu_1, double Trace3, double Trace4, double Trace5, double logdet) {
 
   // Calculate Sum term inside exponential in likelihood
@@ -154,7 +163,7 @@ double Target_A_Star(double a, double N, double gamma, double tau, double nu_1, 
 
 
 
-// Sample a particular entry of matrix A for the model when only Y is there and Sigma is diagonal
+// Sample a particular entry of matrix A for the model when only Y is observed and Sigma is diagonal
 Rcpp::List Sample_A_Diag_Star(const arma::mat& S_YY, const arma::mat& A, const arma::mat& A_Pseudo, double i, double j, const arma::colvec& Sigma_Inv,
                               double N, double p, double gamma, double tau, double nu_1, double prop_var1, double tA, double Trace3,
                               double Trace4, double Trace5, arma::mat InvMat, double logdet) {
@@ -171,7 +180,7 @@ Rcpp::List Sample_A_Diag_Star(const arma::mat& S_YY, const arma::mat& A, const a
   // Modify the copy with the proposed a value
   A_new(i, j) = (fabs(a_new) > tA) * a_new;
 
-  // Change of the (thresholded) entry A(i, j): delta = A(i, j) - A_new(i, j), so that I - A_new = (I - A) + delta * e_i e_j^T.
+  // Change of the entry A(i, j): delta = A(i, j) - A_new(i, j), so that I - A_new = (I - A) + delta * e_i e_j^T.
   // Computed here, before a is overwritten on acceptance.
   double delta = (fabs(a) > tA) * a - (fabs(a_new) > tA) * a_new;
   double denom = 1 + delta * InvMat(j, i);
@@ -243,10 +252,10 @@ Rcpp::List Sample_A_Diag_Star(const arma::mat& S_YY, const arma::mat& A, const a
 
 
 
-// Do MCMC sampling with Spike and Slab Prior for the model when only Y is there and Sigma is diagonal
+// Do MCMC sampling with Spike and Slab Prior for the model when only Y is observed and Sigma is diagonal
 // [[Rcpp::export]]
 Rcpp::List RGM_SpikeSlab_Diag_Star(const arma::mat& S_YY, double n, int nIter, int nBurnin, int Thin, double a_rho = 3.0, double b_rho = 1.0,
-                              double nu_1 = 0.001, double a_sigma = 0.01, double b_sigma = 0.01, double Prop_VarA = 0.01){
+                              double nu_1 = 0.001, double a_sigma = 0.01, double b_sigma = 0.01, double Prop_VarA = -1){
 
 
   // Calculate number of nodes from S_YY matrix
@@ -256,14 +265,15 @@ Rcpp::List RGM_SpikeSlab_Diag_Star(const arma::mat& S_YY, double n, int nIter, i
   arma::mat A = arma::zeros(p, p);
 
   // Initialize Sigma_Inv
-  arma::colvec Sigma_Inv = arma::ones(p);   // start at unit error variances (a draw from the vague IG(a_sigma, b_sigma) prior can be numerically 0 or infinite)
+  // Start at the residual variances of the starting values (A = 0)
+  arma::colvec Sigma_Inv = 1 / arma::colvec(rgm::Start_Sigma(S_YY).diag());
 
   // Initialize Rho, Gamma and Tau matrix
   arma::mat Rho = arma::zeros(p, p);
   arma::mat Gamma = arma::ones(p, p);
   arma::mat Tau = arma::ones(p, p);
 
-  // Make the diagonals of Gamma and Tau matrix to be 0
+  // Set the diagonals of Gamma and Tau to 0
   Gamma.diag().zeros();
   Tau.diag().zeros();
 
@@ -287,8 +297,15 @@ Rcpp::List RGM_SpikeSlab_Diag_Star(const arma::mat& S_YY, double n, int nIter, i
   arma::colvec LL_Pst = arma::zeros(nPst);
 
 
+  // Adaptive random-walk proposals (rgm_mcmc.h): one scale per entry, tuned during the burn-in, then frozen.
+  // Prop_VarA > 0: starting proposal variance of every entry; <= 0: automatic start.
+  rgm::RWAdapt adA(rgm::Initial_PropVar(Prop_VarA, Sigma_Inv, arma::colvec(S_YY.diag()), n), rgm::OffDiag_Mask(p), nBurnin);
+
   // Run a loop to do MCMC sampling
   for(int i = 1; i <= nIter; i++){
+
+    // allow the user to interrupt a long run
+    if (i % 100 == 0) Rcpp::checkUserInterrupt();
 
     // Calculate I_p - A
     arma::mat MultMat = arma::eye(p, p) - A;
@@ -323,7 +340,7 @@ Rcpp::List RGM_SpikeSlab_Diag_Star(const arma::mat& S_YY, double n, int nIter, i
 
       for (int l = 0; l < p; l++) {
 
-        // Don't update the diagonal entries
+        // Do not update the diagonal entries
         if (l != j) {
 
           // Sample Rho
@@ -337,15 +354,16 @@ Rcpp::List RGM_SpikeSlab_Diag_Star(const arma::mat& S_YY, double n, int nIter, i
 
           // Sample a
           Rcpp::List Output2 = Sample_A_Diag_Star(S_YY, A, A, j, l, Sigma_Inv, n, p, Gamma(j, l), Tau(j, l),
-                                             nu_1, Prop_VarA, -1, Trace3, Trace4, Trace5, InvMat, logdet);
+                                             nu_1, adA.var(j, l), -1, Trace3, Trace4, Trace5, InvMat, logdet);
 
           double a = Output2[0];
 
           // Update acceptance counter
+          adA.record(j, l, A(j, l) != a);
           if (A(j, l) != a) {
 
-            // Increase AccptA
-            AccptA = AccptA + 1;
+            // Increase AccptA (acceptance rate reported over the iterations after burn-in)
+            if (i > nBurnin) AccptA = AccptA + 1;
 
             // Update trace values
             Trace3 = Output2[1];
@@ -369,6 +387,9 @@ Rcpp::List RGM_SpikeSlab_Diag_Star(const arma::mat& S_YY, double n, int nIter, i
 
 
 
+    // Adapt the proposal scales (burn-in only)
+    adA.end_iteration(i);
+
     // Store posterior samples
     // Keep every Thin-th draw after burn-in: iterations nBurnin + Thin, nBurnin + 2 * Thin, ...
     // (exactly nPst draws for any nBurnin; identical to i % Thin == 0 when Thin divides nBurnin)
@@ -386,10 +407,6 @@ Rcpp::List RGM_SpikeSlab_Diag_Star(const arma::mat& S_YY, double n, int nIter, i
 
     }
 
-    // Check if `i` is divisible by 100 and print progress
-    //if (i % 100 == 0) {
-    // Rcpp::Rcout << "Iterations " << i << " done." << std::endl;
-    //}
 
   }
 
@@ -405,13 +422,18 @@ Rcpp::List RGM_SpikeSlab_Diag_Star(const arma::mat& S_YY, double n, int nIter, i
   arma::mat zA_Est = arma::conv_to<arma::mat>::from(logicalGraph_A);
 
   // Return outputs
-  return Rcpp::List::create(Rcpp::Named("A_Est") = A_Est,
+  Rcpp::List out = Rcpp::List::create(Rcpp::Named("A_Est") = A_Est,
                             Rcpp::Named("zA_Est") = zA_Est,
                             Rcpp::Named("Gamma_Est") = Gamma_Est, Rcpp::Named("Tau_Est") = Tau_Est,
                             Rcpp::Named("Rho_Est") = Rho_Est,
                             Rcpp::Named("Sigma_Est") = Sigma_Est,
-                            Rcpp::Named("AccptA") = AccptA / (p * (p - 1) * nIter) * 100,
+                            Rcpp::Named("AccptA") = AccptA / (static_cast<double>(p) * (p - 1) * (nIter - nBurnin)) * 100,
                             Rcpp::Named("LL_Pst") = LL_Pst, Rcpp::Named("Gamma_Pst") = Gamma_Pst);
+
+  // Tuned (frozen) proposal variances of the random-walk updates
+  out["PropVarA"] = adA.variances();
+
+  return out;
 
 
 }

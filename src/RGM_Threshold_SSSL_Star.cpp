@@ -6,18 +6,17 @@
 // Covariates    : none
 // Graph prior   : threshold on A: A = A0 * 1(|A0| > tA), A0 ~ N(0, tau), sqrt(tau) ~ C+(0, 1), tA ~ U(0, 0.1)
 // Error model   : full Sigma, stochastic-search spike-and-slab: sigma_jk ~ N(0, v1^2) if z_jk = 1, N(0, v0^2) if z_jk = 0,
-//                 sigma_jj ~ Exp(lambda / 2), z_jk ~ Bern(pi); v0^2 = 0.005, v1^2 = 5, lambda = 1, pi = 0.5 (assumes unit-scale data)
+//                 sigma_jj ~ Exp(lambda / 2), z_jk ~ Bern(pi); defaults v0^2 = 0.005, v1^2 = 5, lambda = 1, pi = 0.5 (RGM(): omega2, omega1, lambda, varpi; assume unit-scale data)
 // Input         : summary statistics S_YY  (each = t(.) %*% . / n)
-// Update order  : Sigma, Z (Gibbs) -> A (Metropolis, entry-wise) -> tA (Metropolis)
+// Update order  : Sigma, Z (Gibbs) -> A (adaptive random-walk Metropolis, entry-wise) -> tA (Metropolis)
+// Proposals     : adaptive during the burn-in, frozen after it (rgm_mcmc.h); starting values in rgm_mcmc.h
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include <RcppArmadillo.h>
+#include "rgm_mcmc.h"   // adaptive proposals, Gibbs update of B, starting values
 // [[Rcpp::depends(RcppArmadillo)]]
 using namespace Rcpp;
 
-// For Inverse Wishart distribution
-#include <RcppDist.h>
-// [[Rcpp::depends(RcppDist)]]
 
 // Include the GIGrvg library for the GIG distribution
 #include <GIGrvg.h>
@@ -91,7 +90,7 @@ arma::mat Sample_Sigma_Full(const arma::mat& Sigma, const arma::mat& S, const ar
   // Set diagonal entries of V to 0
   V.diag().zeros();
 
-  // --- get GIGrvg::rgig safely (no need to attach GIGrvg) ---
+  // GIGrvg::rgig from the package namespace (GIGrvg need not be attached)
   Rcpp::Environment GIGrvg = Rcpp::Environment::namespace_env("GIGrvg");
   Rcpp::Function rgig = GIGrvg["rgig"];
 
@@ -240,7 +239,7 @@ double tn_pdf(double x, double mu, double sigma, double a, double b) {
 }
 
 
-// Calculate log-likelihood for the model when only Y is there and sigma is full
+// Calculate log-likelihood for the model when only Y is observed and Sigma is full
 double LL_Full_Star(const arma::mat& A, const arma::mat& S_YY, const arma::mat& Sigma_Inv, double p, double N) {
 
   // Calculate (I_p - A)
@@ -259,7 +258,7 @@ double LL_Full_Star(const arma::mat& A, const arma::mat& S_YY, const arma::mat& 
 
 
 
-// Calculate target value for a particular A for the model when only Y is there
+// Calculate target value for a particular A for the model when only Y is observed
 double Target_A_Star(double a, double N, double gamma, double tau, double nu_1, double Trace3, double Trace4, double Trace5, double logdet) {
 
   // Calculate Sum term inside exponential in likelihood
@@ -275,7 +274,7 @@ double Target_A_Star(double a, double N, double gamma, double tau, double nu_1, 
 
 
 
-// Sample a particular entry of matrix A for the model when only Y is there
+// Sample a particular entry of matrix A for the model when only Y is observed
 Rcpp::List Sample_A_Full_Star(const arma::mat& S_YY, const arma::mat& A, const arma::mat& A_Pseudo, double i, double j, const arma::mat& Sigma_Inv,
                               double N, double p, double gamma, double tau, double nu_1, double prop_var1, double tA, double Trace3,
                               double Trace4, double Trace5, arma::mat InvMat, double logdet) {
@@ -364,24 +363,22 @@ Rcpp::List Sample_A_Full_Star(const arma::mat& S_YY, const arma::mat& A, const a
 
 
 
-// Do MCMC sampling with threshold prior for the model when only Y is there and Sigma is full with spike and slab prior on it
+// Do MCMC sampling with threshold prior for the model when only Y is observed and Sigma is full with spike and slab prior on it
 // [[Rcpp::export]]
 Rcpp::List RGM_Threshold_SSSL_Star(const arma::mat& S_YY, double n, int nIter, int nBurnin, int Thin, double nu_1 = 0.0001,
-                                 double Prop_VarA = 0.01){
+                                 double Prop_VarA = -1, double v0_square = 0.005, double v1_square = 5, double Pi = 0.5, double lambda = 1){
 
 
   // Calculate number of nodes from S_YY matrix
   int p = S_YY.n_cols;
-
-  // Take b_Tilde = p + 1 (b_Tilde should be greater than p-1; p+1 is taken to ensure mean is not infinity)
-  int b_Tilde = p + 1;
 
   // Initialize A, A_Pseudo matrices
   arma::mat A = arma::zeros(p, p);
   arma::mat A_Pseudo = arma::zeros(p, p);
 
   // Initialize Sigma
-  arma::mat Sigma = riwish(b_Tilde, arma::eye(p, p));
+  // Start at the residual second-moment matrix of the starting values (A = 0)
+  arma::mat Sigma = rgm::Start_Sigma(S_YY);
 
   // Initialize Gamma and Tau matrices
   arma::mat Gamma = arma::ones(p, p);
@@ -390,7 +387,7 @@ Rcpp::List RGM_Threshold_SSSL_Star(const arma::mat& S_YY, double n, int nIter, i
   // Initialize Z
   arma::mat Z = arma::ones(p, p);
 
-  // Make the diagonals of Gamma, Tau and Z matrices to be 0
+  // Set the diagonals of Gamma, Tau and Z to 0
   Gamma.diag().zeros();
   Tau.diag().zeros();
   Z.diag().zeros();
@@ -407,7 +404,7 @@ Rcpp::List RGM_Threshold_SSSL_Star(const arma::mat& S_YY, double n, int nIter, i
   // Calculate number of posterior samples
   int nPst = (nIter - nBurnin) / Thin;   // integer division
 
-  // Initiate Itr to index the posterior samples
+  // Initialize Itr to index the posterior samples
   int Itr = 0;
 
   // Initialize posterior arrays and matrices
@@ -425,14 +422,17 @@ Rcpp::List RGM_Threshold_SSSL_Star(const arma::mat& S_YY, double n, int nIter, i
   // Calculate Sigma_Inv
   arma::mat Sigma_Inv = arma::inv(Sigma);
 
-  // Parameters for spike and slab on Sigma (v0 >= 0.01, v1 = hv0, h <= 1000, lambda = 1/5/10, Pi = Inclusion probability)
-  double v0_square = 0.005;
-  double v1_square = 5;
-  double Pi = 0.5;
-  double lambda = 1;
+  // SSSL hyperparameters v0_square, v1_square, Pi, lambda are arguments (RGM(): omega2, omega1, varpi, lambda)
+
+  // Adaptive random-walk proposals (rgm_mcmc.h): one scale per entry, tuned during the burn-in, then frozen.
+  // Prop_VarA > 0: starting proposal variance of every entry; <= 0: automatic start.
+  rgm::RWAdapt adA(rgm::Initial_PropVar(Prop_VarA, arma::colvec(Sigma_Inv.diag()), arma::colvec(S_YY.diag()), n), rgm::OffDiag_Mask(p), nBurnin);
 
   // Run a loop to do MCMC sampling
   for(int i = 1; i <= nIter; i++){
+
+    // allow the user to interrupt a long run
+    if (i % 100 == 0) Rcpp::checkUserInterrupt();
 
 
     // Calculate I_p - A
@@ -467,7 +467,7 @@ Rcpp::List RGM_Threshold_SSSL_Star(const arma::mat& S_YY, double n, int nIter, i
 
       for (int l = 0; l < p; l++) {
 
-        // Don't update the diagonal entries
+        // Do not update the diagonal entries
         if (l != j) {
 
           // Update Tau
@@ -475,14 +475,15 @@ Rcpp::List RGM_Threshold_SSSL_Star(const arma::mat& S_YY, double n, int nIter, i
 
           // Sample a
           Rcpp::List Output2 = Sample_A_Full_Star(S_YY, A, A_Pseudo, j, l, Sigma_Inv, n, p, 1, Tau(j, l), nu_1,
-                                                  Prop_VarA, tA, Trace3, Trace4, Trace5,  InvMat, logdet);
+                                                  adA.var(j, l), tA, Trace3, Trace4, Trace5,  InvMat, logdet);
           double a = Output2[0];
 
           // Update Acceptance counter
+          adA.record(j, l, A_Pseudo(j, l) != a);
           if (A_Pseudo(j, l) != a) {
 
-            // Increase AccptA
-            AccptA = AccptA + 1;
+            // Increase AccptA (acceptance rate reported over the iterations after burn-in)
+            if (i > nBurnin) AccptA = AccptA + 1;
 
             // Update Trace values
             Trace3 = Output2[1];
@@ -531,10 +532,13 @@ Rcpp::List RGM_Threshold_SSSL_Star(const arma::mat& S_YY, double n, int nIter, i
       Gamma = arma::conv_to<arma::mat>::from(arma::abs(A_Pseudo) > tA);
       Gamma.diag().zeros();
 
-      Accpt_tA = Accpt_tA + 1;
+      if (i > nBurnin) Accpt_tA = Accpt_tA + 1;
 
     }
 
+
+    // Adapt the proposal scales (burn-in only)
+    adA.end_iteration(i);
 
     // Store posterior samples
     // Keep every Thin-th draw after burn-in: iterations nBurnin + Thin, nBurnin + 2 * Thin, ...
@@ -555,10 +559,6 @@ Rcpp::List RGM_Threshold_SSSL_Star(const arma::mat& S_YY, double n, int nIter, i
 
     }
 
-    // Check if `i` is divisible by 100 and print progress
-    //if (i % 100 == 0) {
-    //Rcpp::Rcout << "Iterations " << i << " done." << std::endl;
-    //}
 
   }
 
@@ -577,15 +577,20 @@ Rcpp::List RGM_Threshold_SSSL_Star(const arma::mat& S_YY, double n, int nIter, i
 
 
   // Return outputs
-  return Rcpp::List::create(Rcpp::Named("A_Est") = A_Est,
+  Rcpp::List out = Rcpp::List::create(Rcpp::Named("A_Est") = A_Est,
                             Rcpp::Named("zA_Est") = zA_Est,
                             Rcpp::Named("A0_Est") = A0_Est,
                             Rcpp::Named("Gamma_Est") = Gamma_Est, Rcpp::Named("Tau_Est") = Tau_Est,
                             Rcpp::Named("tA_Est") = tA_Est,
                             Rcpp::Named("Sigma_Est") = Sigma_Est, Rcpp::Named("Z_Est") = Z_Est,
-                            Rcpp::Named("AccptA") = AccptA / (p * (p - 1) * nIter) * 100,
-                            Rcpp::Named("Accpt_tA") = Accpt_tA / (nIter) * 100,
+                            Rcpp::Named("AccptA") = AccptA / (static_cast<double>(p) * (p - 1) * (nIter - nBurnin)) * 100,
+                            Rcpp::Named("Accpt_tA") = Accpt_tA / static_cast<double>(nIter - nBurnin) * 100,
                             Rcpp::Named("LL_Pst") = LL_Pst, Rcpp::Named("Gamma_Pst") = Gamma_Pst);
+
+  // Tuned (frozen) proposal variances of the random-walk updates
+  out["PropVarA"] = adA.variances();
+
+  return out;
 
 
 

@@ -1,6 +1,5 @@
-citHeader("To cite MR.RGM in publications, please use:")
-
 bibentry(
+  header  = "To cite MR.RGM in publications, please use:",
   bibtype = "Article",
   title   = "MR.RGM: an R package for fitting Bayesian multivariate bidirectional Mendelian randomization networks",
   author  = c(
@@ -17,15 +16,15 @@ bibentry(
     "Sarkar, B. and Ni, Y. (2025). MR.RGM: an R package for fitting Bayesian multivariate bidirectional Mendelian randomization networks. Bioinformatics, 41(4), btaf130."
 )
 
-citHeader("If you use the reciprocal graphical model methodology, please also cite:")
 
 bibentry(
+  header  = "If you use the reciprocal graphical model methodology, please also cite:",
   bibtype = "Article",
   title   = "Reciprocal graphical models for integrative gene regulatory network analysis",
   author  = c(
     person("Yang", "Ni"),
     person("Yuan", "Ji"),
-    person("Peter", "Muller")
+    person("Peter", "M\u00fcller")
   ),
   journal = "Bayesian Analysis",
   year    = 2018,
@@ -34,5 +33,5 @@ bibentry(
   pages   = "1095--1110",
   doi     = "10.1214/17-BA1087",
   textVersion =
-    "Ni, Y., Ji, Y., and Muller, P. (2018). Reciprocal graphical models for integrative gene regulatory network analysis. Bayesian Analysis, 13(4), 1095–1110."
+    "Ni, Y., Ji, Y., and Mueller, P. (2018). Reciprocal graphical models for integrative gene regulatory network analysis. Bayesian Analysis, 13(4), 1095-1110."
 )

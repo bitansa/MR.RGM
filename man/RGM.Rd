@@ -19,9 +19,9 @@ RGM(
   SigmaHat = NULL,
   D,
   n,
-  nIter = 10000,
-  nBurnin = 2000,
-  Thin = 1,
+  nIter = 50000,
+  nBurnin = 10000,
+  Thin = 10,
   prior = c("Spike and Slab", "Threshold"),
   SigmaStarModel = c("SSSL", "IW", "diagonal"),
   aRho = 3,
@@ -32,477 +32,267 @@ RGM(
   nu2 = 1e-04,
   aSigma = 0.01,
   bSigma = 0.01,
-  PropVarA = 0.01,
-  PropVarB = 0.01
+  PropVarA = NULL,
+  PropVarB = NULL,
+  gibbsB = TRUE,
+  selectB = NULL,
+  tauC = 2,
+  omega1 = 5,
+  omega2 = 0.005,
+  varpi = 0.5,
+  lambda = 1
 )
 }
 \arguments{
-\item{X}{A matrix of dimension n * k. Each row represents a distinct observation, and each column corresponds to a specific instrumental variable. The default value is set to NULL. The model has no intercept: if the responses have non-zero means not explained by X and U (typical for real data), center the columns (scaling is also recommended) or include a column of ones in U.}
+\item{X}{A numeric matrix of dimension n * k of instrumental variables (rows = observations). Default NULL.}
 
-\item{Y}{A matrix of dimension n * p. Each row represents a specific observation, and each column corresponds to a particular response variable. The default value is set to NULL. The model has no intercept: if the responses have non-zero means not explained by X and U (typical for real data), center the columns (scaling is also recommended) or include a column of ones in U.}
+\item{Y}{A numeric matrix of dimension n * p of response variables (rows = observations). Default NULL.}
 
-\item{U}{A matrix of dimension n * l. Each row represents a distinct observation, and each column corresponds to a covariate. The default value is set to NULL. The model has no intercept: if the responses have non-zero means not explained by X and U (typical for real data), center the columns (scaling is also recommended) or include a column of ones in U.}
+\item{U}{A numeric matrix of dimension n * l of measured covariates (rows = observations). Default NULL.}
 
-\item{Syy}{A matrix of dimension p * p, where "p" is the number of response variables. It is calculated as t(Y) \%*\% Y / n, where "Y" represents the response data matrix and "n" is the number of observations. Because the model has no intercept, summary-level matrices from real data should be computed from centered variables (covariance-type matrices).}
+\item{Syy}{A p * p matrix, \code{t(Y) \%*\% Y / n}, computed from centered (and preferably scaled) responses. Default NULL.}
 
-\item{Syx}{A matrix of dimension p * k, where "p" is the number of response variables, and "k" is the number of instrumental variables. It is calculated as t(Y) \%*\% X / n, where "Y" represents the response data matrix, "X" represents the instrumental data matrix, and "n" is the number of observations.}
+\item{Syx}{A p * k matrix, \code{t(Y) \%*\% X / n}. Default NULL.}
 
-\item{Sxx}{A matrix of dimension k * k, where "k" is the number of instrumental variables. It is derived as t(X) \%*\% X / n, where "X" represents the instrumental data matrix and "n" is the number of observations.}
+\item{Sxx}{A k * k matrix, \code{t(X) \%*\% X / n}. Default NULL.}
 
-\item{Syu}{A matrix of dimension p * l, where "p" is the number of response variables and "l" is the number of covariates. It is calculated as t(Y) \%*\% U / n, where "Y" represents the response data matrix, "U" represents the covariate matrix, and "n" is the number of observations.}
+\item{Syu}{A p * l matrix, \code{t(Y) \%*\% U / n}. Default NULL.}
 
-\item{Sxu}{A matrix of dimension k * l, where "k" is the number of instrumental variables and "l" is the number of covariates. It is calculated as t(X) \%*\% U / n, where "X" represents the instrument data matrix, "U" represents the covariate matrix, and "n" is the number of observations.}
+\item{Sxu}{A k * l matrix, \code{t(X) \%*\% U / n}. Required together with \code{Syu} and \code{Suu} when instruments and covariates are both given as summary matrices. Default NULL.}
 
-\item{Suu}{A matrix of dimension l * l, where "l" is the number of covariates. It is calculated as t(U) \%*\% U / n, where "U" represents the covariate matrix and "n" is the number of observations.}
+\item{Suu}{An l * l matrix, \code{t(U) \%*\% U / n}. Default NULL.}
 
-\item{Beta}{A matrix of dimension p * k, where each row corresponds to a specific response variable and each column pertains to an instrumental variable. Each entry represents the regression coefficient of the response variable on the instrumental variable. When using Beta as input, ensure that both Y (response data) and X (instrument data) are centered before calculating Beta, Sxx, and SigmaHat. The conversion to summary statistics treats the marginal regression coefficients as joint effects, which is exact when the instruments are uncorrelated; use (Syy, Syx, Sxx) when the instruments are correlated.}
+\item{Beta}{A p * k matrix of regression coefficients of each response on each instrument separately (marginal regressions on centered data). Used with \code{Sxx} and \code{SigmaHat}; this input treats the marginal effects as joint effects, which is exact for uncorrelated instruments, and reconstructs the covariances between the responses under independent errors. It requires \code{SigmaStarModel = "diagonal"}, no covariates, and a map \code{D} in which every response has an instrument that affects only that response (so it is not available for MR.RGM+ with \code{D} all ones). Default NULL.}
 
-\item{SigmaHat}{A matrix of dimension p * k. Each row corresponds to a specific response variable, and each column pertains to an instrumental variable. Each entry represents the mean square error of the regression between the response and the instrumental variable. As with Beta, ensure that both Y and X are centered before calculating SigmaHat.}
+\item{SigmaHat}{A p * k matrix of the residual variances of the same marginal regressions: the residual sum of squares divided by n (not by the residual degrees of freedom). Default NULL.}
 
-\item{D}{A binary indicator matrix of dimension p * k, where each row corresponds to a response variable, and each column corresponds to an instrumental variable. The entry \code{D[i, j]} is 1 if instrumental variable j affects response variable i, and 0 otherwise. For each response variable, there must be at least one instrumental variable that affects only that response (i.e., for each row in D, there must be at least one column with 1, and that column must have zeros in all other rows). If you use \code{Syy}, \code{Beta}, and \code{SigmaHat} as inputs, this condition must be satisfied to run this algorithm. If this condition is not met, an error will be thrown. However, if using \code{X}, \code{Y} or \code{Syy}, \code{Syx}, \code{Sxx} as inputs, a warning will be issued if the condition is violated, but the method will still proceed.}
+\item{D}{A binary p * k matrix (numeric 0/1 or logical): \code{D[i, j] = 1} if instrument j is allowed to affect response i. A matrix of ones gives MR.RGM+; a matrix with zeros gives MR.RGM (see Description). Required whenever instruments are given; not used without instruments.}
 
-\item{n}{A positive integer input representing the count of data points or observations in the dataset. This input is only required when summary level data is used as input.}
+\item{n}{A positive integer, the number of observations. Required when summary-level matrices are the input; with individual-level data it is \code{nrow(Y)}.}
 
-\item{nIter}{A positive integer input representing the number of MCMC (Markov Chain Monte Carlo) sampling iterations. The default value is set to 10,000.}
+\item{nIter}{A positive integer, the number of MCMC iterations. Default 50,000 (the setting of the simulation study of the accompanying paper).}
 
-\item{nBurnin}{A non-negative integer input representing the number of samples to be discarded during the burn-in phase of MCMC sampling. It's important that nBurnin is less than nIter. The default value is set to 2000.}
+\item{nBurnin}{A non-negative integer smaller than \code{nIter}, the number of burn-in iterations. Default 10,000. The proposal variances of the Metropolis updates are tuned during the burn-in (in batches of 50 iterations); a burn-in of a few thousand iterations or more is recommended. With the spike-and-slab prior and a known instrument map (\code{D} with zeros, \code{selectB = FALSE}), the inclusion indicators of \code{A} are held at 1 during the first half of the burn-in, so that every causal effect first moves under its slab prior before selection starts.}
 
-\item{Thin}{A positive integer input denoting the thinning factor applied to posterior samples. Thinning reduces the number of samples retained from the MCMC process for efficiency. Thin should not exceed (nIter - nBurnin). The default value is set to 1.}
+\item{Thin}{A positive integer, the thinning interval of the kept draws (draws are kept at iterations \code{nBurnin + Thin, nBurnin + 2 Thin, ...}). It must not exceed \code{nIter - nBurnin}. Default 10 (4,000 kept draws with the default chain length).}
 
-\item{prior}{A character input specifying the prior assumption on the graph structure. Options are \code{"Threshold"} and \code{"Spike and Slab"}. The default option is \code{"Spike and Slab"}.}
+\item{prior}{The prior on the graph structure: \code{"Spike and Slab"} (default) or \code{"Threshold"}.}
 
-\item{SigmaStarModel}{A character input specifying the assumed structure of the error covariance matrix in the model. It provides three options: \code{"SSSL"} (stochastic spike-and-slab prior for correlated errors), \code{"IW"} (Inverse Wishart prior for correlated errors), or \code{"diagonal"} (diagonal error covariance for independent errors). The default option is \code{"SSSL"}. The \code{"SSSL"} prior uses fixed spike and slab variances (0.005 and 5) for the error covariances and assumes responses on roughly unit scale; center and scale the data before fitting (a warning is issued when the second moments of the responses are below 0.01 or above 100).}
+\item{SigmaStarModel}{The model for the error covariance \eqn{\Sigma^{\ast}}: \code{"SSSL"} (default; stochastic search structure learning prior with correlated errors and inclusion indicators for the covariances), \code{"IW"} (inverse-Wishart prior \eqn{IW(p + 1, I_p)}, correlated errors) or \code{"diagonal"} (independent errors with inverse-gamma priors \eqn{IG(aSigma, bSigma)} on the variances).}
 
-\item{aRho}{A positive scalar specifying the first shape parameter of the Beta prior on the inclusion probability of edges in matrix A under the spike-and-slab prior. The default value is set to 3.}
+\item{aRho, bRho}{Positive shape parameters of the Beta prior on the inclusion probability of a causal edge (spike-and-slab prior on \code{A}). Defaults 3 and 1 (prior inclusion probability 0.75).}
 
-\item{bRho}{A positive scalar specifying the second shape parameter of the Beta prior on the inclusion probability of edges in matrix A under the spike-and-slab prior. The default value is set to 1.}
+\item{nu1}{A positive scalar, the spike variance of the spike-and-slab prior on \code{A} relative to the slab variance (spike-and-slab prior only). Default 0.001.}
 
-\item{nu1}{A positive scalar input representing the multiplication factor in the variance of the spike part in the spike and slab distribution of matrix A. The default value is set to 0.001.}
+\item{aPsi, bPsi}{Positive shape parameters of the Beta prior on the inclusion probability of an instrument effect (spike-and-slab prior with selection of the instrument effects, e.g. MR.RGM+, only). Defaults 0.5 and 0.5.}
 
-\item{aPsi}{A positive scalar specifying the first shape parameter of the Beta prior on the inclusion probability of edges in matrix B under the spike-and-slab prior. The default value is set to 0.5.}
+\item{nu2}{A positive scalar, the spike variance of the spike-and-slab prior on \code{B} relative to the slab variance (spike-and-slab prior with selection, e.g. MR.RGM+, only). Default 0.0001.}
 
-\item{bPsi}{A positive scalar specifying the second shape parameter of the Beta prior on the inclusion probability of edges in matrix B under the spike-and-slab prior. The default value is set to 0.5.}
+\item{aSigma, bSigma}{Positive shape and rate parameters of the inverse-gamma prior on the error variances when \code{SigmaStarModel = "diagonal"}. Defaults 0.01 and 0.01.}
 
-\item{nu2}{A positive scalar input corresponding to the multiplication factor in the variance of the spike part in the spike and slab distribution of matrix B. The default value is set to 0.0001.}
+\item{PropVarA, PropVarB}{Starting variances of the adaptive random-walk Metropolis--Hastings proposals for the entries of \code{A} and (when \code{B} is not drawn by Gibbs) \code{B}; the proposals are tuned during the burn-in. \code{NULL} (default): an automatic start, \eqn{2.38^2 / (n \Omega_{ii} S_{jj} + 1)} for entry \code{(i, j)}, where \eqn{\Omega} is the inverse of the starting error covariance and \code{S} is \code{Syy} (for \code{A}) or \code{Sxx} (for \code{B}); it scales with the sample size. A positive number is used as the starting variance of every entry.}
 
-\item{aSigma}{A positive scalar specifying the first shape parameter of the Inverse Gamma prior for the diagonal entries of the error variance–covariance matrix when \code{SigmaStarModel = "diagonal"}. The default value is set to 0.01.}
+\item{gibbsB}{Logical. \code{TRUE} (default): the instrument effects \code{B} are drawn exactly from their normal full conditional (Gibbs), row by row; with the Threshold prior this applies when the instrument effects are not selected (\code{selectB = FALSE}). \code{FALSE}: adaptive random-walk Metropolis--Hastings for every entry of \code{B}.}
 
-\item{bSigma}{A positive scalar specifying the second shape parameter of the Inverse Gamma prior for the diagonal entries of the error variance–covariance matrix when \code{SigmaStarModel = "diagonal"}. The default value is set to 0.01.}
+\item{selectB}{Logical or NULL. Whether the instrument effects in \code{B} are selected by a spike-and-slab (or threshold) prior. \code{NULL} (default) means \code{all(D == 1)}: selection for MR.RGM+ (\code{D} all ones) and no selection for MR.RGM (\code{D} with zeros). \code{TRUE} with a \code{D} that contains zeros selects among the allowed entries only; \code{FALSE} with \code{D} all ones gives every entry a slab prior without selection. The value used is returned in \code{settings}.}
 
-\item{PropVarA}{A positive scalar input representing the variance of the normal distribution used for proposing terms within the A matrix. The default value is set to 0.01.}
+\item{tauC}{A positive scalar, the column variance of the matrix-normal prior \code{C ~ MN(0, SigmaStar, tauC I_l)} on the covariate effects. Default 2.}
 
-\item{PropVarB}{A positive scalar input representing the variance of the normal distribution used for proposing terms within the B matrix. The default value is set to 0.01.}
+\item{omega1, omega2}{Positive slab and spike variances of the SSSL prior on the off-diagonal entries of \eqn{\Sigma^{\ast}} (\code{SigmaStarModel = "SSSL"}). \code{omega1} must exceed \code{omega2}. Defaults 5 and 0.005; they assume responses on unit scale.}
+
+\item{varpi}{The prior inclusion probability of a confounding link under the SSSL prior, in (0, 1). Default 0.5.}
+
+\item{lambda}{A positive scalar; under the SSSL prior the diagonal entries of \eqn{\Sigma^{\ast}} have an exponential prior with rate \code{lambda / 2} (the parametrization of Wang, 2015). Default 1.}
 }
 \value{
-\item{AEst}{A matrix of dimensions p * p, representing the estimated causal effects or strengths between the response variables.}
-\item{BEst}{A matrix of dimensions p * k, representing the estimated causal effects or strengths of the instrument variables on the response variables. Each row corresponds to a specific response variable, and each column corresponds to a particular instrument variable.}
-\item{CEst}{A matrix of dimensions p * l, representing the estimated effects of covariates on the response variables. Each row corresponds to a response variable and each column corresponds to a covariate. This output is returned only when covariate data are provided as input (i.e., when \code{U} or \code{Syu}, \code{Sxu} and \code{Suu} are supplied).}
-\item{zAEst}{A binary adjacency matrix of dimensions p * p, indicating the graph structure between the response variables. Each entry in the matrix represents the presence (1) or absence (0) of a causal link between the corresponding response variables.}
-\item{zBEst}{A binary adjacency matrix of dimensions p * k, illustrating the graph structure between the response variables and the instrument variables. Each row corresponds to a specific response variable, and each column corresponds to a particular instrument variable. The presence of a causal link is denoted by 1, while the absence is denoted by 0.}
-\item{Graph}{A graph object that visually represents the estimated causal network by integrating AEst and zAEst. The graph consists of directed edges that indicate causal relationships between response variables. The edge weights correspond to effect sizes from AEst, while the structure of the graph is defined by zAEst, which already contain binary values (0 or 1) after thresholding at 0.5. This visualization provides an intuitive way to analyze both the strength and structure of causal effects within the network. Users can plot this graph to explore the causal relationships effectively.}
-\item{A0Est}{A matrix of dimensions p * p, representing the estimated causal effects or strengths between response variables before thresholding. This output is particularly relevant for cases where the "Threshold" prior assumption is utilized.}
-\item{B0Est}{A matrix of dimensions p * k, representing the estimated causal effects or strengths of the instrument variables on the response variables before thresholding. This output is particularly relevant for cases where the "Threshold" prior assumption is utilized. Each row corresponds to a specific response variable, and each column corresponds to a particular instrument variable.}
-\item{GammaEst}{A matrix of dimensions p * p, representing the estimated probabilities of edges between response variables in the graph structure. Each entry in the matrix indicates the probability of a causal link between the corresponding response variables.}
-\item{TauEst}{A matrix of dimensions p * p, representing the estimated variances of causal interactions between response variables. Each entry in the matrix corresponds to the variance of the causal effect between the corresponding response variables.}
-\item{PhiEst}{A matrix of dimensions p * k, representing the estimated probabilities of edges between response and instrument variables in the graph structure. Each row corresponds to a specific response variable, and each column corresponds to a particular instrument variable.}
-\item{EtaEst}{A matrix of dimensions p * k, representing the estimated variances of causal interactions between response and instrument variables. Each row corresponds to a specific response variable, and each column corresponds to a particular instrument variable.}
-\item{tAEst}{A scalar value representing the estimated thresholding value of causal interactions between response variables. This output is relevant when using the "Threshold" prior assumption.}
-\item{tBEst}{A scalar value representing the estimated thresholding value of causal interactions between response and instrument variables. This output is applicable when using the "Threshold" prior assumption.}
-\item{SigmaEst}{Estimated error variance structure. If \code{SigmaStarModel = "diagonal"}, this is a vector of length p containing the marginal error variances of the response variables. If \code{SigmaStarModel} is \code{"IW"} or \code{"SSSL"}, this is a p * p error variance--covariance matrix.}
-\item{ZEst}{A matrix of dimensions p * p containing posterior inclusion probabilities for the entries of \code{SigmaEst}. This output is returned when \code{SigmaStarModel = "SSSL"}.}
-\item{AccptA}{The percentage of accepted entries in the A matrix, which represents the causal interactions between response variables. This metric indicates the proportion of proposed changes that were accepted during the sampling process.}
-\item{AccptB}{The percentage of accepted entries in the B matrix, which represents the causal interactions between response and instrument variables. This metric indicates the proportion of proposed changes that were accepted during the sampling process.}
-\item{AccpttA}{The percentage of accepted thresholding values for causal interactions between response variables when using the "Threshold" prior assumption. This metric indicates the proportion of proposed thresholding values that were accepted during the sampling process.}
-\item{AccpttB}{The percentage of accepted thresholding values for causal interactions between response and instrument variables when using the "Threshold" prior assumption. This metric indicates the proportion of proposed thresholding values that were accepted during the sampling process.}
-\item{LLPst}{A vector containing the posterior log-likelihoods of the model. Each element in the vector represents the log-likelihood of the model given the observed data and the estimated parameters.}
-\item{RhoEst}{A matrix of dimensions p * p, representing the estimated Bernoulli success probabilities of causal interactions between response variables when using the "Spike and Slab" prior assumption. Each entry in the matrix corresponds to the success probability of a causal interaction between the corresponding response variables.}
-\item{PsiEst}{A matrix of dimensions p * k, representing the estimated Bernoulli success probabilities of causal interactions between response and instrument variables when using the "Spike and Slab" prior assumption. Each row in the matrix corresponds to a specific response variable, and each column corresponds to a particular instrument variable.}
-\item{GammaPst}{An array containing the posterior samples of the network structure among the response variables.}
+A list with the following components (components that do not apply to the chosen prior or model are omitted):
+
+\item{AEst}{p * p matrix, posterior mean of \code{A} (\code{AEst[i, j]} is the estimated direct effect of \code{Y_j} on \code{Y_i}).}
+\item{BEst}{p * k matrix, posterior mean of \code{B}.}
+\item{CEst}{p * l matrix, posterior mean of \code{C} (with covariates).}
+\item{zAEst}{p * p binary matrix, \code{GammaEst > 0.5} (median probability model).}
+\item{zBEst}{p * k binary matrix, \code{PhiEst > 0.5}; equal to \code{D} without selection.}
+\item{Graph}{An \code{igraph} object of the estimated causal network among the responses (edges of \code{zAEst}, labelled by \code{AEst}).}
+\item{A0Est, B0Est}{Posterior means of the unthresholded \code{A} and \code{B} (Threshold prior).}
+\item{GammaEst}{p * p matrix of posterior inclusion probabilities of the causal edges (\code{GammaEst[i, j]} for the edge \code{Y_j -> Y_i}).}
+\item{TauEst}{p * p matrix, posterior mean of the slab variances of \code{A}.}
+\item{RhoEst}{p * p matrix, posterior mean of the edge inclusion probabilities \code{rho} (spike-and-slab prior).}
+\item{PhiEst}{p * k matrix of posterior inclusion probabilities of the instrument effects when they are selected (MR.RGM+); equal to \code{D} otherwise.}
+\item{EtaEst}{p * k matrix, posterior mean of the slab variances of \code{B}.}
+\item{PsiEst}{p * k matrix, posterior mean of the inclusion probabilities \code{psi} of the instrument effects (spike-and-slab prior with selection only).}
+\item{tAEst, tBEst}{Posterior means of the thresholds (Threshold prior; \code{tBEst} with selection only).}
+\item{SigmaEst}{The estimated error covariance: a p * p matrix for \code{"SSSL"} and \code{"IW"}, a vector of length p of error variances for \code{"diagonal"}.}
+\item{ZEst}{p * p matrix of posterior inclusion probabilities of the confounding links (\code{"SSSL"} only; the diagonal is 1).}
+\item{AccptA, AccptB}{Acceptance rates (in percent, over the iterations after burn-in) of the Metropolis--Hastings updates of \code{A} and \code{B}; \code{AccptB} is omitted when \code{B} is drawn by Gibbs.}
+\item{AccpttA, AccpttB}{Acceptance rates (in percent, after burn-in) of the threshold updates (Threshold prior; \code{AccpttB} only with selection of the instrument effects).}
+\item{PropVarA, PropVarB}{The tuned (frozen) proposal variances of the entries of \code{A} (p * p, zero diagonal) and, when \code{B} is updated by Metropolis--Hastings, of \code{B} (p * k, zero where \code{D = 0}).}
+\item{LLPst}{Numeric vector of the log-likelihood at the kept draws.}
+\item{GammaPst}{p * p * nPst array of the kept draws of the causal edge indicators (input of \code{\link{NetworkMotif}}).}
+\item{diagnostics}{A list of convergence and identification diagnostics, each with a warning when it signals a problem: \code{instrumentF} (only without instrument selection, \code{selectB = FALSE}: first-stage F statistic of each response on its allowed instruments, computed from the second-moment matrices without adjusting for the covariates, \code{NA} where it cannot be computed; warning below 10), \code{spectralRadiusA} (spectral radius of \code{AEst}; warning at 1 or above, where the estimated feedback loops do not converge and the equilibrium interpretation fails), \code{halvesMaxDiff} (largest difference of the causal inclusion probabilities between the two halves of the kept draws; with at least 200 kept draws, warning when, for at least one edge, the difference exceeds 0.2 and four times that edge's batch-means Monte Carlo standard error; returned only with at least 200 kept draws; a heuristic, which can also fire for edges that mix slowly), \code{halvesMCSE} (the Monte Carlo standard error of that largest difference), \code{acceptanceA} (= \code{AccptA}; warning below 10 percent) and \code{errorVarianceRatio} (ratio of each estimated error variance to the second moment of its response; warning above 5).}
+\item{settings}{A list of the settings used: \code{input} (\code{"Y"}, \code{"XY"}, \code{"S"} or \code{"Beta"}), \code{prior}, \code{SigmaStarModel}, \code{instruments}, \code{covariates}, \code{selectB}, \code{gibbsB} (whether \code{B} was drawn by Gibbs), \code{n}, \code{p}, \code{k} (number of instruments), \code{l} (number of covariates), \code{nIter}, \code{nBurnin}, \code{Thin}, the hyperparameters, the starting proposal variances (\code{"auto"} for the automatic start) and the package version. The Threshold prior also uses a fixed upper bound of 0.1 on the thresholds and a truncated-normal proposal with standard deviation 0.1 for them.}
 }
 \description{
-The RGM function transforms causal inference by merging Mendelian randomization and network-based methods, enabling the creation of comprehensive causal graphs within complex biological systems. RGM accommodates varied data contexts with three input options: individual-level data (X, Y matrices), summary-level data including Syy, Syx, and Sxx matrices, and intricate data with challenging cross-correlations, utilizing Sxx, Beta, and SigmaHat matrices.
-For the latter input, data centralization is necessary. Users can select any of these data formats to suit their needs and don’t have to specify all of them, allowing flexibility based on data availability. In addition, RGM optionally allows the inclusion of covariate information. When individual-level data are provided, covariates may be supplied either through the raw covariate matrix U or through summary matrices Syu, Sxu, and Suu. When only summary-level data are used,
-the covariate summary matrices Syu, Sxu, and Suu must be provided explicitly. Covariate information is optional and the method remains valid in its absence. Crucial inputs encompass "D" (a matrix indicating which IV is affecting which response) and "n" (total observations, only required for summary level data), amplified by customizable parameters that refine analysis. Additionally, users can tailor the analysis by setting parameters such as "nIter" (number of MCMC iterations),
-"nBurnin" (number of discarded samples during burn-in for convergence), and "Thin" (thinning of posterior samples). These customizable parameters enhance the precision and relevance of the analysis. RGM provides essential causal effect/strength estimates between response variables, between response and instrument variables and between response and covariates. Moreover, it furnishes adjacency matrices, visually mapping causal graph structures. These outputs empower researchers to
-untangle intricate relationships within biological networks, fostering a holistic understanding of complex systems. The function also returns a graph object representing the estimated causal network between the responses. This graph consists of directed edges that indicate causal effects, with effect sizes displayed on the edges. The edges are determined based on a threshold of 0.5 for inclusion. Users can visualize the network by plotting this object,
-which helps in interpreting the causal relationships between response variables. The output includes AEst, BEst, CEst, A0Est, B0Est, GammaEst, TauEst, PhiEst, EtaEst, tAEst, tBEst, SigmaEst, ZEst, RhoEst, and PsiEst, representing the posterior means of the corresponding quantities. Additionally, LLPst and GammaPst represent posterior samples. The adjacency matrices zAEst and zBEst are obtained by thresholding GammaEst and PhiEst at 0.5, respectively. When a full error variance–covariance matrix
-is estimated, the off-diagonal elements of SigmaEst may be interpreted as evidence of unmeasured confounding between responses.
+\code{RGM} fits the Bayesian directed cyclic graphical model
+\deqn{Y = A Y + B X + C U + E,\qquad E \sim N_p(0, \Sigma^{\ast}),}
+where \code{Y} are \code{p} response variables (traits), \code{X} are \code{k} instrumental variables
+(for example genetic variants), \code{U} are \code{l} optional measured covariates, \code{A} (\code{p x p},
+zero diagonal) contains the direct causal effects among the responses (\code{A[i, j]} is the effect of
+\code{Y_j} on \code{Y_i}; directed cycles are allowed), \code{B} (\code{p x k}) the instrument effects,
+\code{C} (\code{p x l}) the covariate effects and \eqn{\Sigma^{\ast}} the error covariance, whose off-diagonal
+entries represent unmeasured confounding between responses.
+
+Two versions of the method differ only in how the instruments are mapped to the responses (in the accompanying
+methods paper they are called IV-RGM and IV-RGM+, since the model applies to instrumental variables in general):
+\describe{
+\item{\strong{MR.RGM} (known instrument map)}{\code{D} is a binary \code{p x k} matrix with
+\code{D[i, j] = 1} if instrument \code{j} is allowed to affect response \code{i} (for example a
+cis-eQTL for its own gene). Entries of \code{B} with \code{D = 0} are fixed at zero (the exclusion
+restriction) and the allowed entries receive a slab prior \code{N(0, eta)} without any selection:
+every allowed instrument stays in the model. This is the default when \code{D} contains zeros
+(\code{selectB = FALSE}).}
+\item{\strong{MR.RGM+} (instrument selection)}{\code{D} is a matrix of ones: every instrument may affect
+every response, and each entry of \code{B} receives a spike-and-slab prior whose inclusion indicator is
+sampled, so that the instrument--response map is learned from the data (horizontal pleiotropy). This is
+the default when \code{D} has no zeros (\code{selectB = TRUE}).}
+}
+The argument \code{selectB} overrides these defaults (see its description).
+
+Inference is by MCMC on the sufficient statistics of the Gaussian model, so the function accepts
+individual-level data (\code{X}, \code{Y}, optionally \code{U}), the second-moment matrices
+(\code{Syy}, \code{Syx}, \code{Sxx}, optionally \code{Syu}, \code{Sxu}, \code{Suu}) computed from one sample,
+or the matrices \code{Sxx}, \code{Beta} and \code{SigmaHat} of marginal instrument--response regressions;
+responses alone (\code{Y} or \code{Syy}) fit the model without instruments. The marginal-regression input does
+not contain the covariances between the responses: they are reconstructed under independent errors
+(no unmeasured confounding), so this input requires \code{SigmaStarModel = "diagonal"}, no covariates and, for
+every response, an instrument that affects only that response, and it is exact only for uncorrelated
+instruments. Use individual-level data or the second-moment matrices to model confounding.
+The model has no intercept and the stochastic-search prior on \eqn{\Sigma^{\ast}} assumes responses on roughly
+unit scale: center and scale the columns of \code{Y}, \code{X} and \code{U} (or compute the summary
+matrices from centered and scaled data) before fitting.
+
+The output contains posterior means of all parameters, posterior inclusion probabilities of the causal
+edges (\code{GammaEst}), of the instrument effects (\code{PhiEst}, MR.RGM+ only) and of the confounding
+links (\code{ZEst}, SSSL only), the graph estimated by thresholding the inclusion probabilities at 0.5,
+the posterior draws of the causal edge indicators (\code{GammaPst}, used by \code{\link{NetworkMotif}}),
+the log-likelihood trace, acceptance rates and convergence/identification diagnostics. Warnings are issued for
+signs of weak identification or poor convergence (see \code{diagnostics} in the Value section and the Note).
+
+\strong{MCMC algorithm.} Every iteration updates, in turn, the instrument effects \code{B}, the covariate
+effects \code{C}, the error covariance \eqn{\Sigma^{\ast}} (with its confounding indicators) and the causal
+effects \code{A}, each with its prior hyperparameters. Given the other parameters, the likelihood is quadratic in
+\code{B} and its (spike-and-slab or slab) prior is normal given the inclusion indicators, so each row of
+\code{B} is drawn exactly from its multivariate normal full conditional (Gibbs; \code{gibbsB = TRUE}). The
+entries of \code{A} enter the likelihood also through \eqn{\log|\det(I - A)|} and are updated one at a time by
+random-walk Metropolis--Hastings with adaptive proposals: each entry has its own proposal variance, started at
+\eqn{2.38^2} times an approximation of its posterior variance and tuned during the burn-in towards an
+acceptance rate of 0.44 (adaptive Metropolis-within-Gibbs of Roberts and Rosenthal, 2009, with larger adaptation steps early in the burn-in); the variances are frozen after the burn-in, so the kept
+draws come from a fixed Markov kernel. With more than 100 allowed instruments for a response, its row of \code{B}
+is drawn entry by entry (each entry exactly from its scalar full conditional) instead of jointly. The same adaptive scheme updates \code{B} when it cannot be drawn by Gibbs
+(Threshold prior with selection, or \code{gibbsB = FALSE}). The chain starts at \code{A = 0}, at the
+least-squares effects of each response on its allowed instruments (known map; \code{B = 0} with selection) and
+at the corresponding residual covariance.
+
+\strong{Chain length and convergence.} One call runs one chain. The defaults (50,000 iterations, 10,000 burn-in,
+thinning 10) are the settings validated in the simulation study of the accompanying paper for networks of up to
+about 20 responses; larger networks or weak instruments may need longer chains. For a reported analysis, run
+several chains (for example four) with different seeds
+(\code{set.seed()} before each call), check their agreement (for example the rank-normalized split-\eqn{\hat R}
+of \code{LLPst} and of the edge indicators in \code{GammaPst}, computed with the package \pkg{posterior}, and the
+posterior inclusion probabilities of the chains), and pool the chains only if they agree. The function also
+reports diagnostics and warnings of its own (see \code{diagnostics} in the value).
+}
+\note{
+\strong{Weak identification.} With \code{D = 1} (MR.RGM+), the instrument effects are identified only
+through sparsity and an instrument-diversity condition, which require instruments that explain a
+non-negligible share of the variance of several responses. With weak, response-specific instruments
+(for example cis-eQTLs) the posterior can stay close to the prior; in that case \code{RGM} warns (error
+variances far above the second moments of the responses) and the instrument map \code{D} should encode
+which instrument affects which response (MR.RGM). Compare the posterior inclusion probabilities with their
+prior values (0.75 for causal edges under the default \code{aRho = 3, bRho = 1}; 0.5 for confounding
+links) and the causal inclusion probabilities computed from the two halves of \code{GammaPst}.
+
+\strong{Identification of MR.RGM.} With a known map, the causal effects are identified when, for every
+response, the instruments excluded from its equation satisfy the classical rank condition; a sufficient
+condition is that every response has at least one instrument that affects only that response. \code{RGM}
+warns when this sufficient condition fails and no selection is performed.
 }
 \examples{
-
-
-# ---------------------------------------------------------
-#
-# Example 1:
-# Run RGM based on individual-level data with Threshold prior
-# based on the model Y = AY + BX + CU + E
-#
-# Data Generation
+# ------------------------------------------------------------------------------------------
+# Simulated data: Y1 -> Y2 -> Y3 and Y3 -> Y1 (a feedback loop), two own instruments per
+# response, one covariate, and an unmeasured confounder shared by Y1 and Y3
 set.seed(9154)
+n = 2000; p = 3; k = 6; l = 1
+A = matrix(0, p, p); A[2, 1] = 0.3; A[3, 2] = -0.3; A[1, 3] = 0.2   # A[i, j]: effect of Y_j on Y_i
+D = matrix(0, p, k)                                                  # known instrument map
+for (i in 1:p) D[i, (2 * i - 1):(2 * i)] = 1
+X = matrix(rnorm(n * k), n, k); U = matrix(rnorm(n * l), n, l); W = rnorm(n)
+E = cbind(W, 0, W) + matrix(rnorm(n * p), n, p)                      # confounding of Y1 and Y3
+Y = (X \%*\% t(D) + U \%*\% matrix(0.5, l, p) + E) \%*\% t(solve(diag(p) - A))
+colnames(Y) = paste0("Y", 1:p); colnames(X) = paste0("SNP", 1:k); colnames(U) = "age"
+X = scale(X); Y = scale(Y); U = scale(U)                            # the model has no intercept
 
-# Number of data points
-n = 10000
+# Example 1: MR.RGM (known map D) from individual-level data, spike-and-slab prior and
+# SSSL error covariance (the defaults); a short chain to keep the example fast, whereas the
+# default chain length is the recommended one
+fit = RGM(X = X, Y = Y, U = U, D = D, nIter = 2000, nBurnin = 1000, Thin = 2)
+round(fit$GammaEst, 2)   # posterior inclusion probabilities of the causal edges
+round(fit$AEst, 2)       # posterior means of the causal effects
+round(fit$ZEst, 2)       # posterior inclusion probabilities of the confounding links
+fit$diagnostics          # weak-instrument, stability and convergence diagnostics
+plot(fit$Graph, main = "Estimated causal network")
+plot(fit$LLPst, type = "l", xlab = "Kept draw", ylab = "Log-likelihood")
 
-# Number of response variables, instrument variables, and covariates
-p = 3
-k = 4
-l = 2
+# Example 2: the same model from the second-moment matrices of the same sample
+fit_s = RGM(Syy = crossprod(Y) / n, Syx = crossprod(Y, X) / n, Sxx = crossprod(X) / n,
+            Syu = crossprod(Y, U) / n, Sxu = crossprod(X, U) / n, Suu = crossprod(U) / n,
+            D = D, n = n, nIter = 2000, nBurnin = 1000, Thin = 2)
+round(fit_s$GammaEst, 2)
 
-# Initialize causal interaction matrix between response variables
-A = matrix(sample(c(-0.1, 0.1), p^2, replace = TRUE), p, p)
+# Example 3: MR.RGM+ (D = 1): every instrument may affect every response and the instrument
+# effects are selected by a spike-and-slab prior (horizontal pleiotropy)
+fit_plus = RGM(X = X, Y = Y, U = U, D = matrix(1, p, k), nIter = 2000, nBurnin = 1000, Thin = 2)
+round(fit_plus$PhiEst, 2)   # posterior inclusion probabilities of the instrument effects
+fit_plus$settings$selectB   # TRUE
 
-# Diagonal entries of A matrix will always be 0
-diag(A) = 0
+# Example 4: threshold prior on A and a diagonal error covariance
+fit_t = RGM(X = X, Y = Y, D = D, prior = "Threshold", SigmaStarModel = "diagonal",
+            nIter = 2000, nBurnin = 1000, Thin = 2)
+fit_t$zAEst
 
-# Make the network sparse
-A[sample(which(A != 0), length(which(A != 0)) / 2)] = 0
-
-# Create D matrix (Indicator matrix: rows = responses, cols = instruments)
-D = matrix(0, nrow = p, ncol = k)
-
-# Manually assign values to D matrix
-D[1, 1:2] = 1  # First response variable is influenced by the first 2 instruments
-D[2, 3] = 1    # Second response variable is influenced by the 3rd instrument
-D[3, 4] = 1    # Third response variable is influenced by the 4th instrument
-
-# Initialize B matrix (effects of instruments on responses) based on D
-B = matrix(0, p, k)
-for (i in 1:p) {
-  for (j in 1:k) {
-    if (D[i, j] == 1) {
-      B[i, j] = 1
-    }
-  }
+# Example 5: marginal-regression input (Sxx, Beta, SigmaHat), with uncorrelated instruments,
+# no covariates and independent errors (SigmaStarModel = "diagonal" is required)
+Y0 = scale((X \%*\% t(D) + matrix(rnorm(n * p), n, p)) \%*\% t(solve(diag(p) - A)))
+Beta = SigmaHat = matrix(0, p, k)
+for (i in 1:p) for (j in 1:k) {
+  b = sum(X[, j] * Y0[, i]) / sum(X[, j]^2)                          # centered data, no intercept
+  Beta[i, j] = b; SigmaHat[i, j] = sum((Y0[, i] - b * X[, j])^2) / n  # residual sum of squares / n
 }
-
-# Generate covariate data matrix U (n x l)
-U = matrix(rnorm(n * l, 0, 1), nrow = n, ncol = l)
-
-# Initialize C matrix (effects of covariates on responses), similar to B
-C = matrix(0, p, l)
-C[sample(length(C), size = ceiling(length(C) / 2))] = 1  # simple sparse pattern
-
-# Define Sigma matrix (diagonal error variance)
-Sigma = diag(p)
-
-# Compute Mult_Mat
-Mult_Mat = solve(diag(p) - A)
-
-# Calculate Variance
-Variance = Mult_Mat \%*\% Sigma \%*\% t(Mult_Mat)
-
-# Generate instrument data matrix X (n x k)
-X = matrix(rnorm(n * k, 0, 1), nrow = n, ncol = k)
-
-# Initialize response data matrix Y (n x p)
-Y = matrix(0, nrow = n, ncol = p)
-
-# Generate response data matrix based on the model
-for (i in 1:n) {
-  mu_i = Mult_Mat \%*\% (B \%*\% X[i, ] + C \%*\% U[i, ])
-  Y[i, ] = MASS::mvrnorm(n = 1, mu = mu_i, Sigma = Variance)
-}
-
-# Define a function to create smaller arrowheads
-smaller_arrowheads = function(graph) {
-  igraph::E(graph)$arrow.size = 1
-  return(graph)
-}
-
-# Print true causal interaction matrices
-A
-B
-C
-
-# Plot the true graph structure between response variables
-plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix((A != 0) * 1,
-  mode = "directed")), layout = igraph::layout_in_circle, main = "True Graph")
-
-# Apply RGM on individual-level data with covariates for Threshold prior
-Output = RGM(X = X, Y = Y, U = U, D = D,
-             prior = "Threshold", SigmaStarModel = "diagonal")
-
-# Get the graph structure between response variables
-Output$zAEst
-
-# Get the estimated causal strength matrix between response variables
-Output$AEst
-
-# Get the graph structure between response and instrument variables
-Output$zBEst
-
-# Get the estimated causal strength matrix between response and instrument variables
-Output$BEst
-
-# (Only when covariates are provided) Get the estimated covariate effects
-Output$CEst
-
-# Get the estimated causal network between responses
-Output$Graph
-
-# Plot the estimated causal network
-plot(Output$Graph, main = "Estimated Causal Network")
-
-# Plot posterior log-likelihood
-plot(Output$LLPst, type = "l", xlab = "Number of Iterations", ylab = "Log-likelihood")
-
-# -----------------------------------------------------------------
-# Example 2:
-# Run RGM based on summary-level data with Spike and Slab prior
-# based on the model Y = AY + BX + CU + E
-
-# Data Generation
-set.seed(9154)
-
-# Number of data points
-n = 10000
-
-# Number of response variables, instrument variables, and covariates
-p = 3
-k = 4
-l = 2
-
-# Initialize causal interaction matrix between response variables
-A = matrix(sample(c(-0.1, 0.1), p^2, replace = TRUE), p, p)
-
-# Diagonal entries of A matrix will always be 0
-diag(A) = 0
-
-# Make the network sparse
-A[sample(which(A != 0), length(which(A != 0)) / 2)] = 0
-
-# Create D matrix (Indicator matrix where each row corresponds to a response variable
-# and each column corresponds to an instrument variable)
-D = matrix(0, nrow = p, ncol = k)
-
-# Manually assign values to D matrix
-D[1, 1:2] = 1  # First response variable is influenced by the first 2 instruments
-D[2, 3] = 1    # Second response variable is influenced by the 3rd instrument
-D[3, 4] = 1    # Third response variable is influenced by the 4th instrument
-
-# Initialize B matrix
-B = matrix(0, p, k)
-for (i in 1:p) {
-  for (j in 1:k) {
-    if (D[i, j] == 1) {
-      B[i, j] = 1
-    }
-  }
-}
-
-# Generate covariate data matrix U (n x l)
-U = matrix(rnorm(n * l, 0, 1), nrow = n, ncol = l)
-
-# Initialize C matrix (effects of covariates on responses)
-C = matrix(0, p, l)
-C[sample(length(C), size = ceiling(length(C) / 2))] = 1  # simple sparse pattern
-
-# Use a full (non-diagonal) Sigma matrix
-Sigma = crossprod(matrix(rnorm(p * p), p, p))  # SPD matrix
-
-Mult_Mat = solve(diag(p) - A)
-Variance = Mult_Mat \%*\% Sigma \%*\% t(Mult_Mat)
-
-# Generate instrument data matrix
-X = matrix(rnorm(n * k, 0, 1), nrow = n, ncol = k)
-
-# Initialize response data matrix
-Y = matrix(0, nrow = n, ncol = p)
-
-# Generate response data matrix based on instrument + covariate effects
-for (i in 1:n) {
-  mu_i = Mult_Mat \%*\% (B \%*\% X[i, ] + C \%*\% U[i, ])
-  Y[i, ] = MASS::mvrnorm(n = 1, mu = mu_i, Sigma = Variance)
-}
-
-# Calculate summary-level data (including covariate summaries)
-Syy = t(Y) \%*\% Y / n
-Syx = t(Y) \%*\% X / n
-Sxx = t(X) \%*\% X / n
-Syu = t(Y) \%*\% U / n
-Sxu = t(X) \%*\% U / n
-Suu = t(U) \%*\% U / n
-
-# Print true causal interaction matrices
-A
-B
-C
-
-# Plot the true graph structure between response variables
-plot(smaller_arrowheads(igraph::graph_from_adjacency_matrix(((A != 0) * 1),
-  mode = "directed")), layout = igraph::layout_in_circle, main = "True Graph")
-
-# Apply RGM on summary-level data for Spike and Slab Prior + SSSL SigmaStarModel
-Output = RGM(Syy = Syy, Syx = Syx, Sxx = Sxx,
-             Syu = Syu, Sxu = Sxu, Suu = Suu,
-             D = D, n = n, prior = "Spike and Slab",
-             SigmaStarModel = "SSSL")
-
-# Get the graph structure between response variables
-Output$zAEst
-
-# Get the estimated causal strength matrix between response variables
-Output$AEst
-
-# Get the graph structure between response and instrument variables
-Output$zBEst
-
-# Get the estimated causal strength matrix between response and instrument variables
-Output$BEst
-
-# Get the estimated covariate effect matrix
-Output$CEst
-
-# (Only when SigmaStarModel = "SSSL") inclusion probabilities for Sigma*
-Output$ZEst
-
-# Get the estimated causal network between responses
-Output$Graph
-
-# Plot the estimated causal network
-plot(Output$Graph, main = "Estimated Causal Network")
-
-# Plot posterior log-likelihood
-plot(Output$LLPst, type = "l", xlab = "Number of Iterations", ylab = "Log-likelihood")
-
-
-# -----------------------------------------------------------------
-# Example 3:
-# Run RGM based on Sxx, Beta and SigmaHat with Spike and Slab prior
-# based on the model Y = AY + BX + E
-
-# Data Generation
-set.seed(9154)
-
-# Number of datapoints
-n = 10000
-
-# Number of response variables and number of instrument variables
-p = 3
-k = 4
-
-# Initialize causal interaction matrix between response variables
-A = matrix(sample(c(-0.1, 0.1), p^2, replace = TRUE), p, p)
-
-# Diagonal entries of A matrix will always be 0
-diag(A) = 0
-
-# Make the network sparse
-A[sample(which(A != 0), length(which(A != 0)) / 2)] = 0
-
-# Create D matrix (Indicator matrix where each row corresponds to a response variable
-# and each column corresponds to an instrument variable)
-D = matrix(0, nrow = p, ncol = k)
-
-# Manually assign values to D matrix
-D[1, 1:2] = 1  # First response variable is influenced by the first 2 instruments
-D[2, 3] = 1    # Second response variable is influenced by the 3rd instrument
-D[3, 4] = 1    # Third response variable is influenced by the 4th instrument
-
-# Initialize B matrix
-B = matrix(0, p, k)  # Initialize B matrix with zeros
-
-# Calculate B matrix based on D matrix
-for (i in 1:p) {
-  for (j in 1:k) {
-    if (D[i, j] == 1) {
-      B[i, j] = 1  # Set B[i, j] to 1 if D[i, j] is 1
-    }
-  }
-}
-
-# --- Full (non-diagonal) SPD error covariance matrix Sigma ---
-R = matrix(rnorm(p * p), p, p)
-Sigma = crossprod(R)                # SPD
-Sigma = Sigma / mean(diag(Sigma))   # scale so diagonal magnitudes are ~1
-
-# Compute Mult_Mat
-Mult_Mat = solve(diag(p) - A)
-
-# Calculate Variance of Y given X
-Variance = Mult_Mat \%*\% Sigma \%*\% t(Mult_Mat)
-
-# Generate DNA expressions
-X = matrix(rnorm(n * k, 0, 1), nrow = n, ncol = k)
-
-# Initialize response data matrix
-Y = matrix(0, nrow = n, ncol = p)
-
-# Generate response data matrix based on instrument data matrix
-for (i in 1:n) {
-  Y[i, ] = MASS::mvrnorm(n = 1, Mult_Mat \%*\% B \%*\% X[i, ], Variance)
-}
-
-# Centralize Data (required for Beta/SigmaHat input option)
-Y = t(t(Y) - colMeans(Y))
-X = t(t(X) - colMeans(X))
-
-# Calculate Sxx
-Sxx = t(X) \%*\% X / n
-
-# Generate Beta matrix and SigmaHat
-Beta = matrix(0, nrow = p, ncol = k)
-SigmaHat = matrix(0, nrow = p, ncol = k)
-
-for (i in 1:p) {
-  for (j in 1:k) {
-    fit = lm(Y[, i] ~ X[, j])
-    Beta[i, j] = fit$coefficients[2]
-    SigmaHat[i, j] = sum(fit$residuals^2) / n
-  }
-}
-
-# Print true causal interaction matrices between response variables
-# and between response and instrument variables
-A
-B
-
-# Plot the true graph structure between response variables
-smaller_arrowheads = function(graph) {
-  igraph::E(graph)$arrow.size = 1
-  return(graph)
-}
-
-plot(smaller_arrowheads(
-  igraph::graph_from_adjacency_matrix(((A != 0) * 1), mode = "directed")
-), layout = igraph::layout_in_circle, main = "True Graph")
-
-# Apply RGM based on Sxx, Beta and SigmaHat for Spike and Slab Prior
-# Use IW structure for SigmaStarModel
-Output = RGM(Sxx = Sxx, Beta = Beta, SigmaHat = SigmaHat,
-             D = D, n = n, prior = "Spike and Slab",
-             SigmaStarModel = "IW")
-
-# Get the graph structure between response variables
-Output$zAEst
-
-# Get the estimated causal strength matrix between response variables
-Output$AEst
-
-# Get the graph structure between response and instrument variables
-Output$zBEst
-
-# Get the estimated causal strength matrix between response and instrument variables
-Output$BEst
-
-# Get the estimated causal network between responses
-Output$Graph
-
-# Plot the estimated causal network
-plot(Output$Graph, main = "Estimated Causal Network")
-
-# Plot posterior log-likelihood
-plot(Output$LLPst, type = 'l', xlab = "Number of Iterations", ylab = "Log-likelihood")
-
-
-
-
+fit_b = RGM(Sxx = crossprod(X) / n, Beta = Beta, SigmaHat = SigmaHat, D = D, n = n,
+            SigmaStarModel = "diagonal", nIter = 2000, nBurnin = 1000, Thin = 2)
+round(fit_b$GammaEst, 2)
 
 }
 \references{
-Ni, Y., Ji, Y., & Müller, P. (2018).
+Roberts, G. O., & Rosenthal, J. S. (2009).
+Examples of adaptive MCMC.
+\emph{Journal of Computational and Graphical Statistics},
+\strong{18(2)}, 349-367.
+\doi{10.1198/jcgs.2009.06134}.
+
+Wang, H. (2015).
+Scaling it up: stochastic search structure learning in graphical models.
+\emph{Bayesian Analysis},
+\strong{10(2)}, 351-377.
+\doi{10.1214/14-BA916}.
+
+Ni, Y., Ji, Y., & M\enc{ü}{ue}ller, P. (2018).
 Reciprocal graphical models for integrative gene regulatory network analysis.
 \emph{Bayesian Analysis},
 \strong{13(4)}, 1095-1110.
 \doi{10.1214/17-BA1087}.
+
+Sarkar, B. & Ni, Y. (2025).
+MR.RGM: an R package for fitting Bayesian multivariate bidirectional Mendelian randomization networks.
+\emph{Bioinformatics}, \strong{41(4)}, btaf130.
+\doi{10.1093/bioinformatics/btaf130}.
 }
