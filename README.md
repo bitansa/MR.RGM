@@ -12,6 +12,8 @@ status](https://www.r-pkg.org/badges/version/MR.RGM)](https://CRAN.R-project.org
 downloads](https://cranlogs.r-pkg.org/badges/grand-total/MR.RGM)](https://CRAN.R-project.org/package=MR.RGM)
 <!-- badges: end -->
 
+**Please use version 0.1.3 or later.** Versions 0.1.1 and earlier contain errors in the samplers that are fixed in 0.1.2 and 0.1.3 (details in [NEWS](https://github.com/bitansa/MR.RGM/blob/master/NEWS.md)). Update with `install.packages("MR.RGM")` and check with `packageVersion("MR.RGM")`.
+
 ## Intended use of the package
 
 MR.RGM fits Bayesian reciprocal graphical models for instrumental-variable (IV) analysis of several responses at once. From instruments `X`, responses `Y` and optional measured covariates `U`, `RGM()` estimates the direct causal effects among the responses, which may form directed cycles, the effects of the instruments, and the structure of unmeasured confounding among the responses, with a posterior inclusion probability for every edge and every confounding link. `NetworkMotif()` gives the posterior probability of any set of edges, such as a feedback loop. The package is named after its first application, Mendelian randomization (MR), in which genetic variants are the instruments, but the model applies to instrumental variables in general.
