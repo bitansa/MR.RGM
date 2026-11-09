@@ -67,7 +67,7 @@ label_table(res$pathway_node, res$symbols, file.path("tables", "onek_label_map.t
 snp_df <- data.frame(gene = rep(names(res$top_snps), lengths(res$top_snps)), variant = unlist(res$top_snps), row.names = NULL)
 instrument_tables(res$instrument_strength, snp_df, res$symbols, file.path("tables", "onek"),
                   file.path("tables", "onek_instruments.tex"),
-                  caption = sprintf("OneK$1$K B cells: instruments of the analyzed genes ($n = %d$; cis window $\\pm$%s). Partial $R^2$ of a gene's own SNPs given the covariates; concentration parameter $\\mu^2 = nR^2/(1-R^2)$.", res$n, sub("^\\+/- *", "", res$settings$cis_window)),
+                  caption = sprintf("OneK$1$K B cells: instruments of the analyzed genes ($n = %d$; cis window $\\pm$%s). Partial $R^2$ of a gene's own SNPs given the covariates; concentration parameter $\\mu^2 = nR^2/(1-R^2)$.", res$n, cis_window_tex(res$settings$cis_window)),
                   label = "tab:onek_instruments")
 
 if (converged) {

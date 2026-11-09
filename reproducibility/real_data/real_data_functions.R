@@ -589,14 +589,20 @@ all_edges_tex <- function(fit, labels, thr_dir, file, data_name, model_name, ext
   invisible(e)
 }
 
+## cis window for captions: "+/- 1000 kb" is written as 1 Mb (whole megabases), any other value without "+/-"
+cis_window_tex <- function(w) {
+  kb <- suppressWarnings(as.numeric(sub("^\\+/- *([0-9.]+) *kb$", "\\1", w)))
+  if (length(kb) == 1 && is.finite(kb) && kb %% 1000 == 0) sprintf("%g\\,Mb", kb / 1000) else sub("^\\+/- *", "", w)
+}
+
 ## Candidate genes: every gene with at least one instrument, with the selection statistics and whether it was analysed
 candidates_tex <- function(res, file, data_name) {
   st <- res$instrument_strength; it <- res$instrument_table
   st <- st[order(-st$mu2), ]
   kept <- st$gene %in% res$symbols
   L <- c("\\begin{table}[htb]", "\\centering", "\\scriptsize",
-         sprintf("\\caption{%s: the %d pathway genes (KEGG %s) with at least one cis-SNP with $F > %g$, ordered by the concentration parameter $\\mu^2 = nR^2/(1-R^2)$ of their instruments. Cis-SNPs = SNPs tested in the $\\pm$%s window; strong = SNPs with $F > %g$; instruments = SNPs kept after LD clumping ($r^2 \\le %.1f$, at most %d); partial $R^2$ and $F$ of the instruments given the covariates; $p_{\\mathrm{Bonf}}$ = Bonferroni-adjusted $p$-value of the strongest cis-SNP over the cis-SNPs tested. The %d analyzed genes are marked.}",
-                 data_name, nrow(st), res$kegg_pathway, res$settings$f_min, gsub("\\+/- ", "", res$settings$cis_window), res$settings$f_min, res$settings$ld_r2, res$settings$top_per_gene, length(res$symbols)),
+         sprintf("\\caption{%s: the %d pathway genes (KEGG %s) with at least one cis-SNP with $F > %g$, ordered by the concentration parameter $\\mu^2 = nR^2/(1-R^2)$ of their instruments. Cis-SNPs = SNPs tested in the $\\pm$%s window; strong = SNPs with $F > %g$; instruments = SNPs kept after LD clumping ($r^2 \\le %.1f$, at most %d); partial $R^2$ of the instruments given the covariates, $1-\\mathrm{RSS}_1/\\mathrm{RSS}_0$ with $\\mathrm{RSS}_0$ and $\\mathrm{RSS}_1$ the residual sums of squares of the expression on the covariates without and with the instruments; $F$ = joint first-stage $F$ of the $m$ instruments given the $l$ covariates, $(R^2/m)/\\{(1-R^2)/(n-m-l-1)\\}$, which can be below $10$ although every instrument has $F=t^2>10$; $p_{\\mathrm{Bonf}}$ = Bonferroni-adjusted $p$-value of the strongest cis-SNP over the cis-SNPs tested (candidate genes: $p_{\\mathrm{Bonf}}<0.05$). The %d analyzed genes are marked.}",
+                 data_name, nrow(st), res$kegg_pathway, res$settings$f_min, cis_window_tex(res$settings$cis_window), res$settings$f_min, res$settings$ld_r2, res$settings$top_per_gene, length(res$symbols)),
          sprintf("\\label{tab:%s}", sub("\\.tex$", "", basename(file))),
          "\\begin{adjustbox}{max width=\\textwidth}", "\\begin{tabular}{|l|l|r|r|r|r|r|r|r|c|}", "\\hline",
          "\\textbf{Gene} & \\textbf{KEGG node} & \\textbf{Cis-SNPs} & \\textbf{Strong} & \\textbf{Instruments} & \\textbf{Partial $R^2$} & \\textbf{$F$} & \\textbf{$\\mu^2$} & \\textbf{$p_{\\mathrm{Bonf}}$} & \\textbf{Analyzed} \\\\", "\\hline")
@@ -672,7 +678,7 @@ methods_comparison_tables <- function(fit_main, fit_plus, comp, labels, thr, out
   mtex <- function(m) sprintf("\\texttt{%s}", gsub("_", "\\\\_", m))
   fmt  <- function(v, d = 2) ifelse(is.na(v), "--", formatC(v, format = "f", digits = d))
   L <- c("\\begin{table}[htb]", "\\centering", "\\small",
-         sprintf("\\caption{%s: every method on the same genes, SNPs and donors (summary-level and pairwise methods on covariate-adjusted data). Ordered pairs the method could estimate (of %d), edges reported under its rule, edges shared with \\texttt{MR.RGM} (PIP $> %.2f$), Jaccard index of the two edge sets, and the share of the shared edges whose estimated effects have the same sign. The pairwise methods estimate total effects of one gene on another; MR2 needs an exposure/outcome split and does not apply.}", data_name, p * (p - 1), thr),
+         sprintf("\\caption{%s: every method on the same genes, SNPs and donors (summary-level and pairwise methods on covariate-adjusted data). Ordered pairs the method could estimate (of %d), edges reported under its rule, edges shared with \\texttt{MR.RGM} (PIP $> %.2f$), Jaccard index of the two edge sets (shared edges divided by the edges in either set), and the share of the shared edges whose estimated effects have the same sign. The pairwise methods estimate total effects of one gene on another; MR2 needs an exposure/outcome split and does not apply.}", data_name, p * (p - 1), thr),
          sprintf("\\label{tab:%s_methods_comparison}", prefix), "\\begin{adjustbox}{max width=\\textwidth}",
          "\\begin{tabular}{|l|l|c|c|c|c|c|}", "\\hline",
          "\\textbf{Method} & \\textbf{Edge rule} & \\textbf{Pairs estimated} & \\textbf{Edges} & \\textbf{Shared with \\texttt{MR.RGM}} & \\textbf{Jaccard} & \\textbf{Same sign} \\\\", "\\hline")
