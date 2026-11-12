@@ -15,10 +15,11 @@ reproducibility/
 └── real_data/       OneK1K B-cell analysis: preprocessing, model fitting, figures and tables
 ```
 
-**Package version.** The results in the paper were produced with MR.RGM 0.1.3
-(`remotes::install_github("bitansa/MR.RGM")`, or from CRAN). Check with `packageVersion("MR.RGM")`; every script
-stops with an older version (a 0.1.3 build is accepted only if `RGM()` has the argument `gibbsB`), and every script
-saves the package version with its results.
+**Package version.** The results in the paper were produced with MR.RGM 0.1.4
+(`remotes::install_github("bitansa/MR.RGM")`). Check with `packageVersion("MR.RGM")`; every script
+stops with an older version, and every script saves the package version with its results. MR.RGM and MR.RGM_NoConf
+give the same results under 0.1.3 and 0.1.4 (their samplers did not change); their stored results were produced
+with 0.1.3, and those of MR.RGM+ with 0.1.4 (`simulation/cluster/add_methods.R` with `REPLACE_METHODS`).
 
 **Software versions.** R 4.4.3; MendelianRandomization 0.10.0, OneSampleMR 0.1.8, mrbayes 0.5.3 (rjags 4.17),
 MR2G 0.1.0, MR2 0.2.0, MrDAG 0.1.3 and grivet 1.0 (GitHub commit `1777dbf`). `simulation/cluster/install_packages.R`

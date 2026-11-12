@@ -94,7 +94,7 @@ pass the Bonferroni check; the design-matched simulation supports 10 genes; 48 i
   chains do not converge the network, modules and motifs are not drawn and the PIPs of every chain are reported.
   The package's warnings (weak instruments, identification, spectral radius, chain halves, acceptance,
   error-variance ratio) and diagnostics are recorded with the fit and written to
-  `tables/onek*_mcmc_diagnostics.csv` and `onek*_package_warnings.txt`. Requires MR.RGM ≥ 0.1.3.
+  `tables/onek*_mcmc_diagnostics.csv` and `onek*_package_warnings.txt`. Requires MR.RGM ≥ 0.1.4.
 * **Tables for the paper** (`tables/onek_candidates.tex`, `onek_instruments_list.tex`, `onek_all_edges.tex`,
   `realdata_diagnostics.tex`, `onek_model_comparison.tex`, `onek_methods_comparison.tex`, `onek_edge_support.tex`)
   are written by `OneK1K_Results.R` from the fitted objects.

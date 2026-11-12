@@ -7,7 +7,7 @@
 ##   confounding  confounder loadings x {0, 0.5, 1, 1.5} (small-world, p = 10, n in {1000, 10000})
 ##   largen       n in {1e5, 1e6} (small-world, p = 10)
 ##   roles        4 exposures -> 4 outcomes with known roles (n in {1000, 10000})
-##   sensitivity  MR.RGM family with prior inclusion Beta(3,1) / Beta(1,1), nu1 in {1e-2, 1e-3, 1e-4}, nu2 in {1e-3, 1e-4, 1e-5}
+##   sensitivity  MR.RGM family with prior inclusion Beta(3,1) / Beta(1,1), nu1 in {1e-2, 1e-3, 1e-4}
 ##                (small-world, p = 10, n in {1000, 10000})
 ## Methods: every method (METHODS in sim_functions.R) in every experiment except sensitivity (MR.RGM family only).
 ##
@@ -70,7 +70,7 @@ for (scenario in grid$scen) for (p in grid$p) for (n in grid$n) for (si in seq_a
   f  <- result_file(scenario, p, n, st$label)
   if (check_existing_result(f)) { message("skip (exists): ", f); next }
   set_i <- modifyList(set, st[setdiff(names(st), c("label", "index"))])
-  methods_i <- methods_for_setting(EXPERIMENT, st$label, methods)   # sensitivity, nu2 settings: MR.RGM+ only (sim_functions.R)
+  methods_i <- methods_for_setting(EXPERIMENT, st$label, methods)
   message(sprintf("[%s] %s: %s  p = %d  n = %g  setting = %s  (%d replicates on %d cores; methods: %s)",
                   format(Sys.time(), "%H:%M:%S"), EXPERIMENT, scenario, p, n, st$label, set_i$n_rep, n_cores, paste(methods_i, collapse = ", ")))
   t0  <- Sys.time()

@@ -6,7 +6,7 @@ pk <- c("MR.RGM", "MendelianRandomization", "OneSampleMR", "mrbayes", "rjags", "
 v  <- vapply(pk, function(p) if (requireNamespace(p, quietly = TRUE)) as.character(packageVersion(p)) else NA_character_, "")
 print(data.frame(package = pk, version = v), row.names = FALSE)
 if (anyNA(v)) stop("missing: ", paste(pk[is.na(v)], collapse = ", "))
-stopifnot(packageVersion("MR.RGM") >= "0.1.3", "gibbsB" %in% names(formals(MR.RGM::RGM)))
+stopifnot(packageVersion("MR.RGM") >= "0.1.4")
 cat(R.version.string, "\n"); print(sessionInfo()$BLAS); print(extSoftVersion()[c("BLAS")])
 cat("JAGS:", as.character(rjags::jags.version()), "\n")
 ## the simulation code loads and finds every method

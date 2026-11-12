@@ -36,7 +36,7 @@
 ##   noise        error variance 1, 4, 9 (small-world, p = 10)
 ##   confounding  confounder loadings scaled by 0, 0.5, 1, 1.5 (small-world, p = 10)
 ##   largen       n = 1e5, 1e6 (small-world, p = 10)
-##   sensitivity  prior inclusion Beta(3,1) vs Beta(1,1); nu1 in {1e-2, 1e-3, 1e-4}; nu2 in {1e-3, 1e-4, 1e-5} (MR.RGM family)
+##   sensitivity  prior inclusion Beta(3,1) vs Beta(1,1); nu1 in {1e-2, 1e-3, 1e-4} (MR.RGM family)
 ##   roles        exposures -> outcomes design with known roles (MR2 and MrDAG with their native exposure/outcome split)
 ##   strength     instrument strength (run_instrument_strength.R; strength_replicate() below)
 ###############################################################################
@@ -186,10 +186,10 @@ run_parallel <- function(X, FUN, ..., cores = 1, timeout_min = 60, retries = 1, 
   res
 }
 
-## These scripts require MR.RGM >= 0.1.3 (Gibbs update of B, adaptive random-walk proposals for A; MR.RGM = known map
-## without selection, MR.RGM+ = selection), recognised by the argument gibbsB of RGM()
-if (packageVersion("MR.RGM") < "0.1.3" || !"gibbsB" %in% names(formals(MR.RGM::RGM)))
-  stop("MR.RGM ", packageVersion("MR.RGM"), " is installed; these scripts require MR.RGM >= 0.1.3 (argument gibbsB of RGM()): ",
+## These scripts require MR.RGM >= 0.1.4 (MR.RGM = known map without selection; MR.RGM+ = selection of the instrument
+## effects with a point mass at zero). MR.RGM and MR.RGM_NoConf give the same results under 0.1.3 and 0.1.4.
+if (packageVersion("MR.RGM") < "0.1.4")
+  stop("MR.RGM ", packageVersion("MR.RGM"), " is installed; these scripts require MR.RGM >= 0.1.4: ",
        "remotes::install_github(\"bitansa/MR.RGM\")")
 ## Every result file records the sampler it was produced with; a result file without the current tag is not reused:
 ## the scripts stop and ask for it to be moved out of results_*/.
@@ -231,7 +231,7 @@ SIM_SETTINGS <- list(
   ## Every MCMC method (MR.RGM family, mrbayes, MR2, MrDAG) runs 50,000 iterations in total, of which 10,000 are burn-in;
   ## thinning 10 where the package has a thinning argument (mrbayes has none). Every other tuning parameter is the package default.
   mcmc          = list(nIter = 50000, nBurnin = 10000, Thin = 10),   # MR.RGM family
-  rgm_hyper     = list(aRho = 3, bRho = 1, nu1 = 0.001, nu2 = 0.0001),   # package defaults (experiment "sensitivity" varies them)
+  rgm_hyper     = list(aRho = 3, bRho = 1, nu1 = 0.001),   # package defaults (experiment "sensitivity" varies them)
   mr_boot       = 10000,             # MendelianRandomization: bootstrap draws for median SEs (package default)
   mrbayes       = list(n.chains = 3, n.burn = 10000, n.iter = 40000),   # 3 chains (package default); per chain 10,000 burn-in + 40,000 = 50,000
   mr2g          = list(num_pert = 100, num_pert_M = 100, IV_screen = "ScreenAug"),   # MR2G() defaults
@@ -269,11 +269,12 @@ METHODS <- list(
   roles       = ALL_METHODS,
   strength    = NO_ROLES
 )
-## nu2 (spike variance of B) enters only the selection of the instrument effects: MR.RGM and MR.RGM_NoConf (known map,
-## no selection) would repeat their base fits exactly, so in the nu2 settings of the sensitivity experiment only
-## MR.RGM+ is run
-methods_for_setting <- function(experiment, setting_label, methods = METHODS[[experiment]])
-  if (experiment == "sensitivity" && grepl("^nu2_", setting_label)) setdiff(methods, c("MR.RGM", "MR.RGM_NoConf")) else methods
+## Methods of a setting: the method list of its experiment
+methods_for_setting <- function(experiment, setting_label, methods = METHODS[[experiment]]) methods
+## Whether a setting label belongs to the current grid of its experiment (a result file of a setting that is no longer
+## in the grid is left untouched and not used)
+setting_in_grid <- function(experiment, setting_label)
+  setting_label %in% vapply(experiment_grid(experiment)$settings, function(s) s$label, character(1))
 
 ## Grid of each experiment of run_simulations.R: scenarios, p, n and the list of settings (each a list of SIM_SETTINGS
 ## fields to change, a label and its position `index` in the grid, stored as column `setting` of the results)
@@ -288,11 +289,10 @@ experiment_grid <- function(experiment, set = SIM_SETTINGS) {
     largen      = list(scen = "smallworld", p = 10, n = c(1e5, 1e6), settings = list(list(label = "base"))),
     sensitivity = list(scen = "smallworld", p = 10, n = c(1000, 10000),
                        settings = c(lapply(list(c(3, 1), c(1, 1)), function(ab) list(label = sprintf("Beta_%g_%g", ab[1], ab[2]), rgm_hyper = modifyList(set$rgm_hyper, list(aRho = ab[1], bRho = ab[2])))),
-                                    lapply(c(1e-2, 1e-4), function(v) list(label = sprintf("nu1_%g", v), rgm_hyper = modifyList(set$rgm_hyper, list(nu1 = v)))),
-                                    lapply(c(1e-3, 1e-5), function(v) list(label = sprintf("nu2_%g", v), rgm_hyper = modifyList(set$rgm_hyper, list(nu2 = v)))))),
+                                    lapply(c(1e-2, 1e-4), function(v) list(label = sprintf("nu1_%g", v), rgm_hyper = modifyList(set$rgm_hyper, list(nu1 = v)))))),
     roles       = list(scen = "roles", p = 8, n = c(1000, 10000), settings = list(list(label = "base"))),
     stop("unknown experiment ", experiment))
-  ## the default hyperparameters (Beta(3,1), nu1 = 1e-3, nu2 = 1e-4) are the "base" row of the sensitivity experiment
+  ## the default hyperparameters (Beta(3,1), nu1 = 1e-3) are the "base" row of the sensitivity experiment
   if (experiment == "sensitivity") g$settings <- c(list(list(label = "base")), g$settings[-1])
   for (i in seq_along(g$settings)) g$settings[[i]]$index <- i - 1
   g
@@ -936,7 +936,7 @@ fit_rgm <- function(X, Y, D, model = c("SSSL", "diagonal"), set = SIM_SETTINGS, 
         D = D, n = n, selectB = selectB,
         nIter = set$mcmc$nIter, nBurnin = set$mcmc$nBurnin, Thin = set$mcmc$Thin,
         prior = "Spike and Slab", SigmaStarModel = model,
-        aRho = hyper$aRho, bRho = hyper$bRho, nu1 = hyper$nu1, nu2 = hyper$nu2),
+        aRho = hyper$aRho, bRho = hyper$bRho, nu1 = hyper$nu1),
     warning = function(w) { ws <<- c(ws, conditionMessage(w)); invokeRestart("muffleWarning") })
   fit$warnings <- ws
   fit

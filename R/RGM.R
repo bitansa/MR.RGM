@@ -20,8 +20,9 @@
 #'       every allowed instrument stays in the model. This is the default when \code{D} contains zeros
 #'       (\code{selectB = FALSE}).}
 #'     \item{\strong{MR.RGM+} (instrument selection)}{\code{D} is a matrix of ones: every instrument may affect
-#'       every response, and each entry of \code{B} receives a spike-and-slab prior whose inclusion indicator is
-#'       sampled, so that the instrument--response map is learned from the data (horizontal pleiotropy). This is
+#'       every response, and each entry of \code{B} receives a spike-and-slab prior with a point mass at
+#'       zero (an entry is exactly zero when its inclusion indicator is zero), so that the instrument--response map
+#'       is learned from the data (horizontal pleiotropy). This is
 #'       the default when \code{D} has no zeros (\code{selectB = TRUE}).}
 #'   }
 #'   The argument \code{selectB} overrides these defaults (see its description).
@@ -56,8 +57,8 @@
 #'   \eqn{2.38^2} times an approximation of its posterior variance and tuned during the burn-in towards an
 #'   acceptance rate of 0.44 (adaptive Metropolis-within-Gibbs of Roberts and Rosenthal, 2009, with larger adaptation steps early in the burn-in); the variances are frozen after the burn-in, so the kept
 #'   draws come from a fixed Markov kernel. With more than 100 allowed instruments for a response, its row of \code{B}
-#'   is drawn entry by entry (each entry exactly from its scalar full conditional) instead of jointly. The same adaptive scheme updates \code{B} when it cannot be drawn by Gibbs
-#'   (Threshold prior with selection, or \code{gibbsB = FALSE}). The chain starts at \code{A = 0}, at the
+#'   is drawn entry by entry (each entry exactly from its scalar full conditional) instead of jointly. With instrument selection under the spike-and-slab prior, each inclusion indicator and its entry of \code{B} are drawn jointly from their exact full conditional, the entry being integrated out for the draw of the indicator. The adaptive Metropolis scheme updates \code{B} only
+#'   under the Threshold prior with selection, or with \code{gibbsB = FALSE} without selection. The chain starts at \code{A = 0}, at the
 #'   least-squares effects of each response on its allowed instruments (known map; \code{B = 0} with selection) and
 #'   at the corresponding residual covariance.
 #'
@@ -91,10 +92,10 @@
 #' @param aRho,bRho Positive shape parameters of the Beta prior on the inclusion probability of a causal edge (spike-and-slab prior on \code{A}). Defaults 3 and 1 (prior inclusion probability 0.75).
 #' @param nu1 A positive scalar, the spike variance of the spike-and-slab prior on \code{A} relative to the slab variance (spike-and-slab prior only). Default 0.001.
 #' @param aPsi,bPsi Positive shape parameters of the Beta prior on the inclusion probability of an instrument effect (spike-and-slab prior with selection of the instrument effects, e.g. MR.RGM+, only). Defaults 0.5 and 0.5.
-#' @param nu2 A positive scalar, the spike variance of the spike-and-slab prior on \code{B} relative to the slab variance (spike-and-slab prior with selection, e.g. MR.RGM+, only). Default 0.0001.
+#' @param nu2 Not used since version 0.1.4, in which the spike of the prior on \code{B} is a point mass at zero. The argument is kept so that earlier code runs unchanged.
 #' @param aSigma,bSigma Positive shape and rate parameters of the inverse-gamma prior on the error variances when \code{SigmaStarModel = "diagonal"}. Defaults 0.01 and 0.01.
 #' @param PropVarA,PropVarB Starting variances of the adaptive random-walk Metropolis--Hastings proposals for the entries of \code{A} and (when \code{B} is not drawn by Gibbs) \code{B}; the proposals are tuned during the burn-in. \code{NULL} (default): an automatic start, \eqn{2.38^2 / (n \Omega_{ii} S_{jj} + 1)} for entry \code{(i, j)}, where \eqn{\Omega} is the inverse of the starting error covariance and \code{S} is \code{Syy} (for \code{A}) or \code{Sxx} (for \code{B}); it scales with the sample size. A positive number is used as the starting variance of every entry.
-#' @param gibbsB Logical. \code{TRUE} (default): the instrument effects \code{B} are drawn exactly from their normal full conditional (Gibbs), row by row; with the Threshold prior this applies when the instrument effects are not selected (\code{selectB = FALSE}). \code{FALSE}: adaptive random-walk Metropolis--Hastings for every entry of \code{B}.
+#' @param gibbsB Logical. \code{TRUE} (default): the instrument effects \code{B} are drawn exactly from their normal full conditional (Gibbs), row by row; with the Threshold prior this applies when the instrument effects are not selected (\code{selectB = FALSE}). \code{FALSE}: adaptive random-walk Metropolis--Hastings for every entry of \code{B}, available without instrument selection only. With selection under the spike-and-slab prior the exact draw is always used.
 #' @param selectB Logical or NULL. Whether the instrument effects in \code{B} are selected by a spike-and-slab (or threshold) prior. \code{NULL} (default) means \code{all(D == 1)}: selection for MR.RGM+ (\code{D} all ones) and no selection for MR.RGM (\code{D} with zeros). \code{TRUE} with a \code{D} that contains zeros selects among the allowed entries only; \code{FALSE} with \code{D} all ones gives every entry a slab prior without selection. The value used is returned in \code{settings}.
 #' @param tauC A positive scalar, the column variance of the matrix-normal prior \code{C ~ MN(0, SigmaStar, tauC I_l)} on the covariate effects. Default 2.
 #' @param omega1,omega2 Positive slab and spike variances of the SSSL prior on the off-diagonal entries of \eqn{\Sigma^{\ast}} (\code{SigmaStarModel = "SSSL"}). \code{omega1} must exceed \code{omega2}. Defaults 5 and 0.005; they assume responses on unit scale.
@@ -443,9 +444,8 @@ RGM = function(X = NULL, Y = NULL, U = NULL, Syy = NULL, Syx = NULL, Sxx = NULL,
   # ---------------------------------------------------------------------------------------------------------------
   check_positive(list(aRho = aRho, bRho = bRho, nu1 = nu1, aSigma = aSigma, bSigma = bSigma,
                       tauC = tauC, omega1 = omega1, omega2 = omega2, lambda = lambda))
-  if (instruments) check_positive(list(aPsi = aPsi, bPsi = bPsi, nu2 = nu2))
+  if (instruments) check_positive(list(aPsi = aPsi, bPsi = bPsi))
   if (nu1 >= 1) warning("nu1 is the spike variance relative to the slab variance and should be smaller than 1.", call. = FALSE)
-  if (instruments && nu2 >= 1) warning("nu2 is the spike variance relative to the slab variance and should be smaller than 1.", call. = FALSE)
   if (!is.null(PropVarA) && length(PropVarA) != 1) stop("PropVarA should be NULL or a single positive number.")
   if (!is.null(PropVarB) && length(PropVarB) != 1) stop("PropVarB should be NULL or a single positive number.")
   if (!is.null(PropVarA)) check_positive(list(PropVarA = PropVarA))
@@ -453,8 +453,14 @@ RGM = function(X = NULL, Y = NULL, U = NULL, Syy = NULL, Syx = NULL, Sxx = NULL,
   if (!is.logical(gibbsB) || length(gibbsB) != 1 || is.na(gibbsB)) stop("gibbsB should be TRUE or FALSE.")
   if (!is.numeric(varpi) || length(varpi) != 1 || !is.finite(varpi) || varpi <= 0 || varpi >= 1) stop("varpi should be a number in (0, 1).")
   if (SigmaStarModel == "SSSL" && omega1 <= omega2) stop("omega1 (slab variance) should be larger than omega2 (spike variance).")
-  if (instruments && !is.null(PropVarB) && gibbsB && (prior == "Spike and Slab" || isFALSE(selectB))) {
-    warning("PropVarB is not used: the instrument effects B are drawn by Gibbs (gibbsB = TRUE).", call. = FALSE)
+  # B is drawn exactly (no Metropolis step) with selection under the spike-and-slab prior, and with gibbsB = TRUE
+  # without selection
+  B_exact = instruments && (if (isTRUE(selectB)) prior == "Spike and Slab" else gibbsB)
+  if (B_exact && !is.null(PropVarB)) {
+    warning("PropVarB is not used: the instrument effects B are drawn from their exact full conditional.", call. = FALSE)
+  }
+  if (instruments && isTRUE(selectB) && prior == "Spike and Slab" && !gibbsB) {
+    warning("gibbsB = FALSE is not used: with instrument selection under the spike-and-slab prior, B is drawn from its exact full conditional.", call. = FALSE)
   }
 
   is_count = function(x, min) is.numeric(x) && length(x) == 1 && is.finite(x) && x == round(x) && x >= min && x <= .Machine$integer.max
@@ -536,7 +542,7 @@ RGM = function(X = NULL, Y = NULL, U = NULL, Syy = NULL, Syx = NULL, Sxx = NULL,
   out = append(out, list(Graph = create_causal_graph_Y(out$AEst, out$zAEst)), after = max(which(names(out) %in% c("zAEst", "zBEst"))))
 
   # B drawn exactly by Gibbs: no acceptance rate or proposal variance for B
-  B_gibbs = instruments && gibbsB && (spike || !selectB)
+  B_gibbs = instruments && (if (isTRUE(selectB)) spike else gibbsB)
   if (B_gibbs) {
     out$AccptB = NULL
     out$PropVarB = NULL

@@ -1,7 +1,8 @@
 ###############################################################################
 ## smoke_add.R  --  quick check of the methods that are added to existing results (called by smoke_add.sbatch before
 ## the add array): one replicate of the exposure -> outcome design (n = 1,000) and of Case 2 (p = 5, n = 500), with
-## the methods of the current method list that are missing from the result files (cluster/tasks_add.csv). Fails if a
+## the methods of the current method list that are missing from the result files or are to be replaced
+## (cluster/tasks_add.csv). Fails if a
 ## method stops with an error in the exposure -> outcome design or returns no metric.
 ###############################################################################
 source("sim_functions.R")

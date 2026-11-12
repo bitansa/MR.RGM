@@ -13,8 +13,10 @@ REP_TIMEOUT_MIN <- as.numeric(Sys.getenv("REP_TIMEOUT_MIN", "600"))
 REP_RETRIES     <- as.integer(Sys.getenv("REP_RETRIES", "1"))
 ## methods whose failed fits are fitted again (comma-separated, e.g. REFIT_FAILED=GrIVET; default none)
 REFIT_FAILED    <- setdiff(trimws(strsplit(Sys.getenv("REFIT_FAILED", ""), ",")[[1]]), "")
+## methods that are fitted again for every replicate (comma-separated, e.g. REPLACE_METHODS=MR.RGM+; default none)
+REPLACE_METHODS <- setdiff(trimws(strsplit(Sys.getenv("REPLACE_METHODS", ""), ",")[[1]]), "")
 ADD_FILES       <- tk$file
-message(sprintf("[%s] task %d on %s (%d cores): %s (adding %s)", format(Sys.time(), "%F %T"), tk$task,
+message(sprintf("[%s] task %d on %s (%d cores): %s (adding or replacing %s)", format(Sys.time(), "%F %T"), tk$task,
                 Sys.info()[["nodename"]], N_CORES, tk$file, tk$missing))
 source("cluster/add_methods.R")
 message(sprintf("[%s] task %d finished", format(Sys.time(), "%F %T"), tk$task))

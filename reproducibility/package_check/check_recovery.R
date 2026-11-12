@@ -18,7 +18,7 @@
 library(MR.RGM)
 library(pROC)
 message("MR.RGM version: ", packageVersion("MR.RGM"))
-if (packageVersion("MR.RGM") < "0.1.3" || !"gibbsB" %in% names(formals(MR.RGM::RGM))) stop("MR.RGM >= 0.1.3 is required (argument gibbsB of RGM())")
+if (packageVersion("MR.RGM") < "0.1.4") stop("MR.RGM >= 0.1.4 is required")
 
 set.seed(2026)
 n <- 5000; p <- 5; ivs <- 3; k <- p * ivs; l <- 2

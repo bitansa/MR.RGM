@@ -37,7 +37,7 @@ CRAN](https://CRAN.R-project.org/package=MR.RGM) with:
     install.packages("MR.RGM")
 ```
 
-You can install version 0.1.3, the version used for the analyses in
+You can install version 0.1.4, the version used for the analyses in
 `reproducibility/`, from GitHub with:
 
 ``` r

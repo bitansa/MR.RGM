@@ -5,12 +5,12 @@
 // Instruments   : X (k instruments); D (p x k) marks which instrument may affect which response
 // Covariates    : none
 // Graph prior   : spike-and-slab on A: a ~ gamma N(0, tau) + (1 - gamma) N(0, nu_1 tau), gamma ~ Bern(rho), rho ~ Beta(a_rho, b_rho), sqrt(tau) ~ C+(0, 1)
-//                 and on B (entries with D = 1), when selectB = true: b ~ phi N(0, eta) + (1 - phi) N(0, nu_2 eta), phi ~ Bern(psi), psi ~ Beta(a_psi, b_psi), sqrt(eta) ~ C+(0, 1)
+//                 and on B (entries with D = 1), when selectB = true: b ~ phi N(0, eta) + (1 - phi) delta_0 (point mass at zero), phi ~ Bern(psi), psi ~ Beta(a_psi, b_psi), sqrt(eta) ~ C+(0, 1)
 //                 (MR.RGM+, D = 1); when selectB = false (MR.RGM, D given): b ~ N(0, eta), sqrt(eta) ~ C+(0, 1), no selection (phi = D)
 // Error model   : full Sigma, stochastic-search spike-and-slab: sigma_jk ~ N(0, v1^2) if z_jk = 1, N(0, v0^2) if z_jk = 0,
 //                 sigma_jj ~ Exp(lambda / 2), z_jk ~ Bern(pi); defaults v0^2 = 0.005, v1^2 = 5, lambda = 1, pi = 0.5 (RGM(): omega2, omega1, lambda, varpi; assume unit-scale data)
 // Input         : summary statistics S_YY, S_YX, S_XX  (each = t(.) %*% . / n)
-// Update order  : B (Gibbs, row-wise; gibbsB = false: adaptive Metropolis) -> Sigma, Z (Gibbs) -> A (adaptive random-walk Metropolis, entry-wise)
+// Update order  : B (Gibbs: row-wise without selection, entry-wise jointly with phi under selection; gibbsB = false without selection: adaptive Metropolis) -> Sigma, Z (Gibbs) -> A (adaptive random-walk Metropolis, entry-wise)
 // Proposals     : adaptive during the burn-in, frozen after it (rgm_mcmc.h); starting values in rgm_mcmc.h
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -102,30 +102,18 @@ double Sample_Tau(double a, double gamma, double tau, double nu_1) {
 
 
 
-// Sample Eta
-double Sample_Eta(double b, double phi, double eta, double nu_2) {
+// Sample Eta (slab variance of an entry of B), with sqrt(eta) ~ C+(0, 1) written as eta | epsilon ~ IG(1/2, 1 / epsilon),
+// epsilon ~ IG(1/2, 1): epsilon | eta ~ IG(1, 1 + 1 / eta), and
+//   phi = 1 (entry in the model, b ~ N(0, eta)):   eta | b, epsilon ~ IG(1, b^2 / 2 + 1 / epsilon),
+//   phi = 0 (entry exactly zero, no information):  eta | epsilon ~ IG(1/2, 1 / epsilon), its prior.
+double Sample_Eta(double b, double phi, double eta) {
 
   // Sample Epsilon based on old eta
   double Epsilon = 1 / Rcpp::rgamma(1, 1, 1 / (1 + 1 / eta))(0);
 
-  // Initialize Eta
-  double Eta;
-
-  // Check whether phi is 0 or 1
-  if (phi == 1) {
-
-    // Sample Eta based on b and Epsilon
-    Eta = 1 / Rcpp::rgamma(1, 1, 1 / (b * b / 2 + 1 / Epsilon))(0);
-
-  } else {
-
-    // Sample Eta based on b, nu_2 and Epsilon
-    Eta = 1 / Rcpp::rgamma(1, 1, 1 / (b * b / (2 * nu_2) + 1 / Epsilon))(0);
-
-  }
-
-  // Return Eta
-  return Eta;
+  // Sample Eta based on b and Epsilon (phi = 1) or on Epsilon alone (phi = 0)
+  if (phi == 1) return 1 / Rcpp::rgamma(1, 1, 1 / (b * b / 2 + 1 / Epsilon))(0);
+  return 1 / Rcpp::rgamma(1, 0.5, Epsilon)(0);
 
 }
 
@@ -157,29 +145,6 @@ double Sample_Gamma(double a, double tau, double rho, double nu_1) {
 
 
 
-// Sample Phi
-double Sample_Phi(double b, double eta, double psi, double nu_2) {
-
-  // P(phi = 1 | b, eta, psi) = psi N(b; 0, eta) / {psi N(b; 0, eta) + (1 - psi) N(b; 0, nu_2 * eta)}
-  //                          = 1 / (1 + exp(-d)),  d = log(psi / (1 - psi)) + log(nu_2) / 2 + (b^2 / eta) (1 / nu_2 - 1) / 2.
-  // b^2 / eta is set to 0 when b = 0 exactly (an entry that has not left its starting value), so that
-  // eta = 0 or eta = Inf cannot produce 0/0; d = +/-Inf gives p = 1 or 0.
-  double q = (b == 0) ? 0.0 : b * b / eta;
-  double d = log(psi) - log(1 - psi) + 0.5 * log(nu_2) + 0.5 * q * (1 / nu_2 - 1);
-  double p = 1 / (1 + exp(-d));
-
-  // Only possible if psi is exactly 0 or 1 and q is infinite: fall back to the prior probability
-  if (std::isnan(p)) {
-    p = psi;
-  }
-
-  // Sample Phi from Bernoulli(p)
-  double Phi = Rcpp::rbinom(1, 1, p)(0);
-
-  // Return Phi
-  return Phi;
-
-}
 
 
 
@@ -547,6 +512,8 @@ Rcpp::List RGM_SpikeSlab_SSSL(const arma::mat& S_YY, const arma::mat& S_YX, cons
   // Make Phi[i, j] = 0 and Eta[i, j] = 0 if D[i, j] = 0. With selectB = false, Phi stays equal to D throughout:
   // every allowed entry of B has the slab prior N(0, eta) and no inclusion indicator is sampled.
   Phi = Phi % D;
+  // With selection (point-mass spike) B starts at zero, so every indicator starts at zero.
+  if (selectB) Phi.zeros();
   Eta = Eta % D;
 
   // Initialize acceptance counter
@@ -584,7 +551,8 @@ Rcpp::List RGM_SpikeSlab_SSSL(const arma::mat& S_YY, const arma::mat& S_YX, cons
   rgm::RWAdapt adA(rgm::Initial_PropVar(Prop_VarA, arma::colvec(Sigma_Inv.diag()), arma::colvec(S_YY.diag()), n), rgm::OffDiag_Mask(p), nBurnin);
   rgm::RWAdapt adB(rgm::Initial_PropVar(Prop_VarB, arma::colvec(Sigma_Inv.diag()), arma::colvec(S_XX.diag()), n), arma::umat(D != 0), nBurnin);
   // B is drawn exactly from its normal full conditional (Gibbs) unless gibbsB = false; otherwise by adaptive random-walk Metropolis.
-  bool useGibbsB = gibbsB;
+  // With selection, the indicators and the entries of B are always drawn jointly from their exact full conditional.
+  bool useGibbsB = gibbsB || selectB;
 
   // Run a loop to do MCMC sampling
   // Warm-up (MR.RGM, selectB = false only): during the first half of the burn-in the inclusion indicators of A are held
@@ -628,13 +596,8 @@ Rcpp::List RGM_SpikeSlab_SSSL(const arma::mat& S_YY, const arma::mat& S_YX, cons
             Psi(j, l) = Sample_Psi(Phi(j, l), a_psi, b_psi);
           }
 
-          // Sample Eta (with Phi = 1 this is the slab update, eta ~ IG(1, b^2 / 2 + 1 / epsilon))
-          Eta(j, l) = Sample_Eta(B(j, l), Phi(j, l), Eta(j, l), nu_2);
-
-          // Sample Phi (only when the instrument effects are selected)
-          if (selectB) {
-            Phi(j, l) = Sample_Phi(B(j, l), Eta(j, l), Psi(j, l), nu_2);
-          }
+          // Sample Eta (Phi = 1: slab update given b; Phi = 0: draw from the prior)
+          Eta(j, l) = Sample_Eta(B(j, l), Phi(j, l), Eta(j, l));
 
           if (!useGibbsB) {
             // Sample b
@@ -663,8 +626,10 @@ Rcpp::List RGM_SpikeSlab_SSSL(const arma::mat& S_YY, const arma::mat& S_YX, cons
 
       }
 
-      // Exact Gibbs draw of the allowed entries of row j of B, given Psi, Eta, Phi, A, Sigma
-      if (useGibbsB) rgm::Gibbs_B_Row(B, j, T_B, S_XX, Omega_B, D, Phi, Eta, nu_2, n);
+      // Exact draw of row j of B: with selection, each indicator and entry jointly (point-mass spike);
+      // without selection, the allowed entries jointly from their normal full conditional.
+      if (selectB) rgm::PointMass_B_Row(B, Phi, j, T_B, S_XX, Omega_B, D, Eta, Psi, n);
+      else if (useGibbsB) rgm::Gibbs_B_Row(B, j, T_B, S_XX, Omega_B, D, Phi, Eta, nu_2, n);
 
     }
 

@@ -86,13 +86,13 @@ RGM(
 
 \item{aPsi, bPsi}{Positive shape parameters of the Beta prior on the inclusion probability of an instrument effect (spike-and-slab prior with selection of the instrument effects, e.g. MR.RGM+, only). Defaults 0.5 and 0.5.}
 
-\item{nu2}{A positive scalar, the spike variance of the spike-and-slab prior on \code{B} relative to the slab variance (spike-and-slab prior with selection, e.g. MR.RGM+, only). Default 0.0001.}
+\item{nu2}{Not used since version 0.1.4, in which the spike of the prior on \code{B} is a point mass at zero. The argument is kept so that earlier code runs unchanged.}
 
 \item{aSigma, bSigma}{Positive shape and rate parameters of the inverse-gamma prior on the error variances when \code{SigmaStarModel = "diagonal"}. Defaults 0.01 and 0.01.}
 
 \item{PropVarA, PropVarB}{Starting variances of the adaptive random-walk Metropolis--Hastings proposals for the entries of \code{A} and (when \code{B} is not drawn by Gibbs) \code{B}; the proposals are tuned during the burn-in. \code{NULL} (default): an automatic start, \eqn{2.38^2 / (n \Omega_{ii} S_{jj} + 1)} for entry \code{(i, j)}, where \eqn{\Omega} is the inverse of the starting error covariance and \code{S} is \code{Syy} (for \code{A}) or \code{Sxx} (for \code{B}); it scales with the sample size. A positive number is used as the starting variance of every entry.}
 
-\item{gibbsB}{Logical. \code{TRUE} (default): the instrument effects \code{B} are drawn exactly from their normal full conditional (Gibbs), row by row; with the Threshold prior this applies when the instrument effects are not selected (\code{selectB = FALSE}). \code{FALSE}: adaptive random-walk Metropolis--Hastings for every entry of \code{B}.}
+\item{gibbsB}{Logical. \code{TRUE} (default): the instrument effects \code{B} are drawn exactly from their normal full conditional (Gibbs), row by row; with the Threshold prior this applies when the instrument effects are not selected (\code{selectB = FALSE}). \code{FALSE}: adaptive random-walk Metropolis--Hastings for every entry of \code{B}, available without instrument selection only. With selection under the spike-and-slab prior the exact draw is always used.}
 
 \item{selectB}{Logical or NULL. Whether the instrument effects in \code{B} are selected by a spike-and-slab (or threshold) prior. \code{NULL} (default) means \code{all(D == 1)}: selection for MR.RGM+ (\code{D} all ones) and no selection for MR.RGM (\code{D} with zeros). \code{TRUE} with a \code{D} that contains zeros selects among the allowed entries only; \code{FALSE} with \code{D} all ones gives every entry a slab prior without selection. The value used is returned in \code{settings}.}
 
@@ -151,8 +151,9 @@ restriction) and the allowed entries receive a slab prior \code{N(0, eta)} witho
 every allowed instrument stays in the model. This is the default when \code{D} contains zeros
 (\code{selectB = FALSE}).}
 \item{\strong{MR.RGM+} (instrument selection)}{\code{D} is a matrix of ones: every instrument may affect
-every response, and each entry of \code{B} receives a spike-and-slab prior whose inclusion indicator is
-sampled, so that the instrument--response map is learned from the data (horizontal pleiotropy). This is
+every response, and each entry of \code{B} receives a spike-and-slab prior with a point mass at
+zero (an entry is exactly zero when its inclusion indicator is zero), so that the instrument--response map
+is learned from the data (horizontal pleiotropy). This is
 the default when \code{D} has no zeros (\code{selectB = TRUE}).}
 }
 The argument \code{selectB} overrides these defaults (see its description).
@@ -187,8 +188,8 @@ random-walk Metropolis--Hastings with adaptive proposals: each entry has its own
 \eqn{2.38^2} times an approximation of its posterior variance and tuned during the burn-in towards an
 acceptance rate of 0.44 (adaptive Metropolis-within-Gibbs of Roberts and Rosenthal, 2009, with larger adaptation steps early in the burn-in); the variances are frozen after the burn-in, so the kept
 draws come from a fixed Markov kernel. With more than 100 allowed instruments for a response, its row of \code{B}
-is drawn entry by entry (each entry exactly from its scalar full conditional) instead of jointly. The same adaptive scheme updates \code{B} when it cannot be drawn by Gibbs
-(Threshold prior with selection, or \code{gibbsB = FALSE}). The chain starts at \code{A = 0}, at the
+is drawn entry by entry (each entry exactly from its scalar full conditional) instead of jointly. With instrument selection under the spike-and-slab prior, each inclusion indicator and its entry of \code{B} are drawn jointly from their exact full conditional, the entry being integrated out for the draw of the indicator. The adaptive Metropolis scheme updates \code{B} only
+under the Threshold prior with selection, or with \code{gibbsB = FALSE} without selection. The chain starts at \code{A = 0}, at the
 least-squares effects of each response on its allowed instruments (known map; \code{B = 0} with selection) and
 at the corresponding residual covariance.
 

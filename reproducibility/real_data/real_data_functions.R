@@ -1,7 +1,7 @@
 ###############################################################################
 ## real_data_functions.R
 ##
-## Shared code for the real-data analyses (OneK1K; the helpers are generic), MR.RGM >= 0.1.3:
+## Shared code for the real-data analyses (OneK1K; the helpers are generic), MR.RGM >= 0.1.4:
 ##   - preprocessing helpers (centering/scaling, summary statistics)
 ##   - result tables generated programmatically from the fitted model
 ##   - network figure, data-driven modules, network motifs
@@ -21,9 +21,10 @@ suppressPackageStartupMessages({
   library(igraph); library(tidygraph); library(scales); library(grid); library(MR.RGM)
 })
 
-## These scripts require MR.RGM >= 0.1.3 (MR.RGM = known map without selection of the instrument effects; see NEWS.md)
-if (packageVersion("MR.RGM") < "0.1.3" || !"gibbsB" %in% names(formals(MR.RGM::RGM)))
-  stop("MR.RGM ", packageVersion("MR.RGM"), " is installed; these scripts need MR.RGM 0.1.3 (Gibbs update of B, argument gibbsB of RGM()): remotes::install_github(\"bitansa/MR.RGM\")")
+## These scripts require MR.RGM >= 0.1.4 (MR.RGM = known map without selection of the instrument effects; MR.RGM+ =
+## selection with a point mass at zero; see NEWS.md)
+if (packageVersion("MR.RGM") < "0.1.4")
+  stop("MR.RGM ", packageVersion("MR.RGM"), " is installed; these scripts need MR.RGM >= 0.1.4: remotes::install_github(\"bitansa/MR.RGM\")")
 
 
 PRIOR_CAUSAL <- 0.75

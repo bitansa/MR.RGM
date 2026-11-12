@@ -18,6 +18,8 @@
 //        P = n Omega_jj S_XX[L, L] + diag(1 / v_l),     v_l = eta_jl (phi_jl = 1) or nu_2 eta_jl (phi_jl = 0),
 //        h = n [ (Omega T)_j,L - (Omega B S_XX)_j,L + Omega_jj (B_j S_XX)_L ],
 //    where Omega = Sigma^{-1}, T = (I - A) S_YX - C S_XU^T (C = 0 without covariates), B_j = current row j of B.
+// 3b. PointMass_B_Row: joint draw of the indicators and entries of one row of B under the point-mass spike used
+//    when the instrument effects are selected (b_jl = 0 exactly when phi_jl = 0); see the function.
 // 4. Starting values: B from least squares of each response on its allowed instruments (A = 0), Sigma from the
 //    residual second-moment matrix at these values.
 //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -171,6 +173,53 @@ inline void Gibbs_B_Row(arma::mat& B, int j, const arma::mat& T, const arma::mat
   arma::colvec b  = mu + arma::solve(arma::trimatu(R), z, arma::solve_opts::fast);
 
   for (arma::uword m = 0; m < L.n_elem; m++) B(j, L(m)) = b(m);
+}
+
+// --------------------------------------------------------------------------------------------------
+// 3b. Joint draw of the inclusion indicators and the entries of row j of B under the point-mass spike
+//     (instrument selection): b_jl ~ phi_jl N(0, eta_jl) + (1 - phi_jl) delta_0, phi_jl ~ Bern(psi_jl).
+//     Given the other parameters the log-likelihood is, as a function of b_jl alone, h b_jl - q b_jl^2 / 2 with
+//         q = n Omega_jj S_ll,     h = n [ (Omega T)_jl - (Omega B S_XX)_jl + Omega_jj b_jl S_ll ].
+//     With b_jl integrated out under the slab, the ratio of the marginal likelihoods of phi_jl = 1 and phi_jl = 0 is
+//         r = (1 + eta_jl q)^(-1/2) exp{ h^2 / (2 (q + 1 / eta_jl)) },
+//     so P(phi_jl = 1 | rest) = psi_jl r / (psi_jl r + 1 - psi_jl), computed on the logit scale. Then
+//     b_jl | phi_jl = 1 ~ N(h / (q + 1 / eta_jl), 1 / (q + 1 / eta_jl)) and b_jl = 0 if phi_jl = 0.
+//     The entries of the row are visited in turn; (Omega B S_XX)_j,. is updated after every change of b_jl.
+//     The uniform and normal draws use R's generator, so results follow set.seed().
+// --------------------------------------------------------------------------------------------------
+inline void PointMass_B_Row(arma::mat& B, arma::mat& Phi, int j, const arma::mat& T, const arma::mat& S_XX,
+                            const arma::mat& Omega, const arma::mat& D, const arma::mat& Eta, const arma::mat& Psi,
+                            double n) {
+
+  arma::uvec L = arma::find(D.row(j).t() != 0);
+  if (L.n_elem == 0) return;
+
+  arma::rowvec OT  = Omega.row(j) * T;
+  arma::rowvec OBS = Omega.row(j) * B * S_XX;
+  double Ojj = Omega(j, j);
+
+  for (arma::uword m = 0; m < L.n_elem; m++) {
+    arma::uword l = L(m);
+    double b_old = B(j, l);
+    double eta = std::max(Eta(j, l), 1e-300);        // guard against an underflowed slab variance
+    double q = n * Ojj * S_XX(l, l);
+    double h = n * (OT(l) - OBS(l) + Ojj * b_old * S_XX(l, l));
+    double prec = q + 1.0 / eta;
+
+    // log r and the inclusion probability on the logit scale
+    double log_r = -0.5 * std::log1p(eta * q) + 0.5 * h * h / prec;
+    double psi = Psi(j, l);
+    double d = std::log(psi) - std::log1p(-psi) + log_r;
+    double prob = 1.0 / (1.0 + std::exp(-d));
+    if (std::isnan(prob)) prob = psi;               // psi exactly 0 or 1 with an infinite log r
+
+    double phi = (R::unif_rand() < prob) ? 1.0 : 0.0;
+    double b_new = (phi == 1.0) ? h / prec + R::norm_rand() / std::sqrt(prec) : 0.0;
+
+    OBS += Ojj * (b_new - b_old) * S_XX.row(l);
+    B(j, l) = b_new;
+    Phi(j, l) = phi;
+  }
 }
 
 // --------------------------------------------------------------------------------------------------

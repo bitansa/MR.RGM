@@ -88,7 +88,18 @@ test_that("MR.RGM+ (D = 1) selects the instrument effects", {
     expect_true(all(fit$PhiEst >= 0 & fit$PhiEst <= 1))
     expect_equal(fit$zBEst, (fit$PhiEst > 0.5) * 1)
     if (pr == "Spike and Slab") expect_equal(dim(fit$PsiEst), c(d$p, d$k)) else expect_true(is.numeric(fit$tBEst))
+    ## point-mass spike: an instrument effect that is never selected has posterior mean exactly zero
+    if (pr == "Spike and Slab") {
+      expect_true(all(fit$BEst[fit$PhiEst == 0] == 0))
+      expect_true(fit$settings$gibbsB)
+    }
   }
+})
+
+test_that("with instrument selection under the spike-and-slab prior, gibbsB = FALSE gives a warning", {
+  set.seed(6)
+  expect_warning(RGM(X = d$X, Y = d$Y, D = matrix(1, d$p, d$k), gibbsB = FALSE, nIter = mcmc$nIter, nBurnin = mcmc$nBurnin,
+                     Thin = mcmc$Thin), "gibbsB = FALSE is not used")
 })
 
 test_that("selectB overrides the default given by D", {

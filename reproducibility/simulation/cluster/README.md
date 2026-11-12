@@ -48,6 +48,12 @@ If the smoke test fails, the other jobs stay pending ("DependencyNeverSatisfied"
 (`sbatch -p <RUN_PARTITION> --cpus-per-task=100 --mem-per-cpu=4G --time=2-00:00:00 --array=<task> cluster/sim_array.sbatch`);
 finished settings are skipped, so `bash cluster/submit_all.sh --no-smoke` also completes whatever is missing.
 
+**Refitting one method.** After a change of a method's implementation, `REPLACE_METHODS=MR.RGM+ bash cluster/submit_add.sh`
+fits that method again for every replicate of every result file, on the same data and with the same seeds, and
+times it again in the runtime benchmark. The results of every other method are kept; the original files are copied
+to `_Archive before replaced methods/` first. Result files of settings that are no longer in the grid of their
+experiment are left untouched and are not used.
+
 **GrIVET (second pass).** The simulation tasks skip GrIVET (`SKIP_METHODS` in `run_task.R`), since a replicate that
 exceeds its time limit is stopped with every method in it, and GrIVET does not finish within 48 hours at n = 10^6.
 `submit_add.sh` then adds GrIVET to every result file, with `REP_TIMEOUT_MIN=2880` (48 hours per fit) and the 48-hour

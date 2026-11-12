@@ -39,7 +39,7 @@
 ###############################################################################
 
 library(MR.RGM); library(pROC); library(parallel)
-if (packageVersion("MR.RGM") < "0.1.3" || !"gibbsB" %in% names(formals(MR.RGM::RGM))) stop("MR.RGM >= 0.1.3 is required (arguments selectB and gibbsB of RGM())")
+if (packageVersion("MR.RGM") < "0.1.4") stop("MR.RGM >= 0.1.4 is required")
 ## run_parallel() (replicates in forked processes with a time limit), without loading the simulation settings
 ## and display_text() (displayed method names and wording of the LaTeX table)
 sim_env <- local({ e <- new.env(); sys.source(file.path("..", "simulation", "sim_functions.R"), envir = e,

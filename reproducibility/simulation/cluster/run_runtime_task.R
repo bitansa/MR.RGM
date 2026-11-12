@@ -6,6 +6,9 @@
 ## is recorded as failed (median NA). Before the timed runs, one untimed
 ## warm-up fit (as the trial fit of RunTimeAnalysis.R): it also detects a method that cannot be fitted.
 ## Output: Runtime Analysis/cluster_parts/rt_p<p>_m<method number in RUNTIME_EXPRS>_<block>.rds
+## A block that exists is skipped, unless its method is named in the environment variable REPLACE_METHODS
+## (comma-separated) and the block was timed with another version of MR.RGM: the block is then moved to
+## Runtime Analysis/cluster_parts/_Archive before replaced methods/ and timed again.
 ###############################################################################
 args <- commandArgs(trailingOnly = TRUE)
 tk <- read.csv(args[1], stringsAsFactors = FALSE)
@@ -13,7 +16,14 @@ tk <- tk[tk$task == as.integer(args[2]), ]; stopifnot(nrow(tk) == 1)
 source("sim_functions.R")
 out_dir <- file.path("Runtime Analysis", "cluster_parts"); dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
 f <- file.path(out_dir, sprintf("rt_p%02d_m%02d_%02d.rds", tk$p, match(tk$method, names(RUNTIME_EXPRS)), tk$block))   # m = method number
-if (file.exists(f)) { message("exists: ", f); quit(save = "no") }
+REPLACE_METHODS <- setdiff(trimws(strsplit(Sys.getenv("REPLACE_METHODS", ""), ",")[[1]]), "")
+if (file.exists(f)) {
+  current <- identical(unname(attr(readRDS(f), "package_versions")["MR.RGM"]), as.character(packageVersion("MR.RGM")))
+  if (!(tk$method %in% REPLACE_METHODS) || current) { message("exists: ", f); quit(save = "no") }
+  old_dir <- file.path(out_dir, "_Archive before replaced methods"); dir.create(old_dir, showWarnings = FALSE)
+  stopifnot(file.rename(f, file.path(old_dir, basename(f))))
+  message("moved to the archive and timed again: ", f)
+}
 set <- SIM_SETTINGS
 rd  <- runtime_data(tk$p, 30000, set); X <- rd$X; Y <- rd$Y; D <- rd$D; Dfull <- rd$Dfull; ms <- rd$ms
 X_raw <- rd$X_raw; Y_raw <- rd$Y_raw; sY <- rd$sY                   # GrIVET (unstandardized data)

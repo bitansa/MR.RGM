@@ -14,7 +14,7 @@
 ##   results_noise        error variance 1 / 4 / 9                                            -> noise_*.pdf, noise_*.tex
 ##   results_confounding  confounder loadings x 0 / 0.5 / 1 / 1.5                             -> confscale_*.pdf, confscale_*.tex
 ##   results_largen       n = 1e5, 1e6                                                        -> largen.pdf (with the main n), largen.tex, largen_seconds.tex
-##   results_sensitivity  prior inclusion Beta(a,b), nu1, nu2                                 -> sensitivity_*.tex
+##   results_sensitivity  prior inclusion Beta(a,b), nu1                                      -> sensitivity_*.tex
 ##   results_roles        4 exposures -> 4 outcomes (MR2, MrDAG with their exposure/outcome split) -> roles_*.pdf, roles_*.tex
 ##   timing table over all experiments (mean seconds per fit)                                 -> timing.tex
 ##
@@ -41,6 +41,9 @@ dir.create(file.path(FIG_DIR, "png"), showWarnings = FALSE)
 
 read_exp <- function(exp) {
   files <- list.files(paste0(RESULTS_PREFIX, exp), pattern = "^sim_.*\\.rds$", full.names = TRUE)
+  ## only the settings of the current grid of the experiment (the file name ends with the setting label)
+  labs  <- vapply(experiment_grid(exp)$settings, function(s) s$label, character(1))
+  files <- files[vapply(files, function(f) any(endsWith(basename(f), paste0("_", labs, ".rds"))), logical(1))]
   if (!length(files)) return(NULL)
   strip <- function(r) { for (a in c("settings", "methods", "session_info", "package_versions")) attr(r, a) <- NULL; r }
   ## each result file plus the effect error on the true edges / non-edges and the All-zero reference, computed from
@@ -669,18 +672,15 @@ if ("largen" %in% names(exp_data)) {
 if ("sensitivity" %in% names(exp_data)) {
   ss <- summ[summ$experiment == "sensitivity", ]
   labs_ <- c("base", setdiff(unique(ss$setting_label), "base")); ns <- sort(unique(ss$n))
-  labs_ <- labs_[order(match(sub("_.*", "", labs_), c("base", "Beta", "nu1", "nu2")), -as.numeric(ifelse(grepl("^nu", labs_), sub("^nu[12]_", "", labs_), 0)))]   # base, Beta, nu1 (large to small), nu2
+  labs_ <- labs_[order(match(sub("_.*", "", labs_), c("base", "Beta", "nu1")), -as.numeric(ifelse(grepl("^nu1_", labs_), sub("^nu1_", "", labs_), 0)))]   # base, Beta, nu1 (large to small)
   sci <- function(x) { x <- as.numeric(x); e <- round(log10(x)); m <- x / 10^e
     if (abs(m - 1) < 1e-9) sprintf("10^{%d}", e) else sprintf("%g \\times 10^{%d}", m, e) }
-  pretty_lab <- function(l) { if (l == "base") return("Default: Beta(3,1), $\\nu_1 = 10^{-3}$, $\\nu_2 = 10^{-4}$")
+  pretty_lab <- function(l) { if (l == "base") return("Default: Beta(3,1), $\\nu_1 = 10^{-3}$")
     if (grepl("^Beta_", l)) { ab <- strsplit(sub("^Beta_", "", l), "_")[[1]]; return(sprintf("Beta(%s,%s)", ab[1], ab[2])) }
     if (grepl("^nu1_", l)) return(sprintf("$\\nu_1 = %s$", sci(sub("^nu1_", "", l))))
-    if (grepl("^nu2_", l)) return(sprintf("$\\nu_2 = %s$", sci(sub("^nu2_", "", l))))
     l }
-  ## nu2 is the spike variance of the instrument effects, which only MR.RGM+ selects: the nu2 rows of MR.RGM and
-  ## MR.RGM_NoConf would repeat their base rows exactly (same data and seeds), so they are shown as "--"
-  rgm <- function(l, n_, fam, met, m = "MR.RGM") if (grepl("^nu2_", l)) "--" else cell(ss, "sensitivity", "smallworld", 10, n_, m, fam, met, l)
-  cap0 <- "Sensitivity of %s to the prior inclusion probability (Beta($a_\\rho, b_\\rho$)) and the spike variances $\\nu_1$ (causal effects) and $\\nu_2$ (instrument effects), one changed at a time (small-world network with feedback loops and unmeasured confounding, $p = 10$); FDR of the edges selected at PIP $> 0.5$. %sThe competing methods do not use these hyperparameters; the data are those of the main study, so their results are those of the main study for the same case and $n$.%s"
+  rgm <- function(l, n_, fam, met, m = "MR.RGM") cell(ss, "sensitivity", "smallworld", 10, n_, m, fam, met, l)
+  cap0 <- "Sensitivity of %s to the prior inclusion probability (Beta($a_\\rho, b_\\rho$)) and the spike variance $\\nu_1$ of the causal effects, one changed at a time (small-world network with feedback loops and unmeasured confounding, $p = 10$); FDR of the edges selected at PIP $> 0.5$. %sThe competing methods do not use these hyperparameters; the data are those of the main study, so their results are those of the main study for the same case and $n$.%s"
   ## table 1: MR.RGM and MR.RGM_NoConf (known instrument map); table 2: MR.RGM+
   hdr <- paste(c("\\textbf{Hyperparameters}", "\\textbf{$n$}", "\\textbf{AUC}", "\\textbf{FDR}", "\\textbf{MAD}", "\\textbf{Conf.\\ AUC}", "\\textbf{AUC, NoConf}", "\\textbf{MAD, NoConf}"), collapse = " & ")
   body <- c()
@@ -688,7 +688,7 @@ if ("sensitivity" %in% names(exp_data)) {
       rgm(l, n_, "graph", "AUC"), rgm(l, n_, "graph", "FDR"), rgm(l, n_, "effect", "MeanAbsDev"), rgm(l, n_, "confounding", "AUC"),
       rgm(l, n_, "graph", "AUC", "MR.RGM_NoConf"), rgm(l, n_, "effect", "MeanAbsDev", "MR.RGM_NoConf")), collapse = " & "), "\\\\")
     body <- c(body, "\\hline") }
-  table_tex("sensitivity.tex", sprintf(cap0, "MR.RGM and MR.RGM\\_NoConf", "$\\nu_2$ applies only to MR.RGM+ (Table~\\ref{tab:sensitivity_plus}); MR.RGM and MR.RGM\\_NoConf (known instrument map, no selection) do not use it, so their entries in the $\\nu_2$ rows are marked ``--''. ", cap_tail(short_in(ss[ss$method != "MR.RGM+", ]))),
+  table_tex("sensitivity.tex", sprintf(cap0, "MR.RGM and MR.RGM\\_NoConf", "", cap_tail(short_in(ss[ss$method != "MR.RGM+", ]))),
             "tab:sensitivity", "|l|r|c|c|c|c|c|c|", hdr, body, "\\scriptsize")
   hdr <- paste(c("\\textbf{Hyperparameters}", "\\textbf{$n$}", "\\textbf{AUC}", "\\textbf{FDR}", "\\textbf{MAD}", "\\textbf{Conf.\\ AUC}", "\\textbf{IV AUC}"), collapse = " & ")
   body <- c()

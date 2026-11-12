@@ -21,11 +21,11 @@ internal keys `MR.RGM`, `MR.RGM+` and `MR.RGM_NoConf`; tables and figures displa
 
 ## Requirements
 
-* MR.RGM >= 0.1.3 (`remotes::install_github("bitansa/MR.RGM")`, or from CRAN); the scripts stop otherwise. Its MCMC draws the instrument effects `B` exactly from their normal full conditional (Gibbs)
+* MR.RGM >= 0.1.4 (`remotes::install_github("bitansa/MR.RGM")`); the scripts stop otherwise. Its MCMC draws the instrument effects `B` exactly from their normal full conditional (Gibbs)
   and updates the causal effects `A` by random-walk Metropolis with proposal variances tuned during the burn-in
-  (adaptive, then frozen); the chain starts at the least-squares instrument effects. 0.1.3 distinguishes **MR.RGM** (instrument map `D` given; the allowed instrument effects are estimated without
-  selection, `selectB = FALSE`) from **MR.RGM+** (`D = 1`, every instrument effect subject to spike-and-slab
-  selection, `selectB = TRUE`).
+  (adaptive, then frozen); the chain starts at the least-squares instrument effects. The package distinguishes **MR.RGM** (instrument map `D` given; the allowed instrument effects are estimated without
+  selection, `selectB = FALSE`) from **MR.RGM+** (`D = 1`, every instrument effect selected under a prior with a
+  point mass at zero, `selectB = TRUE`).
 * R packages: `igraph`, `pROC`, `rjags` (+ `ggplot2`, `scales` for the figures; `microbenchmark` for the runtime
   analysis), and the competing methods at the versions of the study (list in `../README.md`); a method whose package
   is missing is skipped and reported:
@@ -139,13 +139,12 @@ be run with `SCENARIOS`, `P_VALUES`, `N_VALUES` and `SETTINGS` (indices).
   (MendelianRandomization simple median, weighted median, IVW with 10,000 bootstrap draws; OneSampleMR two-stage
   residual inclusion; mrbayes Bayesian IVW, 3 chains as in the package default) for every ordered pair of responses.
   **Every method is run in every experiment and in the instrument-strength study** (MR2: `roles` only, see above), except `sensitivity`, which varies
-  the hyperparameters of the MR.RGM family only (MR.RGM, MR.RGM_NoConf, MR.RGM+; in the ν₂ settings MR.RGM+ only,
-  since the others do not select instrument effects): the competitors do not use these hyperparameters, and the
+  the hyperparameters of the MR.RGM family only (MR.RGM, MR.RGM_NoConf, MR.RGM+): the competitors do not use these hyperparameters, and the
   sensitivity data are those of the main study (same seeds), so their results are the main-study results. **Every MCMC method uses the same chain length:** 50,000 iterations in total,
   of which 10,000 are burn-in, thinning 10 (4,000 draws) — the MR.RGM family, MR2 and MrDAG (whose packages have no
   default chain length), and mrbayes (10,000 burn-in + 40,000 iterations per chain; no thinning argument). Every other
   tuning parameter and prior hyperparameter of every competitor is its package default. MR.RGM family: package
-  defaults for every hyperparameter (`aRho = 3, bRho = 1, nu1 = 1e-3, nu2 = 1e-4, tauC = 2,
+  defaults for every hyperparameter (`aRho = 3, bRho = 1, nu1 = 1e-3, tauC = 2,
   omega1 = 5, omega2 = 0.005, varpi = 0.5, lambda = 1`), varied only in the `sensitivity` experiment.
   Two input details, both documented in `sim_functions.R`: (i) MR2G 0.1.0 fails with igraph >= 2.0 in its ScreenAug
   step (the diagonal of an adjacency matrix is NaN); `mr2g_screenaug()` is `MR2G()` with `IV_screen = "ScreenAug"`

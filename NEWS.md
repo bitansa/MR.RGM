@@ -1,3 +1,25 @@
+# MR.RGM 0.1.4
+
+## Model change
+
+* **Point-mass spike for the instrument effects under selection (MR.RGM+).** With instrument selection
+  (`selectB = TRUE`, the default when `D` has no zeros) and the spike-and-slab prior, an entry of `B` is now exactly
+  zero when its inclusion indicator is zero: `b ~ phi N(0, eta) + (1 - phi) delta_0`. In 0.1.3 the spike was the
+  narrow normal distribution `N(0, nu2 * eta)`. The identification and posterior consistency results of the
+  accompanying paper for MR.RGM+ are stated for the point-mass prior. Fits with a known instrument map
+  (`selectB = FALSE`, MR.RGM), fits without instruments and fits with the threshold prior are unchanged.
+
+## Sampler
+
+* With selection under the spike-and-slab prior, each inclusion indicator and its entry of `B` are drawn jointly
+  from their exact full conditional: the indicator with the entry integrated out under the slab, then the entry
+  given the indicator. The chain starts with all indicators of `B` at zero. `gibbsB = FALSE` is not available in
+  this case and gives a warning.
+
+## Arguments
+
+* `nu2` is no longer used. The argument is kept so that earlier code runs unchanged.
+
 # MR.RGM 0.1.3
 
 ## Defaults

@@ -4,7 +4,10 @@
 ## reproducibility/simulation/ after the package code has been copied to the cluster and setup.sbatch has installed
 ## any new package):
 ##   bash cluster/submit_add.sh
-## 1. cluster/tasks_add.csv: the result files that lack a method (make_add_tasks.R); cluster/tasks_runtime.csv:
+## To fit a method again for every replicate (same data, same seeds) after its implementation has changed:
+##   REPLACE_METHODS=MR.RGM+ bash cluster/submit_add.sh
+## (the stored results of every other method are kept; see cluster/add_methods.R)
+## 1. cluster/tasks_add.csv: the result files that lack a method or hold a method to replace (make_add_tasks.R); cluster/tasks_runtime.csv:
 ##    regenerated (make_tasks.R), so that the runtime benchmark includes the new methods
 ## 2. smoke test (smoke_add.R) -> add array (one result file per task, its replicates in parallel) -> runtime array
 ##    (blocks already present are skipped at once) -> final check (cluster/check_results.R, collect_runtime.R)
@@ -14,6 +17,7 @@ cd "$(dirname "$0")/.."
 source cluster/config.sh
 source cluster/env.sh
 mkdir -p cluster/logs
+export REPLACE_METHODS="${REPLACE_METHODS:-}"     # passed on to every job (sbatch exports the environment)
 Rscript cluster/make_add_tasks.R
 Rscript cluster/make_tasks.R
 [ -f cluster/tasks_add.csv ] || { echo "nothing to add"; exit 0; }

@@ -14,7 +14,7 @@ real_data/
 
 ## Requirements
 
-* MR.RGM >= 0.1.3 (`remotes::install_github("bitansa/MR.RGM")`, or from CRAN); the scripts stop otherwise.
+* MR.RGM >= 0.1.4 (`remotes::install_github("bitansa/MR.RGM")`); the scripts stop otherwise.
 * R packages: `dplyr`, `tidyr`, `ggplot2`, `ggraph`, `igraph`, `tidygraph`, `scales`; `GenomicRanges` and `snpStats` (Bioconductor);
   `posterior` (convergence diagnostics of the chains);
   for `OneK1K_Competitors.R` and `../package_check/check_design_matched.R` also the packages of the simulation study
