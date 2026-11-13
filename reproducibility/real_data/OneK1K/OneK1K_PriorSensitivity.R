@@ -73,7 +73,7 @@ print(head(transform(cmp, PIP_Beta31 = round(PIP_Beta31, 3), PIP_Beta11 = round(
 ## LaTeX table: every edge with PIP > 0.5 under either prior
 tt <- cmp[cmp$PIP_Beta31 > 0.5 | cmp$PIP_Beta11 > 0.5, ]
 L <- c("\\begin{table}[htb]", "\\centering", "\\small",
-       sprintf("\\caption{OneK$1$K B cells, \\texttt{MR.RGM}: sensitivity to the prior on the causal inclusion probabilities. Edges with posterior inclusion probability (PIP) $> 0.50$ under the default $\\mathrm{Beta}(3,1)$ prior (prior inclusion probability $0.75$) or under $\\mathrm{Beta}(1,1)$ ($0.50$), with the PIP and the Bayes factor (BF, posterior odds divided by prior odds) under each, and the posterior mean effects. Same data, chain length and seeds; four chains, %s under $\\mathrm{Beta}(1,1)$. Spearman correlation of the PIPs of all %d ordered pairs: %.2f.}",
+       sprintf("\\caption{OneK$1$K B cells, \\texttt{MR.RGM}: sensitivity to the prior on the causal inclusion probabilities. Edges with posterior inclusion probability (PIP) $> 0.50$ under the default $\\mathrm{Beta}(3,1)$ prior (prior inclusion probability $0.75$) or under $\\mathrm{Beta}(1,1)$ ($0.50$), with the PIP and the Bayes factor (BF, posterior odds divided by prior odds) under each, and the posterior mean effects. Same data, chain length and seeds. Four chains, %s under $\\mathrm{Beta}(1,1)$. Spearman correlation of the PIPs of all %d ordered pairs: %.2f.}",
                if (fc$convergence$converged) "converged" else "not converged", length(off), rho),
        "\\label{tab:onek_prior_sensitivity}", "\\begin{tabular}{|l|c|c|c|c|c|c|}", "\\hline",
        "\\textbf{Edge} & \\textbf{PIP, Beta(3,1)} & \\textbf{BF} & \\textbf{Effect} & \\textbf{PIP, Beta(1,1)} & \\textbf{BF} & \\textbf{Effect} \\\\", "\\hline",

@@ -338,14 +338,14 @@ write_method_table <- function(p_, sc, fam, met, stub, what) {
       vapply(ST_N, function(n_) cell_val(sc, p_, st, n_, tm[k], fam, met), character(1))), collapse = " & "), "\\\\")
     rows <- c(rows, "\\hline") }
   tex_table(sprintf("strength_%s_%s_p=%d.tex", stub, scen_label[[sc]], p_),
-            sprintf("Instrument-strength study, %s, small-world network, $p = %d$: %s. Entries are mean (SD) over %d replicates; entries marked $^\\dagger$ are over the successful fits only (Table~\\ref{tab:strength_failures} gives the number of failed fits); where fewer than %d fits succeeded the entry gives the number of failed fits instead.",
+            sprintf("Instrument-strength study, %s, small-world network, $p = %d$: %s. Entries are mean (SD) over %d replicates. Entries marked $^\\dagger$ are over the successful fits only (Table~\\ref{tab:strength_failures} gives the number of failed fits). Where fewer than %d fits succeeded the entry gives the number of failed fits instead.",
                     tolower(case_lab[[sc]]), p_, what, max(summ$reps), MIN_FITS),
             sprintf("tab:strength_%s_%s_p=%d", stub, scen_label[[sc]], p_), sprintf("|l|l|%s", paste(rep("c|", length(ST_N)), collapse = "")), hdr, rows)
 }
 scen_label <- c(smallworld = "nopleio", smallworld_pleio = "pleio")
 for (p_ in ST_P) {
   for (sc in ST_SCEN) for (tb in list(list("graph", "AUC", "network_auc", "causal network recovery (AUC)"),
-                                      list("effect", "MeanAbsDev", "effect_mad", "causal effect estimation (mean absolute deviation, MAD, over all off-diagonal entries; All-zero: the estimate 0)"),
+                                      list("effect", "MeanAbsDev", "effect_mad", "causal effect estimation (mean absolute deviation, MAD, over all off-diagonal entries, where All-zero is the estimate 0)"),
                                       list("effect_edges", "MeanAbsDev", "effect_mad_edges", "causal effect estimation on the true edges (MAD)"),
                                       list("effect_nonedges", "MeanAbsDev", "effect_mad_nonedges", "mean absolute estimated effect over the true non-edges")))
     write_method_table(p_, sc, tb[[1]], tb[[2]], tb[[3]], tb[[4]])
@@ -380,7 +380,7 @@ for (p_ in ST_P) {
                           collapse = " & "), "\\\\") }
     rows <- c(rows, "\\hline") } }
   tex_table(sprintf("strength_diag_p=%d.tex", p_),
-            sprintf("Diagnostics of MR.RGM and MR.RGM+ by instrument strength (small-world network, $p = %d$): population $R^2$ of a trait on its own instruments and the implied $F$ statistic (medians over traits, mean over replicates); mean correlation of the causal posterior inclusion probabilities between the two halves of the chain; percentage of the %d replicates in which the largest error-variance ratio exceeds 5 (the package's error-variance warning); mean spectral radius of the estimated $A$.", p_, max(summ$reps)),
+            sprintf("Diagnostics of MR.RGM and MR.RGM+ by instrument strength (small-world network, $p = %d$): population $R^2$ of a trait on its own instruments and the implied $F$ statistic (medians over traits, mean over replicates), mean correlation of the causal posterior inclusion probabilities between the two halves of the chain, percentage of the %d replicates in which the largest error-variance ratio exceeds 5 (the package's error-variance warning), and mean spectral radius of the estimated $A$.", p_, max(summ$reps)),
             sprintf("tab:strength_diag_p=%d", p_), "|l|r|c|c|c|c|c|c|c|c|", hdr, rows, "\\scriptsize")
 }
 ## Warnings issued by RGM(): weak instruments (first-stage F < 10; computed when the map has exclusions, i.e. for
@@ -398,7 +398,7 @@ for (p_ in ST_P) {
                           collapse = " & "), "\\\\") }
     rows <- c(rows, "\\hline") } }
   tex_table(sprintf("strength_warn_p=%d.tex", p_),
-            sprintf("Warnings issued by \\texttt{RGM()} by instrument strength (small-world network, $p = %d$): percentage of the %d replicates with the weak-instrument warning (first-stage $F < 10$; computed when the instrument--trait map has exclusions, that is, for \\texttt{MR.RGM}), the error-variance warning, and any warning.", p_, max(summ$reps)),
+            sprintf("Warnings issued by \\texttt{RGM()} by instrument strength (small-world network, $p = %d$): percentage of the %d replicates with the weak-instrument warning (first-stage $F < 10$, computed when the instrument--trait map has exclusions, that is, for \\texttt{MR.RGM}), the error-variance warning, and any warning.", p_, max(summ$reps)),
             sprintf("tab:strength_warn_p=%d", p_), "|l|r|c|c|c|c|c|", hdr, rows, "\\scriptsize")
 }
 ## Failed fits per method and setting (every table and figure above summarises the successful fits only)
@@ -415,7 +415,7 @@ if (length(FAIL_COUNT)) {
   body <- sprintf("%s & %s & %d & %s & %s & %d / %d & %d & %s \\\\", case_lab[fr$scenario], ST_LABEL[fr$strength], fr$p,
                   format(fr$n, big.mark = ","), method_tex[fr$method], fr$k, N_REP_ST, N_REP_ST - fr$k, fr$cause)
   tex_table("strength_failures.tex",
-            "Instrument-strength study: fits without a result (number out of the replicates), the number of successful fits over which the method is summarized in every strength table and figure, and the cause (MR2G: no genome-wide significant instrument; GrIVET: peeling, its peeling step could not order every trait; numerical, it stopped with a numerical error; time, it did not finish within 48 hours).",
+            "Instrument-strength study: fits without a result (number out of the replicates), the number of successful fits over which the method is summarized in every strength table and figure, and the cause (MR2G: no genome-wide significant instrument). For GrIVET, peeling means that its peeling step could not order every trait, numerical means that it stopped with a numerical error, and time means that it did not finish within 48 hours.",
             "tab:strength_failures", "|l|l|r|r|l|c|c|l|",
             "\\textbf{Case} & \\textbf{Instruments} & \\textbf{$p$} & \\textbf{$n$} & \\textbf{Method} & \\textbf{Failed} & \\textbf{Successful} & \\textbf{Cause}",
             c(body, "\\hline"), "\\scriptsize")

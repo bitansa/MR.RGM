@@ -132,17 +132,17 @@ saveRDS(list(stats = st, cycles = cy, pip = Gs, sign = Sg, truth = list(A = A0, 
 write.csv(summ, file.path(OUT_DIR, "tables", "onek_bootstrap.csv"), row.names = FALSE)
 write.csv(edges, file.path(OUT_DIR, "tables", "onek_bootstrap_edges.csv"), row.names = FALSE)
 
-cap_common <- sprintf("the fitted \\texttt{MR.RGM} network ($%d$ edges with PIP $> %.1f$, posterior-mean effects) taken as the truth; expression generated %d times for the %d donors from their genotypes and covariates, and \\texttt{MR.RGM} refitted with the simulation-study MCMC settings", sum(truth), THR, R, n)
+cap_common <- sprintf("the fitted \\texttt{MR.RGM} network ($%d$ edges with PIP $> %.1f$, posterior-mean effects) taken as the truth, expression generated %d times for the %d donors from their genotypes and covariates, and \\texttt{MR.RGM} refitted with the simulation-study MCMC settings", sum(truth), THR, R, n)
 L1 <- c("\\begin{table}[htb]", "\\centering", "\\small",
         sprintf("\\caption{OneK$1$K B cells, parametric bootstrap: %s. Mean (SD) over the replicates%s.}", cap_common,
-                if (any(is.na(st[, "fdp_high"]))) sprintf("; the false discovery proportion at PIP $> %.2f$ is averaged over the replicates that select at least one such edge (their number in brackets)", THR_HIGH) else ""),
+                if (any(is.na(st[, "fdp_high"]))) sprintf(". The false discovery proportion at PIP $> %.2f$ is averaged over the replicates that select at least one such edge (their number in brackets)", THR_HIGH) else ""),
         "\\label{tab:onek_bootstrap}", "\\begin{tabular}{|l|c|}", "\\hline", "\\textbf{Quantity} & \\textbf{Value} \\\\", "\\hline",
         sprintf("%s & %s \\\\", summ$quantity, summ$value), "\\hline", "\\end{tabular}", "\\end{table}")
 writeLines(display_text(L1), file.path(OUT_DIR, "tables", "onek_bootstrap.tex"))   # displayed names (real_data_functions.R)
 fmt_row <- function(i) with(edges[i, ], sprintf("%s & %s & %.2f & %+.3f & %s & %d & %s \\\\", edge, if (in_fit) "yes" else "no",
                                                fitted_pip, fitted_effect, boot_pip, selected, if (is.na(selected_sign)) "--" else as.character(selected_sign)))
 L2 <- c("\\begin{table}[htb]", "\\centering", "\\footnotesize",
-        sprintf("\\caption{OneK$1$K B cells, parametric bootstrap (%s): for every edge of the fitted network, its PIP and effect in the fit, its mean (SD) PIP over the replicates, and the percentage of replicates in which it is selected (PIP $> %.1f$) and selected with the sign of the fitted effect; below, the false edges selected in at least $20\\%%$ of the replicates.}", cap_common, THR),
+        sprintf("\\caption{OneK$1$K B cells, parametric bootstrap (%s): for every edge of the fitted network, its PIP and effect in the fit, its mean (SD) PIP over the replicates, and the percentage of replicates in which it is selected (PIP $> %.1f$) and selected with the sign of the fitted effect. Below are the false edges selected in at least $20\\%%$ of the replicates.}", cap_common, THR),
         "\\label{tab:onek_bootstrap_edges}", "\\begin{tabular}{|l|c|c|c|c|c|c|}", "\\hline",
         "\\textbf{Edge} & \\textbf{In fit} & \\textbf{PIP} & \\textbf{Effect} & \\textbf{Bootstrap PIP} & \\textbf{Selected \\%} & \\textbf{Same sign \\%} \\\\", "\\hline",
         vapply(seq_len(nrow(edges)), fmt_row, character(1)), "\\hline", "\\end{tabular}", "\\end{table}")

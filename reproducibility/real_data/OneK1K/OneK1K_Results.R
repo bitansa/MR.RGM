@@ -67,7 +67,7 @@ label_table(res$pathway_node, res$symbols, file.path("tables", "onek_label_map.t
 snp_df <- data.frame(gene = rep(names(res$top_snps), lengths(res$top_snps)), variant = unlist(res$top_snps), row.names = NULL)
 instrument_tables(res$instrument_strength, snp_df, res$symbols, file.path("tables", "onek"),
                   file.path("tables", "onek_instruments.tex"),
-                  caption = sprintf("OneK$1$K B cells: instruments of the analyzed genes ($n = %d$; cis window $\\pm$%s). Partial $R^2$ of a gene's own SNPs given the covariates; concentration parameter $\\mu^2 = nR^2/(1-R^2)$.", res$n, cis_window_tex(res$settings$cis_window)),
+                  caption = sprintf("OneK$1$K B cells: instruments of the analyzed genes ($n = %d$, cis window $\\pm$%s). Partial $R^2$ of a gene's own SNPs given the covariates, and concentration parameter $\\mu^2 = nR^2/(1-R^2)$.", res$n, cis_window_tex(res$settings$cis_window)),
                   label = "tab:onek_instruments")
 
 if (converged) {
@@ -104,7 +104,7 @@ plus_note <- ""
 f_main <- file.path("output", "OneK1K_fit_MRRGM.rds"); f_plus <- file.path("output", "OneK1K_fit_MRRGMplus.rds")
 r_main <- if (file.exists(f_main)) readRDS(f_main); r_plus <- if (file.exists(f_plus)) readRDS(f_plus)
 if (!is.null(r_plus) && !is.null(r_plus$convergence) && !isTRUE(r_plus$convergence$converged))
-  plus_note <- " The chains of \\texttt{MR.RGM+} did not converge (Table~\\ref{tab:realdata_diagnostics}); its pooled PIPs are shown for reference only."
+  plus_note <- " The chains of \\texttt{MR.RGM+} did not converge (Table~\\ref{tab:realdata_diagnostics}). Its pooled PIPs are shown for reference only."
 if (!is.null(r_main) && !is.null(r_plus) && identical(r_main$symbols, r_plus$symbols)) {
   compare_models(r_main$fit, r_plus$fit, labels, ONEK_THR_DIR, ONEK_THR_CONF, "tables", "onek")
   diagnostics_tex(list(r_main$fit, r_plus$fit), c("MR.RGM", "MR.RGM+"), DATA_NAME, file.path("tables", "realdata_diagnostics.tex"), r_main$settings$mcmc, ONEK_THR_DIR,

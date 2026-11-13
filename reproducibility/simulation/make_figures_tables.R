@@ -165,10 +165,10 @@ meth_f <- function(m) { lv <- intersect(method_order, unique(m)); factor(m, leve
 ##   design also MR2 through its residual correlation); instrument-selection AUC: MR.RGM+ only (MR.RGM uses the known map).
 METRICS <- list(
   auc  = list(metric = "AUC",        family = "graph",        label = "Network AUC",       what = "causal network recovery (AUC)"),
-  mad  = list(metric = "MeanAbsDev", family = "effect",       label = "Effect MAD",        what = "causal effect estimation (mean absolute deviation over all off-diagonal entries; All-zero: the value of the estimate 0, i.e. of a method that reports no effect)"),
+  mad  = list(metric = "MeanAbsDev", family = "effect",       label = "Effect MAD",        what = "causal effect estimation (mean absolute deviation over all off-diagonal entries, where All-zero is the value of the estimate 0, i.e. of a method that reports no effect)"),
   mad_edges = list(metric = "MeanAbsDev", family = "effect_edges",    label = "Effect MAD, true edges", what = "causal effect estimation on the true edges (mean absolute deviation)"),
   mad_non   = list(metric = "MeanAbsDev", family = "effect_nonedges", label = "Mean |est.|, non-edges", what = "estimated effect where there is none (mean absolute estimate over the non-edges)"),
-  conf = list(metric = "AUC",        family = "confounding",  label = "Confounding AUC",             what = "confounding structure recovery (AUC; MR.RGM and MR.RGM+)"),
+  conf = list(metric = "AUC",        family = "confounding",  label = "Confounding AUC",             what = "confounding structure recovery (AUC, for MR.RGM and MR.RGM+)"),
   iv   = list(metric = "AUC",        family = "iv_selection", label = "Instrument selection AUC",  what = "instrument--trait selection by MR.RGM+ (AUC)"))
 metric_methods <- function(s, mm) intersect(method_order, unique(s$method[s$family == mm$family & s$metric == mm$metric & !is.na(s$mean)]))
 
@@ -201,7 +201,7 @@ cell <- function(s, exp, sc, p_, n_, meth, fam, met, lab = "base") {
 ## the reason and the number of successful fits in each such setting, e.g.
 ## "... MR2G stopped in some replicates (...); its entries marked $^\dagger$ are over its successful fits: 84 (scale-free, $p = 5$, $n = 500$)."
 fail_reason <- c(MR2G = "it requires a genome-wide significant instrument ($p < 5\\times10^{-8}$, fixed in the package) for every trait",
-                 GrIVET = "its peeling step could not order every trait, which a directed cycle can prevent; it stopped with a numerical error; or it did not finish within 48 hours")
+                 GrIVET = "its peeling step could not order every trait, which a directed cycle can prevent, or it stopped with a numerical error, or it did not finish within 48 hours")
 setting_text <- function(sc, p_, n_, lab) paste0(if (sc %in% names(scen_title)) scen_title[[sc]] else sc, ", $p = ", p_, "$, $n = ", gsub(",", "{,}", format(n_, big.mark = ",", scientific = FALSE), fixed = TRUE), "$",
                                                  if (lab != "base") paste0(", ", gsub("_", " ", lab)) else "")
 short_in <- function(s) s[s$reps < N_REP & s$method != "data" & s$family != "diagnostic", , drop = FALSE]
@@ -214,13 +214,13 @@ short_note <- function(sh, what = "entries marked $^\\dagger$ are") {
   u <- aggregate(reps ~ experiment + method + scenario + p + n + setting_label, data = sh, FUN = min)
   u$failed <- vapply(seq_len(nrow(u)), function(i) n_failed(paste(u$experiment[i], u$scenario[i], u$p[i], u$n[i], u$setting_label[i], u$method[i], sep = "|")) > 0, logical(1))
   u <- u[order(match(u$method, method_order), u$scenario, u$p, u$n), ]
-  txt <- function(x) paste(sprintf("%d (%s)", x$reps, mapply(setting_text, x$scenario, x$p, x$n, x$setting_label)), collapse = "; ")
+  txt <- function(x) paste(sprintf("%d (%s)", x$reps, mapply(setting_text, x$scenario, x$p, x$n, x$setting_label)), collapse = ", ")
   mtex <- function(m) if (m %in% names(method_tex)) method_tex[[m]] else m
   fail_txt <- vapply(split(u[u$failed, , drop = FALSE], factor(u$method[u$failed], levels = unique(u$method[u$failed]))), function(xf) {
     m <- xf$method[1]
     low_m <- any(endsWith(low_keys, paste0("|", m)) & sub("\\|.*", "", low_keys) %in% xf$experiment)
     paste0(mtex(m), " did not return a result in some replicates", if (m %in% names(fail_reason)) paste0(" (", fail_reason[[m]], ")") else "",
-           "; its ", what, " over its successful fits only (", if (min(xf$reps) == max(xf$reps)) min(xf$reps) else paste0(min(xf$reps), "--", max(xf$reps)), " of ", N_REP, "; counts in Table~\\ref{tab:failures}).",
+           ". Its ", what, " over its successful fits only (", if (min(xf$reps) == max(xf$reps)) min(xf$reps) else paste0(min(xf$reps), "--", max(xf$reps)), " of ", N_REP, ", counts in Table~\\ref{tab:failures}).",
            if (low_m) sprintf(" Where fewer than %d fits succeeded, the entry gives the number of failed fits instead.", MIN_FITS) else "")
   }, character(1))
   uu <- u[!u$failed, , drop = FALSE]
@@ -229,8 +229,8 @@ short_note <- function(sh, what = "entries marked $^\\dagger$ are") {
     per_m <- vapply(split(uu, factor(uu$method, levels = unique(uu$method))), txt, character(1))
     for (t in unique(per_m)) {
       ms <- names(per_m)[per_m == t]
-      und_txt <- c(und_txt, paste0("For ", paste(vapply(ms, mtex, ""), collapse = ", "), " a metric is undefined in some replicates (the truth has a single class there, so the AUC is not defined); ",
-                                   if (length(ms) > 1) "their " else "its ", what, " over the remaining replicates, out of ", N_REP,
+      und_txt <- c(und_txt, paste0("For ", paste(vapply(ms, mtex, ""), collapse = ", "), " a metric is undefined in some replicates (the truth has a single class there, so the AUC is not defined). ",
+                                   if (length(ms) > 1) "Their " else "Its ", what, " over the remaining replicates, out of ", N_REP,
                                    " (smallest count over the metrics shown): ", t, "."))
     }
   }
@@ -330,7 +330,7 @@ if ("main" %in% names(exp_data)) {
             else list("Max.\\ abs.\\ dev." = c("effect", "MaxAbsDev"), "MAD" = c("effect", "MeanAbsDev"), "Mean sq.\\ dev." = c("effect", "MeanSqDev"),
                       "MAD, true edges" = c("effect_edges", "MeanAbsDev"), "Mean $|$est.$|$, non-edges" = c("effect_nonedges", "MeanAbsDev"))
     meths <- intersect(method_order, unique(sm$method[sm$scenario == sc & sm$family == fam]))
-    what  <- if (fam == "graph") "Graph recovery" else "Causal effect estimation (mean absolute deviation, MAD, over all off-diagonal entries, on the true edges, and the mean absolute estimate on the true non-edges; All-zero: the estimate 0)"
+    what  <- if (fam == "graph") "Graph recovery" else "Causal effect estimation (mean absolute deviation, MAD, over all off-diagonal entries, on the true edges, and the mean absolute estimate on the true non-edges, where All-zero is the estimate 0)"
     lab   <- sprintf("tab:feedback_%s_%s_90_p=%d", if (fam == "graph") "graph_structure" else "causal_effect", scen_label[[sc]], p_)
     body <- c()
     for (n_ in n_levels) {
@@ -493,7 +493,7 @@ factor_experiment <- function(exp, factor_name, factor_tex, factor_from_label, f
   ## estimation; effect estimation on the true edges and non-edges), then the narrow confounding and
   ## instrument-selection tables (rows = level x n)
   lab_of <- function(lv) unique(se$setting_label[se$level == lv])[1]
-  for (tb in list(list(key = "auc", cols = c("auc", "mad"), what = "causal network recovery (AUC) and causal effect estimation (MAD over all off-diagonal entries; All-zero: the estimate 0)"),
+  for (tb in list(list(key = "auc", cols = c("auc", "mad"), what = "causal network recovery (AUC) and causal effect estimation (MAD over all off-diagonal entries, where All-zero is the estimate 0)"),
                   list(key = "mad", cols = c("mad_edges", "mad_non"), what = "causal effect estimation on the true edges (MAD) and the mean absolute estimate on the true non-edges"))) {
     meths <- unique(unlist(lapply(METRICS[tb$cols], function(mm) metric_methods(se, mm)))); meths <- intersect(method_order, meths)
     if (!length(meths)) next
@@ -561,7 +561,7 @@ selection_tables <- function(exp, factor_name, factor_tex, factor_from_label, fi
     cols <- list(); for (mt in c("TPR", "FDR")) for (n_ in ns)
       cols[[sprintf("\\shortstack{%s\\\\ $n = %s$}", mt, format(n_, big.mark = "{,}"))]] <- c(mt, n_)
     long_table_tex(sprintf("%s_sel.tex", file_stub),
-                   sprintf("%s: true positive rate (TPR) and false discovery rate (FDR) of the selected causal graph (PIP $> 0.5$ for the MR.RGM family, MR2 and MrDAG; $p < 0.05$, or a posterior tail probability below 0.05 for mrbayes, for the others) by %s (small-world network with feedback loops and unmeasured confounding, $p = 10$).%s",
+                   sprintf("%s: true positive rate (TPR) and false discovery rate (FDR) of the selected causal graph (PIP $> 0.5$ for the MR.RGM family, MR2 and MrDAG, and $p < 0.05$, or a posterior tail probability below 0.05 for mrbayes, for the others) by %s (small-world network with feedback loops and unmeasured confounding, $p = 10$).%s",
                            caption_what, tolower(factor_name), cap_tail(short_in(se[se$family == "graph", ]))),
                    sprintf("tab:%s_sel", file_stub), rows, factor_tex, cols,
                    function(i, cl) cell(se, exp, "smallworld", 10, as.numeric(cl[2]), rows$method[i], "graph", cl[1], lab_of(rows$level[i])),
@@ -579,7 +579,7 @@ selection_tables <- function(exp, factor_name, factor_tex, factor_from_label, fi
                             collapse = " & "), "\\\\") }
       body <- c(body, "\\hline") }
     table_tex(sprintf("%s_conf_sel.tex", file_stub),
-              sprintf("%s: TPR and FDR of the confounding links selected at PIP $> 0.5$ by %s (small-world network with feedback loops and unmeasured confounding, $p = 10$; truth: the pairs whose $|\\sigma^*_{jh}|$ on the generating scale exceeds its mean over pairs).%s",
+              sprintf("%s: TPR and FDR of the confounding links selected at PIP $> 0.5$ by %s (small-world network with feedback loops and unmeasured confounding, $p = 10$). The truth is the pairs whose $|\\sigma^*_{jh}|$ on the generating scale exceeds its mean over pairs.%s",
                       caption_what, tolower(factor_name), cap_tail(short_in(se[se$family == "confounding", ]))),
               sprintf("tab:%s_conf_sel", file_stub), sprintf("|c|r|%s", paste(rep("c|", 2 * length(cm)), collapse = "")), hdr, body, "\\scriptsize")
   }
@@ -622,7 +622,7 @@ if ("main" %in% names(exp_data)) local({
                             collapse = " & "), "\\\\") }
     body <- c(body, "\\hline") }
   table_tex("main_diagnostics.tex",
-            sprintf("Main study: percentage of the %d replicates in which \\texttt{RGM()} issued any warning (\\texttt{MR.RGM}, \\texttt{MR.RGM+}) and, for \\texttt{MR.RGM+}, the error-variance, spectral-radius and chain-halves warnings; mean and median over the replicates of the effect MAD of \\texttt{MR.RGM+}; difference between the mean network AUC of \\texttt{MR.RGM} over the replicates in which \\texttt{MR2G} succeeded and over all replicates (in parentheses: the number of replicates in which \\texttt{MR2G} stopped; --: none).", N_REP),
+            sprintf("Main study: percentage of the %d replicates in which \\texttt{RGM()} issued any warning (\\texttt{MR.RGM}, \\texttt{MR.RGM+}) and, for \\texttt{MR.RGM+}, the error-variance, spectral-radius and chain-halves warnings. Mean and median over the replicates of the effect MAD of \\texttt{MR.RGM+}. Difference between the mean network AUC of \\texttt{MR.RGM} over the replicates in which \\texttt{MR2G} succeeded and over all replicates (in parentheses: the number of replicates in which \\texttt{MR2G} stopped, or -- if none).", N_REP),
             "tab:main_diagnostics", "|l|r|r|c|c|c|c|c|c|c|c|", hdr, body, "\\scriptsize")
 })
 
@@ -640,7 +640,7 @@ if ("largen" %in% names(exp_data)) {
   rows <- rows[order(match(rows$n, ns), match(rows$method, method_order)), ]; rows$group <- format(rows$n, big.mark = ",", scientific = FALSE)
   cols <- list("AUC" = c("graph", "AUC"), "TPR" = c("graph", "TPR"), "FDR" = c("graph", "FDR"), "MAD" = c("effect", "MeanAbsDev"),
                "MAD, true edges" = c("effect_edges", "MeanAbsDev"), "Mean $|$est.$|$, non-edges" = c("effect_nonedges", "MeanAbsDev"))
-  long_table_tex("largen.tex", sprintf("Large samples ($n = 10^5$ and $10^6$; small-world network with feedback loops and unmeasured confounding, $p = 10$): causal network recovery (AUC; TPR and FDR of the selected graph) and causal effect estimation (MAD over all off-diagonal entries, on the true edges, and the mean absolute estimate on the non-edges; All-zero: the estimate 0).%s", cap_tail(short_in(sl[sl$family %in% c("graph", "effect", "effect_edges", "effect_nonedges"), ]))),
+  long_table_tex("largen.tex", sprintf("Large samples ($n = 10^5$ and $10^6$, small-world network with feedback loops and unmeasured confounding, $p = 10$): causal network recovery (AUC, and TPR and FDR of the selected graph) and causal effect estimation (MAD over all off-diagonal entries, on the true edges, and the mean absolute estimate on the non-edges, where All-zero is the estimate 0).%s", cap_tail(short_in(sl[sl$family %in% c("graph", "effect", "effect_edges", "effect_nonedges"), ]))),
                  "tab:largen", rows, "$n$", cols, function(i, cl) cell(sl, "largen", "smallworld", 10, rows$n[i], rows$method[i], cl[1], cl[2]), "\\scriptsize")
   sec <- aggregate(seconds ~ n + method, data = sl[sl$family == "graph" & !is.na(sl$seconds), ], FUN = mean)
   secs <- function(n_, m) { v <- sec$seconds[sec$n == n_ & sec$method == m]; if (!length(v)) "--" else if (v < 0.5) "$<1$" else format(round(v), big.mark = ",", scientific = FALSE) }
@@ -648,7 +648,7 @@ if ("largen" %in% names(exp_data)) {
   for (n_ in ns) { for (k in seq_along(meths)) body <- c(body, paste(c(if (k == 1) format(n_, big.mark = ",", scientific = FALSE) else "", method_tex[[meths[k]]],
       cell(sl, "largen", "smallworld", 10, n_, meths[k], "confounding", "AUC"), cell(sl, "largen", "smallworld", 10, n_, meths[k], "iv_selection", "AUC"), secs(n_, meths[k])), collapse = " & "), "\\\\")
     body <- c(body, "\\hline") }
-  table_tex("largen_seconds.tex", "Large samples (small-world network, $p = 10$): confounding structure recovery (AUC; MR.RGM and MR.RGM+), instrument--trait selection (AUC; MR.RGM+) and mean wall-clock seconds per fit (one core per replicate; MR.RGM family: 50,000 iterations). Entries are mean (SD) over 100 replicates.", "tab:largen_seconds",
+  table_tex("largen_seconds.tex", "Large samples (small-world network, $p = 10$): confounding structure recovery (AUC, for MR.RGM and MR.RGM+), instrument--trait selection (AUC, for MR.RGM+) and mean wall-clock seconds per fit (one core per replicate, with 50,000 iterations for the MR.RGM family). Entries are mean (SD) over 100 replicates.", "tab:largen_seconds",
             "|r|l|c|c|r|", paste(c("\\textbf{$n$}", "\\textbf{Method}", "\\textbf{Conf.\\ AUC}", "\\textbf{IV AUC}", "\\textbf{Seconds}"), collapse = " & "), body)
   ## MR.RGM+ at the largest n with a chain five times as long (experiment "longchain" of run_simulations.R): the same
   ## data and seeds as the large-sample experiment, so the two rows of the table differ only in the chain length
@@ -663,7 +663,7 @@ if ("largen" %in% names(exp_data)) {
       msd(d, "effect", "MeanAbsDev"), msd(d, "confounding", "AUC"), msd(d, "iv_selection", "AUC"),
       sprintf("%.0f", 100 * mean(val(d, "diagnostic", "warn_halves"))),
       big(round(mean(d$seconds[d$method == "MR.RGM+" & d$family == "graph" & d$metric == "AUC"], na.rm = TRUE)))), collapse = " & ")
-    table_tex("largen_longchain.tex", sprintf("MR.RGM+ at $n = 10^6$ (small-world network, $p = 10$) with the chain length of the study and with a chain five times as long, on the same data: causal network recovery (AUC; TPR and FDR of the selected graph), causal effect estimation (MAD), confounding structure recovery (AUC), instrument--trait selection (AUC), percentage of fits with the chain-halves warning of the package, and mean wall-clock seconds per fit. Entries are mean (SD) over %d replicates.", length(unique(lc$rep))),
+    table_tex("largen_longchain.tex", sprintf("MR.RGM+ at $n = 10^6$ (small-world network, $p = 10$) with the chain length of the study and with a chain five times as long, on the same data: causal network recovery (AUC, and TPR and FDR of the selected graph), causal effect estimation (MAD), confounding structure recovery (AUC), instrument--trait selection (AUC), percentage of fits with the chain-halves warning of the package, and mean wall-clock seconds per fit. Entries are mean (SD) over %d replicates.", length(unique(lc$rep))),
               "tab:largen_longchain", "|r|r|c|c|c|c|c|c|r|r|",
               paste(c("\\textbf{Iterations}", "\\textbf{Burn-in}", "\\textbf{AUC}", "\\textbf{TPR}", "\\textbf{FDR}", "\\textbf{MAD}", "\\textbf{Conf.\\ AUC}", "\\textbf{IV AUC}", "\\textbf{Halves warning (\\%)}", "\\textbf{Seconds}"), collapse = " & "),
               c(paste(line(lb, SIM_SETTINGS$mcmc), "\\\\"), "\\hline", paste(line(lc, mc_long), "\\\\"), "\\hline"), "\\scriptsize")
@@ -701,7 +701,7 @@ if ("sensitivity" %in% names(exp_data)) {
     if (grepl("^nu1_", l)) return(sprintf("$\\nu_1 = %s$", sci(sub("^nu1_", "", l))))
     l }
   rgm <- function(l, n_, fam, met, m = "MR.RGM") cell(ss, "sensitivity", "smallworld", 10, n_, m, fam, met, l)
-  cap0 <- "Sensitivity of %s to the prior inclusion probability (Beta($a_\\rho, b_\\rho$)) and the spike variance $\\nu_1$ of the causal effects, one changed at a time (small-world network with feedback loops and unmeasured confounding, $p = 10$); FDR of the edges selected at PIP $> 0.5$. %sThe competing methods do not use these hyperparameters; the data are those of the main study, so their results are those of the main study for the same case and $n$.%s"
+  cap0 <- "Sensitivity of %s to the prior inclusion probability (Beta($a_\\rho, b_\\rho$)) and the spike variance $\\nu_1$ of the causal effects, one changed at a time (small-world network with feedback loops and unmeasured confounding, $p = 10$). The FDR is of the edges selected at PIP $> 0.5$. %sThe competing methods do not use these hyperparameters. The data are those of the main study, so their results are those of the main study for the same case and $n$.%s"
   ## table 1: MR.RGM and MR.RGM_NoConf (known instrument map); table 2: MR.RGM+
   hdr <- paste(c("\\textbf{Hyperparameters}", "\\textbf{$n$}", "\\textbf{AUC}", "\\textbf{FDR}", "\\textbf{MAD}", "\\textbf{Conf.\\ AUC}", "\\textbf{AUC, NoConf}", "\\textbf{MAD, NoConf}"), collapse = " & ")
   body <- c()
@@ -730,13 +730,13 @@ if ("roles" %in% names(exp_data)) {
   ns <- sort(unique(sr$n))
   meths <- intersect(method_order, unique(sr$method[sr$family == "graph_xy"]))
   rows <- expand.grid(method = meths, n = ns, stringsAsFactors = FALSE)[, c("n", "method")]; rows$group <- format(rows$n, big.mark = ",")
-  cap_common <- "MR2 and MrDAG are given the true split into exposures and outcomes; the other methods are not. The pairwise methods (MendelianRandomization, OneSampleMR, mrbayes) estimate the total effect of each trait on each other trait."
+  cap_common <- "MR2 and MrDAG are given the true split into exposures and outcomes. The other methods are not. The pairwise methods (MendelianRandomization, OneSampleMR, mrbayes) estimate the total effect of each trait on each other trait."
   cols <- list("AUC" = c("graph", "AUC"), "FDR" = c("graph", "FDR"), "MAD" = c("effect", "MeanAbsDev"),
                "AUC, out.\\ $\\to$ out." = c("graph_yy", "AUC"), "Conf.\\ AUC, outcomes" = c("confounding", "AUC"))
-  long_table_tex("roles.tex", sprintf("Exposure--outcome design (4 exposures, 4 outcomes with a causal DAG among the outcomes, unmeasured confounding): recovery of the whole graph (AUC; FDR at the decision rule PIP $>0.5$ for the Bayesian methods and $p<0.05$ for the others; MAD over all off-diagonal entries), of the outcome $\\to$ outcome effects (AUC; the network methods, MVMR and the pairwise methods estimate them, MR2 does not, MrDAG through its DAG among the outcomes), and of the confounding structure among the outcomes (AUC; MR2 through its residual correlation). %s%s", cap_common, cap_tail(short_in(sr[sr$family %in% c("graph", "effect", "graph_yy", "confounding"), ]))),
+  long_table_tex("roles.tex", sprintf("Exposure--outcome design (4 exposures, 4 outcomes with a causal DAG among the outcomes, unmeasured confounding): recovery of the whole graph (AUC, FDR at the decision rule PIP $>0.5$ for the Bayesian methods and $p<0.05$ for the others, and MAD over all off-diagonal entries), of the outcome $\\to$ outcome effects (AUC, where the network methods, MVMR and the pairwise methods estimate them, MR2 does not, and MrDAG estimates them through its DAG among the outcomes), and of the confounding structure among the outcomes (AUC, for MR2 through its residual correlation). %s%s", cap_common, cap_tail(short_in(sr[sr$family %in% c("graph", "effect", "graph_yy", "confounding"), ]))),
                  "tab:roles", rows, "$n$", cols, function(i, cl) cell(sr, "roles", "roles", unique(sr$p)[1], rows$n[i], rows$method[i], cl[1], cl[2]), "\\scriptsize")
   cols <- list("AUC" = c("graph_xy", "AUC"), "TPR" = c("graph_xy", "TPR"), "FDR" = c("graph_xy", "FDR"), "MAD" = c("effect_xy", "MeanAbsDev"))
-  long_table_tex("roles_xy.tex", sprintf("Exposure--outcome design: recovery of the exposure $\\to$ outcome effects (AUC; TPR and FDR at the decision rule PIP $>0.5$ for the Bayesian methods and $p<0.05$ for the others; MAD). %s%s", cap_common, cap_tail(short_in(sr[sr$family %in% c("graph_xy", "effect_xy"), ]))),
+  long_table_tex("roles_xy.tex", sprintf("Exposure--outcome design: recovery of the exposure $\\to$ outcome effects (AUC, TPR and FDR at the decision rule PIP $>0.5$ for the Bayesian methods and $p<0.05$ for the others, and MAD). %s%s", cap_common, cap_tail(short_in(sr[sr$family %in% c("graph_xy", "effect_xy"), ]))),
                  "tab:roles_xy", rows, "$n$", cols, function(i, cl) cell(sr, "roles", "roles", unique(sr$p)[1], rows$n[i], rows$method[i], cl[1], cl[2]))
   ## figure: boxplots of the three AUCs per method
   d <- rr[rr$family %in% c("graph_xy", "graph_yy", "confounding") & rr$metric == "AUC" & !is.na(rr$value) & rr$method %in% meths, ]
@@ -789,7 +789,7 @@ if ("roles" %in% names(exp_data)) {
       body <- c(body, "\\hline")
       table_tex("failures.tex",
                 paste0("Fits without a result, by experiment and setting: number of such fits out of the replicates, number of successful fits over which the method is summarized in every table and figure, and cause (MR2G: ", fail_reason[["MR2G"]],
-                       "; GrIVET: peeling, its peeling step could not order every trait, which a directed cycle can prevent; numerical, it stopped with a numerical error; time, it did not finish within 48 hours)."),
+                       "). For GrIVET, peeling means that its peeling step could not order every trait, which a directed cycle can prevent, numerical means that it stopped with a numerical error, and time means that it did not finish within 48 hours."),
                 "tab:failures", "|l|l|r|r|l|l|c|c|l|",
                 paste(c("\\textbf{Experiment}", "\\textbf{Case}", "\\textbf{$p$}", "\\textbf{$n$}", "\\textbf{Setting}", "\\textbf{Method}",
                         "\\textbf{Failed}", "\\textbf{Successful}", "\\textbf{Cause}"), collapse = " & "),
@@ -811,7 +811,7 @@ if ("main" %in% names(exp_data)) {
     for (p_ in sort(unique(st$p))) { for (n_ in ns) body <- c(body, paste(c(if (n_ == ns[1]) p_ else "", format(n_, big.mark = ","),
         vapply(meths, function(m) { v <- st$seconds[st$p == p_ & st$n == n_ & st$method == m & st$scenario == "smallworld"]; if (!length(v)) "--" else if (v < 0.05) "$<0.1$" else format(round(v, 1), nsmall = 1, big.mark = ",", scientific = FALSE) }, character(1))), collapse = " & "), "\\\\")
       body <- c(body, "\\hline") }
-    table_tex("timing.tex", "Mean wall-clock seconds per fit (small-world case, one core per replicate; MCMC methods: 50,000 iterations; MendelianRandomization, OneSampleMR and mrbayes: all ordered pairs; MrDAG: one fit per outcome). The three MendelianRandomization estimators are computed in one call and share its time.",
+    table_tex("timing.tex", "Mean wall-clock seconds per fit (small-world case, one core per replicate, with 50,000 iterations for the MCMC methods, all ordered pairs for MendelianRandomization, OneSampleMR and mrbayes, and one fit per outcome for MrDAG). The three MendelianRandomization estimators are computed in one call and share its time.",
               "tab:timing", sprintf("|c|r|%s", paste(rep("c|", length(meths)), collapse = "")),
               paste(c("\\textbf{$p$}", "\\textbf{$n$}", sprintf("\\textbf{%s}", method_tex[meths])), collapse = " & "), body, "\\scriptsize")
   }
