@@ -12,11 +12,12 @@ with `make_figures_tables.R`, `run_instrument_strength.R` (`STRENGTH_PLOT_ONLY <
 | `config.sh` | Paths, partitions, cores, memory, time limits (the only file to edit for another cluster) |
 | `env.sh` | Sourced by every job: conda R environment, R library, one BLAS thread per process |
 | `setup.sbatch` | Builds the environment once: conda (R 4.4, JAGS, compilers, libraries), `install_packages.R`, MR.RGM from source, `verify_setup.R`, `make_tasks.R` |
-| `make_tasks.R` | `tasks_sim.csv` (one task per setting, 118) and `tasks_runtime.csv` (one task per p, method and block of runs, 720) |
+| `make_tasks.R` | `tasks_sim.csv` (one task per setting, 115) and `tasks_runtime.csv` (one task per p, method and block of runs, 720) |
 | `smoke_test.R`, `smoke.sbatch` | Every experiment with short chains and 2 replicates; fails if a step fails or a method never succeeds |
 | `run_task.R`, `sim_array.sbatch` | One simulation task (one setting, all methods, 100 replicates in parallel) |
 | `run_runtime_task.R`, `runtime_array.sbatch` | One runtime task: an untimed warm-up fit, then 2 (MrDAG, GrIVET) or 10 timed runs of one method at one p on one core |
 | `check_results.R`, `collect_runtime.R`, `check.sbatch` | Completeness per task and method (`check_results.csv`); runtime CSVs of `RunTimeAnalysis.R` |
+| `check_versions_agree.R` | Fits MR.RGM and MR.RGM_NoConf again for three settings and three replicates and confirms that the installed version reproduces the stored results exactly |
 | `submit_all.sh` | Smoke test → simulation array → runtime array → check, as dependent jobs |
 | `status.sh` | Progress (jobs, settings and runtime blocks done, last errors) |
 | `add_methods.R`, `make_add_tasks.R`, `run_add_task.R`, `add_array.sbatch`, `smoke_add.R`, `smoke_add.sbatch`, `submit_add.sh` | Adds methods to the existing result files (the second pass that fits GrIVET, or any method added to `METHODS`; only the missing methods and replicates, same data and seeds), then completes the runtime benchmark and runs the check |
@@ -66,7 +67,7 @@ Local machine (results back into the simulation folder; move earlier results of 
 
 ```bash
 cd "path/to/simulation"
-rsync -av user@cluster:MRRGM/MR.RGM/reproducibility/simulation/results_{main,roles,strength,noise,confounding,sensitivity,largen} ./
+rsync -av user@cluster:MRRGM/MR.RGM/reproducibility/simulation/results_{main,roles,strength,noise,confounding,sensitivity,largen,longchain} ./
 rsync -avs "user@cluster:MRRGM/MR.RGM/reproducibility/simulation/Runtime Analysis/runtime_*" "Runtime Analysis/"
 rsync -av user@cluster:MRRGM/MR.RGM/reproducibility/simulation/cluster/check_results.csv cluster/
 ```

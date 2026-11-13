@@ -36,6 +36,7 @@
 ##   noise        error variance 1, 4, 9 (small-world, p = 10)
 ##   confounding  confounder loadings scaled by 0, 0.5, 1, 1.5 (small-world, p = 10)
 ##   largen       n = 1e5, 1e6 (small-world, p = 10)
+##   longchain    MR.RGM+ at n = 1e6 with a chain of 250,000 iterations (the data and seeds of largen)
 ##   sensitivity  prior inclusion Beta(3,1) vs Beta(1,1); nu1 in {1e-2, 1e-3, 1e-4} (MR.RGM family)
 ##   roles        exposures -> outcomes design with known roles (MR2 and MrDAG with their native exposure/outcome split)
 ##   strength     instrument strength (run_instrument_strength.R; strength_replicate() below)
@@ -69,7 +70,7 @@ invisible(vapply(c("MR2G", "MR2", "MrDAG", "grivet", "future"), has_pkg, logical
 ## Displayed text (tables, captions, figure labels). The result files, data frames and lists keep the method keys
 ## "MR.RGM", "MR.RGM+", "MR.RGM_NoConf" and the scenario keys (e.g. "smallworld_pleio"); only the text that is shown is
 ## converted: the methods are displayed as IV-RGM, IV-RGM+ and IV-RGM_NoConf, (horizontal) pleiotropy as invalid
-## instruments, and trait(s) as response(s). References to the R package MR.RGM ("package MR.RGM", "MR.RGM >= 0.1.3",
+## instruments, and trait(s) as response(s). References to the R package MR.RGM ("package MR.RGM", "MR.RGM >= 0.1.4",
 ## "MR.RGM::", ...) are kept. Character vector in, character vector out (names kept); a second application changes nothing.
 ## real_data_functions.R defines the same function without renaming SNPs, which the real-data tables keep.
 ## ---------------------------------------------------------------------------
@@ -195,6 +196,16 @@ if (packageVersion("MR.RGM") < "0.1.4")
 ## the scripts stop and ask for it to be moved out of results_*/.
 SAMPLER_TAG <- "MR.RGM 0.1.3 final sampler: Gibbs B, adaptive random-walk A, least-squares start"   # identifier of the sampler; compared with identical() against the stored results
 result_is_current <- function(f) identical(attr(readRDS(f), "sampler"), SAMPLER_TAG)
+## The tag identifies the sampler of MR.RGM and MR.RGM_NoConf, which is the same in versions 0.1.3 and 0.1.4 of the
+## package. The sampler of MR.RGM+ changed in 0.1.4 (point mass at zero for the instrument effects), so its results
+## must come from version 0.1.4 or later: either the file was produced with that version, or MR.RGM+ was refitted into
+## it by cluster/add_methods.R (attribute "replaced_methods"). rgm_plus_is_current() checks this for a result object.
+rgm_plus_is_current <- function(x) {
+  if (!"MR.RGM+" %in% unique(x$method)) return(TRUE)
+  v <- attr(x, "replaced_methods")$version[["MR.RGM+"]]
+  v <- if (is.null(v)) attr(x, "package_versions")["MR.RGM"] else sub("^MR\\.RGM ", "", v)
+  length(v) == 1 && !is.na(v) && package_version(as.character(v)) >= "0.1.4"
+}
 ## Results are written to a temporary file and then renamed, so that a file is either complete or absent (several
 ## processes, e.g. cluster tasks, may write into the same folder)
 save_rds_atomic <- function(obj, f) {
@@ -265,6 +276,7 @@ METHODS <- list(
   noise       = NO_ROLES,
   confounding = NO_ROLES,
   largen      = NO_ROLES,
+  longchain   = "MR.RGM+",
   sensitivity = RGM_FAMILY,
   roles       = ALL_METHODS,
   strength    = NO_ROLES
@@ -287,6 +299,10 @@ experiment_grid <- function(experiment, set = SIM_SETTINGS) {
     confounding = list(scen = "smallworld", p = 10, n = c(1000, 10000),
                        settings = lapply(c(0, 0.5, 1, 1.5), function(v) list(label = sprintf("conf_%g", v), conf_scale = v))),
     largen      = list(scen = "smallworld", p = 10, n = c(1e5, 1e6), settings = list(list(label = "base"))),
+    ## the setting n = 1e6 of largen (same data and seeds) with a chain five times as long: at this sample size the
+    ## posterior is so narrow that the chain of MR.RGM+ needs more iterations to reach the sparse instrument map
+    longchain   = list(scen = "smallworld", p = 10, n = 1e6,
+                       settings = list(list(label = "iter250000", mcmc = list(nIter = 250000, nBurnin = 50000, Thin = 10)))),
     sensitivity = list(scen = "smallworld", p = 10, n = c(1000, 10000),
                        settings = c(lapply(list(c(3, 1), c(1, 1)), function(ab) list(label = sprintf("Beta_%g_%g", ab[1], ab[2]), rgm_hyper = modifyList(set$rgm_hyper, list(aRho = ab[1], bRho = ab[2])))),
                                     lapply(c(1e-2, 1e-4), function(v) list(label = sprintf("nu1_%g", v), rgm_hyper = modifyList(set$rgm_hyper, list(nu1 = v)))))),

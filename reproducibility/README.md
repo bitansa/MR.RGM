@@ -17,9 +17,11 @@ reproducibility/
 
 **Package version.** The results in the paper were produced with MR.RGM 0.1.4
 (`remotes::install_github("bitansa/MR.RGM")`). Check with `packageVersion("MR.RGM")`; every script
-stops with an older version, and every script saves the package version with its results. MR.RGM and MR.RGM_NoConf
-give the same results under 0.1.3 and 0.1.4 (their samplers did not change); their stored results were produced
-with 0.1.3, and those of MR.RGM+ with 0.1.4 (`simulation/cluster/add_methods.R` with `REPLACE_METHODS`).
+stops with an older version, and every script saves the package version with its results. The samplers of MR.RGM
+and MR.RGM_NoConf are the same in 0.1.3 and 0.1.4, so both versions give the same results for these two methods
+(`simulation/cluster/check_versions_agree.R` confirms this). Their result files were computed before the version
+number changed and record 0.1.3. MR.RGM+ was fitted with 0.1.4 (`simulation/cluster/add_methods.R` with
+`REPLACE_METHODS`).
 
 **Software versions.** R 4.4.3; MendelianRandomization 0.10.0, OneSampleMR 0.1.8, mrbayes 0.5.3 (rjags 4.17),
 MR2G 0.1.0, MR2 0.2.0, MrDAG 0.1.3 and grivet 1.0 (GitHub commit `1777dbf`). `simulation/cluster/install_packages.R`
@@ -87,7 +89,8 @@ source("OneK1K_RunAll.R")                                       # MR.RGM and MR.
 
 Seven experiments: the six of `run_simulations.R` (main cases 1–3; error variance; strength of confounding; large n;
 hyperparameter sensitivity; exposure → outcome design with known roles) and the instrument-strength study of
-`run_instrument_strength.R`, together with the runtime benchmark. They compare MR.RGM, MR.RGM_NoConf and MR.RGM+ with
+`run_instrument_strength.R`, together with the runtime benchmark and a run of MR.RGM+ at n = 10⁶ with a chain five
+times as long (`longchain`). They compare MR.RGM, MR.RGM_NoConf and MR.RGM+ with
 MR2G, MVMR, MR2, MrDAG, GrIVET and the pairwise estimators (IVW, simple and weighted median, OneSampleMR, mrbayes),
 every competitor with its package's default settings except the √n input scaling and chain length of MR2 and MrDAG,
 the tuning grid and unstandardized input of GrIVET, and a correction of MR2G's ScreenAug step for igraph ≥ 2.0 (all
@@ -113,6 +116,7 @@ See `real_data/README.md` and `real_data/OneK1K/README.md`.
 |---|---|---|
 | Figure 2 (main study, p = 10); main-study figures and tables of Sections OA.2–OA.3 | `main_summary_p=10.pdf`, `feedback_*.tex`, `overview_*.tex`, `failures.tex`, `main_diagnostics.tex` | `simulation/make_figures_tables.R` |
 | Further experiments (exposure-outcome, error variance, confounding, large samples, prior sensitivity) | `roles*`, `roles_auc.pdf`, `noise*`, `confscale*`, `largen*`, `largen_seconds.tex`, `sensitivity*` | `simulation/make_figures_tables.R` |
+| MR.RGM+ at n = 10⁶ with 50,000 and with 250,000 iterations | `largen_longchain.tex` | `simulation/make_figures_tables.R` (experiment `longchain`) |
 | Mean time per fit in the main study | `timing.tex` | `simulation/make_figures_tables.R` |
 | Figure 3 and the instrument-strength study | `strength_*.pdf`, `strength_*.tex` | `simulation/run_instrument_strength.R` |
 | Computation time against the number of responses | `runtime_vs_p_n30000.pdf` | timed by `simulation/cluster/run_runtime_task.R` and collected by `collect_runtime.R`, drawn by `simulation/Runtime Analysis/RunTimeAnalysis.R` |

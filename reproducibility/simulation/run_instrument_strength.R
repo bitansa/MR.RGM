@@ -4,8 +4,8 @@
 ##
 ## Question: when does estimating the instrument map (MR.RGM+, D = 1 with selection) cost more than it gains over
 ## using a known map without selection (MR.RGM)? The main study uses strong instruments (generating effect 1,
-## population R^2 of a trait on its own instruments about 0.2). Real cis-eQTL instruments are much weaker
-## (R^2 about 0.01-0.08 per gene). Here the instrument effect is varied while everything else is as in Case 2
+## population R^2 of a trait on its own instruments about 0.2). Real cis-eQTL instruments are often weaker
+## (partial R^2 about 0.03-0.19 per gene in the OneK1K analysis). Here the instrument effect is varied while everything else is as in Case 2
 ## (small-world, no pleiotropy) and Case 3 (small-world, pleiotropy):
 ##   strength:  strong (effect 1), moderate (0.5), weak (0.3), all with 3 SNPs per trait, and weak with
 ##              10 instruments per response (same total strength as weak; cis-eQTL-like)
@@ -106,7 +106,9 @@ if (!length(files)) stop("No results in ", normalizePath(out_dir, mustWork = FAL
 ## each result file plus the effect error on the true edges / non-edges and the All-zero reference, computed from the
 ## estimates saved next to it (effect_split_rows() in sim_functions.R)
 res <- do.call(rbind, lapply(files, function(f) {
-  d  <- as.data.frame(readRDS(f)); for (a in c("settings", "session_info", "package_versions", "methods", "sampler", "MR.RGM_build")) attr(d, a) <- NULL
+  d  <- readRDS(f)
+  if (!rgm_plus_is_current(d)) stop("The MR.RGM+ results of ", f, " were not produced with MR.RGM >= 0.1.4 (cluster/add_methods.R with REPLACE_METHODS).")
+  d  <- as.data.frame(d); for (a in c("settings", "session_info", "package_versions", "methods", "sampler", "MR.RGM_build")) attr(d, a) <- NULL
   ff <- sub("/strength_", "/fits_strength_", f, fixed = TRUE)
   if (!file.exists(ff)) return(d)
   s  <- effect_split_rows(ff)

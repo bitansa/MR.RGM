@@ -6,10 +6,12 @@
 ##   noise        error variance in {1, 4, 9} (small-world, p = 10, n in {1000, 10000})
 ##   confounding  confounder loadings x {0, 0.5, 1, 1.5} (small-world, p = 10, n in {1000, 10000})
 ##   largen       n in {1e5, 1e6} (small-world, p = 10)
+##   longchain    MR.RGM+ at n = 1e6 with 250,000 iterations (same data and seeds as largen)
 ##   roles        4 exposures -> 4 outcomes with known roles (n in {1000, 10000})
 ##   sensitivity  MR.RGM family with prior inclusion Beta(3,1) / Beta(1,1), nu1 in {1e-2, 1e-3, 1e-4}
 ##                (small-world, p = 10, n in {1000, 10000})
-## Methods: every method (METHODS in sim_functions.R) in every experiment except sensitivity (MR.RGM family only).
+## Methods: every method (METHODS in sim_functions.R) in every experiment except sensitivity (MR.RGM family only) and
+## longchain (MR.RGM+ only).
 ##
 ## Usage (from this folder):
 ##   SMOKE_TEST <- TRUE;  source("run_simulations.R")                  # short end-to-end check of every method (~minutes)

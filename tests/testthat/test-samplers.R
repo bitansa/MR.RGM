@@ -102,6 +102,25 @@ test_that("with instrument selection under the spike-and-slab prior, gibbsB = FA
                      Thin = mcmc$Thin), "gibbsB = FALSE is not used")
 })
 
+test_that("the point-mass update of B runs under every error model, with and without covariates", {
+  for (sg in c("SSSL", "IW", "diagonal")) for (cv in c(FALSE, TRUE)) {
+    args <- list(X = d$X, Y = d$Y, D = d$D, selectB = TRUE, SigmaStarModel = sg,
+                 nIter = mcmc$nIter, nBurnin = mcmc$nBurnin, Thin = mcmc$Thin)
+    if (cv) args$U <- d$U
+    set.seed(40)
+    fit <- suppressWarnings(do.call(RGM, args))
+    info <- paste(sg, if (cv) "with covariates" else "without covariates")
+    expect_true(fit$settings$selectB, info = info)
+    expect_true(all(is.finite(fit$BEst)), info = info)
+    expect_true(all(fit$PhiEst >= 0 & fit$PhiEst <= 1), info = info)
+    ## entries outside the map are never selected and stay at zero
+    expect_true(all(fit$PhiEst[d$D == 0] == 0), info = info)
+    expect_true(all(fit$BEst[d$D == 0] == 0), info = info)
+    ## the own instruments (true effect 1) are selected
+    expect_true(all(fit$PhiEst[d$D == 1] > 0.5), info = info)
+  }
+})
+
 test_that("selectB overrides the default given by D", {
   set.seed(6)
   ## selection restricted to the allowed entries

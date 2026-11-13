@@ -17,6 +17,7 @@ if (!any(file.exists(ts$file))) stop("no simulation result file found")
 out <- do.call(rbind, lapply(which(file.exists(ts$file)), function(i) {
   x <- as.data.frame(readRDS(ts$file[i])); x <- x[x$method != "data", ]
   if (!identical(attr(readRDS(ts$file[i]), "sampler"), SAMPLER_TAG)) warning("no current sampler tag: ", ts$file[i])
+  if (!rgm_plus_is_current(readRDS(ts$file[i]))) warning("MR.RGM+ not fitted with MR.RGM >= 0.1.4: ", ts$file[i])
   x$method <- row_method(x$method)
   fl <- x[x$family == "diagnostic" & x$metric == "failed_fits", ]
   target <- if (ts$script[i] == "sim") methods_for_setting(ts$experiment[i], ts$label[i]) else METHODS$strength

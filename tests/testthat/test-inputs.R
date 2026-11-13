@@ -87,7 +87,7 @@ test_that("output format: names from the input, vector log-likelihood, graph", {
   expect_true(is.numeric(f$diagnostics$halvesMCSE))
   expect_equal(sort(igraph::V(f$Graph)$name), sort(colnames(Y)))
   expect_equal(igraph::ecount(f$Graph), sum(f$zAEst))
-  ## without names in the input the outputs have no dimnames, as before
+  ## without names in the input the outputs have no dimnames
   set.seed(72); g <- do.call(RGM, c(list(X = d$X, Y = d$Y, D = d$D), short))
   expect_null(dimnames(g$AEst))
 })

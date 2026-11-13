@@ -50,7 +50,7 @@
 #'   \strong{MCMC algorithm.} Every iteration updates, in turn, the instrument effects \code{B}, the covariate
 #'   effects \code{C}, the error covariance \eqn{\Sigma^{\ast}} (with its confounding indicators) and the causal
 #'   effects \code{A}, each with its prior hyperparameters. Given the other parameters, the likelihood is quadratic in
-#'   \code{B} and its (spike-and-slab or slab) prior is normal given the inclusion indicators, so each row of
+#'   \code{B}. Without instrument selection the prior of every allowed entry is normal, so each row of
 #'   \code{B} is drawn exactly from its multivariate normal full conditional (Gibbs; \code{gibbsB = TRUE}). The
 #'   entries of \code{A} enter the likelihood also through \eqn{\log|\det(I - A)|} and are updated one at a time by
 #'   random-walk Metropolis--Hastings with adaptive proposals: each entry has its own proposal variance, started at
@@ -115,7 +115,7 @@
 #' \item{TauEst}{p * p matrix, posterior mean of the slab variances of \code{A}.}
 #' \item{RhoEst}{p * p matrix, posterior mean of the edge inclusion probabilities \code{rho} (spike-and-slab prior).}
 #' \item{PhiEst}{p * k matrix of posterior inclusion probabilities of the instrument effects when they are selected (MR.RGM+); equal to \code{D} otherwise.}
-#' \item{EtaEst}{p * k matrix, posterior mean of the slab variances of \code{B}.}
+#' \item{EtaEst}{p * k matrix, posterior mean of the slab variances of \code{B}. Their prior (the square of a half-Cauchy variable) has no mean, so this average can be dominated by a few large draws, in particular for entries that are excluded in most iterations (MR.RGM+).}
 #' \item{PsiEst}{p * k matrix, posterior mean of the inclusion probabilities \code{psi} of the instrument effects (spike-and-slab prior with selection only).}
 #' \item{tAEst, tBEst}{Posterior means of the thresholds (Threshold prior; \code{tBEst} with selection only).}
 #' \item{SigmaEst}{The estimated error covariance: a p * p matrix for \code{"SSSL"} and \code{"IW"}, a vector of length p of error variances for \code{"diagonal"}.}
@@ -483,8 +483,10 @@ RGM = function(X = NULL, Y = NULL, U = NULL, Syy = NULL, Syx = NULL, Sxx = NULL,
   args = list(S_YY = Syy, n = n, nIter = nIter, nBurnin = nBurnin, Thin = Thin, nu_1 = nu1,
               Prop_VarA = if (is.null(PropVarA)) -1 else PropVarA)
   if (spike) args = c(args, list(a_rho = aRho, b_rho = bRho))
+  # nu_2 is an argument of the compiled samplers that no longer affects any update (the argument nu2 of RGM() is not
+  # used since version 0.1.4); a fixed valid value is passed
   if (instruments) {
-    args = c(args, list(S_YX = Syx, S_XX = Sxx, D = D, nu_2 = nu2, Prop_VarB = if (is.null(PropVarB)) -1 else PropVarB,
+    args = c(args, list(S_YX = Syx, S_XX = Sxx, D = D, nu_2 = 1e-4, Prop_VarB = if (is.null(PropVarB)) -1 else PropVarB,
                         selectB = selectB, gibbsB = gibbsB))
     if (spike) args = c(args, list(a_psi = aPsi, b_psi = bPsi))
   }

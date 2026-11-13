@@ -13,6 +13,7 @@ internal keys `MR.RGM`, `MR.RGM+` and `MR.RGM_NoConf`; tables and figures displa
 | `sim_functions.R` | Settings (single source of truth), data generation and standardization, the MR.RGM family, every competing method, metrics |
 | `run_all.R` | The complete study in one run (from a Terminal; see below) |
 | `pilot_competitors.R` | One-off check of the competitor wrappers on one replicate (prints raw outputs next to the truth; run once before the study) |
+| `pilot_mrdag_scaling.R` | Pilot check of the input scale of MrDAG: five replicates of the exposure → outcome design at n = 1,000 and 10,000, with and without the √n scaling of the marginal effects used in the study |
 | `run_simulations.R` | Runs one experiment (100 replicates per setting, in parallel); one result file per setting in `results_<experiment>/` |
 | `make_figures_tables.R` | Builds every figure (`figures/`) and table (`tables/*.tex`) from the result files; `tables/simulation_summary.csv` holds every mean, SD and replicate count |
 | `run_instrument_strength.R` | Every method under strong, moderate and weak instruments (runs, figures `strength_*`, tables incl. diagnostics) |
@@ -21,9 +22,11 @@ internal keys `MR.RGM`, `MR.RGM+` and `MR.RGM_NoConf`; tables and figures displa
 
 ## Requirements
 
-* MR.RGM >= 0.1.4 (`remotes::install_github("bitansa/MR.RGM")`); the scripts stop otherwise. Its MCMC draws the instrument effects `B` exactly from their normal full conditional (Gibbs)
+* MR.RGM >= 0.1.4 (`remotes::install_github("bitansa/MR.RGM")`); the scripts stop otherwise. Its MCMC draws the instrument effects `B` from their exact full conditional
+  (MR.RGM: the allowed entries of a row jointly, normal; MR.RGM+: each inclusion indicator together with its effect)
   and updates the causal effects `A` by random-walk Metropolis with proposal variances tuned during the burn-in
-  (adaptive, then frozen); the chain starts at the least-squares instrument effects. The package distinguishes **MR.RGM** (instrument map `D` given; the allowed instrument effects are estimated without
+  (adaptive, then frozen). The chain starts at `A = 0` and at the least-squares instrument effects (MR.RGM) or at
+  `B = 0` (MR.RGM+). The package distinguishes **MR.RGM** (instrument map `D` given; the allowed instrument effects are estimated without
   selection, `selectB = FALSE`) from **MR.RGM+** (`D = 1`, every instrument effect selected under a prior with a
   point mass at zero, `selectB = TRUE`).
 * R packages: `igraph`, `pROC`, `rjags` (+ `ggplot2`, `scales` for the figures; `microbenchmark` for the runtime
@@ -54,7 +57,7 @@ tail -f run_all.log                                       # progress ("done in .
 ```
 
 `run_all.R` runs the experiments and the instrument-strength study (main, roles, strength, noise, confounding,
-sensitivity, large n), then the figures and tables, then the runtime benchmark; it is restartable (finished settings
+sensitivity, large n, long chain), then the figures and tables, then the runtime benchmark; it is restartable (finished settings
 are skipped), and a step that fails is reported and the next step still runs. Result files carry a sampler tag: a
 result file without the current tag is not reused (the scripts stop and ask for it to be moved out of `results_*/`).
 A replicate that runs longer than `REP_TIMEOUT_MIN` (default 240 minutes, twice that at n = 10^6) is terminated and
@@ -72,7 +75,7 @@ for (e in c("main", "noise", "confounding", "largen", "sensitivity", "roles")) {
   SMOKE_TEST <- TRUE; EXPERIMENT <- e; source("run_simulations.R")   # minutes: every method and metric once (results_smoke_*/)
 }
 SMOKE_TEST <- FALSE
-for (e in c("main", "noise", "confounding", "largen", "sensitivity", "roles")) {
+for (e in c("main", "noise", "confounding", "largen", "longchain", "sensitivity", "roles")) {
   EXPERIMENT <- e; source("run_simulations.R")                  # full experiment (restartable: finished settings are skipped)
 }
 source("make_figures_tables.R")                                 # figures/ and tables/ from results_*/
@@ -97,7 +100,8 @@ be run with `SCENARIOS`, `P_VALUES`, `N_VALUES` and `SETTINGS` (indices).
   built for MR2 and MrDAG (which are given the true split into exposures and outcomes there).
 * **Sizes.** p ∈ {5, 10} (8 in `roles`); n ∈ {500, 1000, 10000, 30000} in `main` and in the instrument-strength study,
   n ∈ {1000, 10000} in `noise`, `confounding`, `sensitivity` and `roles`, n ∈ {10⁵, 10⁶} in `largen`; 100 replicates per
-  setting everywhere.
+  setting everywhere. `longchain` refits MR.RGM+ at n = 10⁶ on the data of `largen` with 250,000 iterations (50,000
+  burn-in) instead of 50,000: at this sample size the posterior is so narrow that its chain needs more iterations.
 * **Truth.** Non-zero entries of **A** are ±0.1 (equal probability) on the edges of the graph; each response has 3
   unique instruments with effect 1 on the generating scale; 5 latent confounders with loadings ±1 (times the
   confounder scale, 1 in the main study), half of them (rounded down) set to 0. In Case 3 the instrument map given to every

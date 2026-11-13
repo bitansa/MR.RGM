@@ -35,7 +35,7 @@ bayes_factor <- function(pip, prior) (pip / (1 - pip)) / (prior / (1 - prior))
 ## Displayed text (tables, captions, figure labels). The result files, data frames and lists keep the method keys
 ## "MR.RGM", "MR.RGM+", "MR.RGM_NoConf" and the scenario keys (e.g. "smallworld_pleio"); only the text that is shown is
 ## converted: the methods are displayed as IV-RGM, IV-RGM+ and IV-RGM_NoConf, (horizontal) pleiotropy as invalid
-## instruments, and trait(s) as response(s). References to the R package MR.RGM ("package MR.RGM", "MR.RGM >= 0.1.3",
+## instruments, and trait(s) as response(s). References to the R package MR.RGM ("package MR.RGM", "MR.RGM >= 0.1.4",
 ## "MR.RGM::", ...) are kept. Character vector in, character vector out (names kept); a second application changes nothing.
 ## sim_functions.R defines the same function, which also renames SNPs as instruments for the simulated data.
 ## ---------------------------------------------------------------------------

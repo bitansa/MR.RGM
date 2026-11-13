@@ -13,9 +13,9 @@
 //    the quadratic term of the log-likelihood at the starting value (Gelman, Roberts and Gilks, 1996).
 // 3. Gibbs_B_Row: exact Gibbs draw of the allowed entries of one row of B (jointly for up to 100 allowed instruments,
 //    entry by entry within the row beyond that). Given A, Sigma (and C), the log-likelihood
-//    is quadratic in B and the (spike-and-slab or slab) prior of every entry is normal given its indicator, so the
+//    is quadratic in B and the slab prior of every allowed entry is normal, so the
 //    full conditional of b_j,L (L = allowed instruments of response j) is N(P^{-1} h, P^{-1}) with
-//        P = n Omega_jj S_XX[L, L] + diag(1 / v_l),     v_l = eta_jl (phi_jl = 1) or nu_2 eta_jl (phi_jl = 0),
+//        P = n Omega_jj S_XX[L, L] + diag(1 / v_l),     v_l = eta_jl,
 //        h = n [ (Omega T)_j,L - (Omega B S_XX)_j,L + Omega_jj (B_j S_XX)_L ],
 //    where Omega = Sigma^{-1}, T = (I - A) S_YX - C S_XU^T (C = 0 without covariates), B_j = current row j of B.
 // 3b. PointMass_B_Row: joint draw of the indicators and entries of one row of B under the point-mass spike used
@@ -107,7 +107,8 @@ inline arma::umat OffDiag_Mask(int p) {
 // --------------------------------------------------------------------------------------------------
 // 3. Exact Gibbs draw of the allowed entries of row j of B (see the header)
 //    T = (I - A) S_YX - C S_XU^T (p x k); Omega = Sigma^{-1} (p x p; diagonal for the diagonal error model);
-//    prior variance of entry (j, l): Eta(j, l) if Phi(j, l) == 1, nu_2 * Eta(j, l) otherwise.
+//    prior variance of entry (j, l): Eta(j, l). The function is called without instrument selection only, where
+//    Phi(j, l) == 1 for every allowed entry; the argument nu_2 and the branch for Phi(j, l) != 1 are not used.
 //    The standard normal draws use R's generator (R::norm_rand), so results follow set.seed().
 // --------------------------------------------------------------------------------------------------
 inline void Gibbs_B_Row(arma::mat& B, int j, const arma::mat& T, const arma::mat& S_XX, const arma::mat& Omega,
@@ -164,8 +165,8 @@ inline void Gibbs_B_Row(arma::mat& B, int j, const arma::mat& T, const arma::mat
   }
   arma::colvec z(L.n_elem);
   for (arma::uword m = 0; m < L.n_elem; m++) z(m) = R::norm_rand();
-  // Triangular solves by substitution (solve_opts::fast: no condition-number check). P is often badly scaled -- an
-  // entry in the spike has prior precision 1 / (nu_2 eta), orders of magnitude above the data precision -- which makes
+  // Triangular solves by substitution (solve_opts::fast: no condition-number check). P can be badly scaled -- an
+  // entry with a small slab variance eta has prior precision 1 / eta, orders of magnitude above the data precision -- which makes
   // its reciprocal condition number tiny although the triangular solve itself is backward stable; without `fast`
   // Armadillo would warn and switch to an approximate (least-squares) solution.
   arma::colvec w  = arma::solve(arma::trimatl(R.t()), h, arma::solve_opts::fast);

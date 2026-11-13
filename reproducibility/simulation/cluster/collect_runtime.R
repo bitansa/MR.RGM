@@ -20,8 +20,15 @@ if (any(rt$runs > 0 & rt$runs != 100)) warning("some methods have fewer than 100
 write.csv(rt[, c("Method", "p", "median_sec")], file.path("Runtime Analysis", "runtime_vs_p_n30000.csv"), row.names = FALSE)
 write.csv(raw[!raw$failed, c("Method", "p", "sec")], file.path("Runtime Analysis", "runtime_vs_p_n30000_all_runs.csv"), row.names = FALSE)
 pv <- attr(parts[[1]], "package_versions")
+## version of MR.RGM with which each method of the MR.RGM family was timed (a method refitted after a change of its
+## sampler is timed with a later version than the others)
+fam <- intersect(c("MR.RGM", "MR.RGM+", "MR.RGM_NoConf"), raw$Method)
+ver <- vapply(fam, function(m) paste(sort(unique(vapply(parts[vapply(parts, function(x) x$Method[1] == m, logical(1))],
+                function(x) as.character(attr(x, "package_versions")["MR.RGM"]), ""))), collapse = ", "), "")
+pv  <- pv[names(pv) != "MR.RGM"]
 writeLines(c(paste("Cluster run; collected on", format(Sys.time())),
              paste("CPU:", paste(unique(vapply(parts, function(x) as.character(attr(x, "cpu")), "")), collapse = "; ")),
              paste("Nodes:", paste(sort(unique(vapply(parts, function(x) attr(x, "node"), ""))), collapse = ", ")),
              "Each run on one core; the 100 runs of a method and p in blocks of 2 (MrDAG, GrIVET) or 10 runs, one block per task, each after an untimed warm-up fit.",
+             paste0("Package MR.RGM, version by method: ", paste(sprintf("%s %s", fam, ver), collapse = "; ")),
              paste(names(pv), pv, sep = " ")), file.path("Runtime Analysis", "runtime_versions.txt"))

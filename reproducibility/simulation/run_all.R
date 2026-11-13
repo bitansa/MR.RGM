@@ -8,7 +8,7 @@
 ## such as RStudio (forked processes may not return inside a GUI); run_parallel() in sim_functions.R additionally
 ## terminates and restarts a replicate that exceeds REP_TIMEOUT_MIN (default 240 minutes).
 ##
-## Order: main, roles, instrument strength, noise, confounding, sensitivity, largen, figures and tables, runtime
+## Order: main, roles, instrument strength, noise, confounding, sensitivity, largen, longchain, figures and tables, runtime
 ## benchmark (last, so its timings are not disturbed by other work). Every step is restartable: settings whose result
 ## file exists are skipped (the runtime benchmark keeps finished p), so after an interruption the same command continues
 ## where it stopped. Progress is
@@ -35,7 +35,7 @@ step <- function(label, file, experiment = NULL) {
 status <- c()
 for (e in c("main", "roles")) status[e] <- step(paste("experiment", e), "run_simulations.R", e)
 status["strength"] <- step("instrument-strength study", "run_instrument_strength.R")
-for (e in c("noise", "confounding", "sensitivity", "largen")) status[e] <- step(paste("experiment", e), "run_simulations.R", e)
+for (e in c("noise", "confounding", "sensitivity", "largen", "longchain")) status[e] <- step(paste("experiment", e), "run_simulations.R", e)
 status["figures"] <- step("figures and tables", "make_figures_tables.R")
 status["runtime"] <- step("runtime benchmark", file.path("Runtime Analysis", "RunTimeAnalysis.R"))
 stamp(sprintf("all done in %.1f hours; steps that failed: %s", as.numeric(difftime(Sys.time(), t_all, units = "hours")),

@@ -62,7 +62,7 @@ The model applies to instrumental variables in general, not only to genetic inst
 The instrument--response map `D` (a binary `p x k` matrix, `D[i, j] = 1` if instrument `j` may affect response `i`) decides which version is fitted:
 
 * **MR.RGM** (`D` with zeros, the usual case: each instrument assigned to its own response, e.g. a cis-eQTL to its gene): entries of `B` with `D = 0` are fixed at zero and the allowed entries receive a slab prior without selection, so every allowed instrument stays in the model. The causal effects are identified through the excluded instruments (rank condition).
-* **MR.RGM+** (`D` all ones): every entry of `B` receives a spike-and-slab prior and the map is learned from the data, which accommodates horizontal pleiotropy. This needs instruments that explain a non-negligible share of the variance; with many weak instruments the fit is weakly identified and `RGM()` warns.
+* **MR.RGM+** (`D` all ones): every entry of `B` receives a spike-and-slab prior with a point mass at zero and the map is learned from the data, which accommodates horizontal pleiotropy. This needs instruments that explain a non-negligible share of the variance; with many weak instruments the fit is weakly identified and `RGM()` warns.
 
 The argument `selectB` overrides this default (`selectB = TRUE` with a partial `D` selects among the allowed entries; `selectB = FALSE` with `D = 1` gives every entry a slab prior). The value used is stored in `fit$settings$selectB`.
 

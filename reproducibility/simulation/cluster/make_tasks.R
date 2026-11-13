@@ -9,7 +9,7 @@
 ###############################################################################
 source("sim_functions.R")
 rows <- list()
-for (e in c("main", "roles", "noise", "confounding", "sensitivity", "largen")) {
+for (e in c("main", "roles", "noise", "confounding", "sensitivity", "largen", "longchain")) {
   g <- experiment_grid(e)
   for (sc in g$scen) for (p in g$p) for (n in g$n) for (st in g$settings)
     rows[[length(rows) + 1]] <- data.frame(script = "sim", experiment = e, scenario = sc, p = p, n = n,

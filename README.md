@@ -78,7 +78,7 @@ fitted:
   causal effects are identified through the excluded instruments (rank
   condition).
 - **MR.RGM+** (`D` all ones): every entry of `B` receives a
-  spike-and-slab prior and the map is learned from the data, which
+  spike-and-slab prior with a point mass at zero and the map is learned from the data, which
   accommodates horizontal pleiotropy. This needs instruments that
   explain a non-negligible share of the variance; with many weak
   instruments the fit is weakly identified and `RGM()` warns.

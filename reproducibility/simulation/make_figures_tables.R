@@ -14,6 +14,7 @@
 ##   results_noise        error variance 1 / 4 / 9                                            -> noise_*.pdf, noise_*.tex
 ##   results_confounding  confounder loadings x 0 / 0.5 / 1 / 1.5                             -> confscale_*.pdf, confscale_*.tex
 ##   results_largen       n = 1e5, 1e6                                                        -> largen.pdf (with the main n), largen.tex, largen_seconds.tex
+##   results_longchain    MR.RGM+ at n = 1e6 with 250,000 iterations                          -> largen_longchain.tex
 ##   results_sensitivity  prior inclusion Beta(a,b), nu1                                      -> sensitivity_*.tex
 ##   results_roles        4 exposures -> 4 outcomes (MR2, MrDAG with their exposure/outcome split) -> roles_*.pdf, roles_*.tex
 ##   timing table over all experiments (mean seconds per fit)                                 -> timing.tex
@@ -49,7 +50,9 @@ read_exp <- function(exp) {
   ## each result file plus the effect error on the true edges / non-edges and the All-zero reference, computed from
   ## the estimates saved next to it (fits_*.rds), in the same format
   d <- do.call(rbind, lapply(files, function(f) {
-    r  <- as.data.frame(strip(readRDS(f))); ff <- sub("/sim_", "/fits_", f, fixed = TRUE)
+    x  <- readRDS(f)
+    if (!rgm_plus_is_current(x)) stop("The MR.RGM+ results of ", f, " were not produced with MR.RGM >= 0.1.4 (cluster/add_methods.R with REPLACE_METHODS).")
+    r  <- as.data.frame(strip(x)); ff <- sub("/sim_", "/fits_", f, fixed = TRUE)
     if (!file.exists(ff)) return(r)
     s  <- effect_split_rows(ff)
     k  <- r[rep(1, nrow(s)), c("experiment", "scenario", "p", "n", "setting", "setting_label"), drop = FALSE]
@@ -647,6 +650,24 @@ if ("largen" %in% names(exp_data)) {
     body <- c(body, "\\hline") }
   table_tex("largen_seconds.tex", "Large samples (small-world network, $p = 10$): confounding structure recovery (AUC; MR.RGM and MR.RGM+), instrument--trait selection (AUC; MR.RGM+) and mean wall-clock seconds per fit (one core per replicate; MR.RGM family: 50,000 iterations). Entries are mean (SD) over 100 replicates.", "tab:largen_seconds",
             "|r|l|c|c|r|", paste(c("\\textbf{$n$}", "\\textbf{Method}", "\\textbf{Conf.\\ AUC}", "\\textbf{IV AUC}", "\\textbf{Seconds}"), collapse = " & "), body)
+  ## MR.RGM+ at the largest n with a chain five times as long (experiment "longchain" of run_simulations.R): the same
+  ## data and seeds as the large-sample experiment, so the two rows of the table differ only in the chain length
+  lf <- list.files(paste0(RESULTS_PREFIX, "longchain"), pattern = "^sim_longchain_.*\\.rds$", full.names = TRUE)
+  if (length(lf) == 1) {
+    lc  <- readRDS(lf); mc_long <- attr(lc, "settings")$mcmc; lc <- as.data.frame(lc)
+    lb  <- res[res$experiment == "largen" & res$n == lc$n[1], ]
+    val <- function(d, fam, met) d$value[d$method == "MR.RGM+" & d$family == fam & d$metric == met]
+    msd <- function(d, fam, met) { v <- val(d, fam, met); if (!length(v)) "--" else paste0(fmt(mean(v)), " (", fmt(sd(v)), ")") }
+    big <- function(x) format(x, big.mark = ",", scientific = FALSE)
+    line <- function(d, mc) paste(c(big(mc$nIter), big(mc$nBurnin), msd(d, "graph", "AUC"), msd(d, "graph", "TPR"), msd(d, "graph", "FDR"),
+      msd(d, "effect", "MeanAbsDev"), msd(d, "confounding", "AUC"), msd(d, "iv_selection", "AUC"),
+      sprintf("%.0f", 100 * mean(val(d, "diagnostic", "warn_halves"))),
+      big(round(mean(d$seconds[d$method == "MR.RGM+" & d$family == "graph" & d$metric == "AUC"], na.rm = TRUE)))), collapse = " & ")
+    table_tex("largen_longchain.tex", sprintf("MR.RGM+ at $n = 10^6$ (small-world network, $p = 10$) with the chain length of the study and with a chain five times as long, on the same data: causal network recovery (AUC; TPR and FDR of the selected graph), causal effect estimation (MAD), confounding structure recovery (AUC), instrument--trait selection (AUC), percentage of fits with the chain-halves warning of the package, and mean wall-clock seconds per fit. Entries are mean (SD) over %d replicates.", length(unique(lc$rep))),
+              "tab:largen_longchain", "|r|r|c|c|c|c|c|c|r|r|",
+              paste(c("\\textbf{Iterations}", "\\textbf{Burn-in}", "\\textbf{AUC}", "\\textbf{TPR}", "\\textbf{FDR}", "\\textbf{MAD}", "\\textbf{Conf.\\ AUC}", "\\textbf{IV AUC}", "\\textbf{Halves warning (\\%)}", "\\textbf{Seconds}"), collapse = " & "),
+              c(paste(line(lb, SIM_SETTINGS$mcmc), "\\\\"), "\\hline", paste(line(lc, mc_long), "\\\\"), "\\hline"), "\\scriptsize")
+  }
   ## figure over all n (main + largen), small-world p = 10
   sa <- summ[((summ$experiment == "main" & summ$scenario == "smallworld" & summ$p == 10 & summ$setting_label == "base") | summ$experiment == "largen") &
              summ$method %in% meths, ]
