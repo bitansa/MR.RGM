@@ -353,7 +353,7 @@ for (p_ in ST_P) {
                        "IV AUC MR.RGM+" = c("MR.RGM+", "iv_selection", "AUC"),
                        "Err.\\ ratio MR.RGM" = c("MR.RGM", "diagnostic", "err_ratio_max"), "Err.\\ ratio MR.RGM+" = c("MR.RGM+", "diagnostic", "err_ratio_max")),
               sprintf("strength_conf_iv_diag_p=%d.tex", p_),
-              sprintf("MR.RGM and MR.RGM+ by instrument strength (small-world network, $p = %d$): confounding recovery (AUC), instrument selection by MR.RGM+ (AUC), and the largest ratio of estimated error variance to the variance of a trait (RGM() warns above 5).", p_),
+              sprintf("MR.RGM and MR.RGM+ by instrument strength (small-world network, $p = %d$): confounding recovery (AUC), instrument selection by MR.RGM+ (AUC) and the largest error-variance ratio. This ratio is the estimated error variance of a trait divided by the variance of that trait. \\texttt{RGM()} warns when the largest ratio is above 5.", p_),
               sprintf("tab:strength_conf_iv_diag_p=%d", p_))
 }
 
@@ -380,7 +380,7 @@ for (p_ in ST_P) {
                           collapse = " & "), "\\\\") }
     rows <- c(rows, "\\hline") } }
   tex_table(sprintf("strength_diag_p=%d.tex", p_),
-            sprintf("Diagnostics of MR.RGM and MR.RGM+ by instrument strength (small-world network, $p = %d$): population $R^2$ of a trait on its own instruments and the implied $F$ statistic (medians over traits, mean over replicates), mean correlation of the causal posterior inclusion probabilities between the two halves of the chain, percentage of the %d replicates in which the largest error-variance ratio exceeds 5 (the package's error-variance warning), and mean spectral radius of the estimated $A$.", p_, max(summ$reps)),
+            sprintf("Diagnostics of MR.RGM and MR.RGM+ by instrument strength (small-world network, $p = %d$). The columns give the population $R^2$ of a trait on its own instruments and the implied $F$ statistic, as medians over traits, averaged over replicates. They also give the mean correlation of the causal PIPs between the two halves of the chain. The next columns give the percentage of the %d replicates in which the largest error-variance ratio exceeds 5. In these replicates the package gives its error-variance warning. The last columns give the mean spectral radius of the estimated $A$.", p_, max(summ$reps)),
             sprintf("tab:strength_diag_p=%d", p_), "|l|r|c|c|c|c|c|c|c|c|", hdr, rows, "\\scriptsize")
 }
 ## Warnings issued by RGM(): weak instruments (first-stage F < 10; computed when the map has exclusions, i.e. for
@@ -398,7 +398,7 @@ for (p_ in ST_P) {
                           collapse = " & "), "\\\\") }
     rows <- c(rows, "\\hline") } }
   tex_table(sprintf("strength_warn_p=%d.tex", p_),
-            sprintf("Warnings issued by \\texttt{RGM()} by instrument strength (small-world network, $p = %d$): percentage of the %d replicates with the weak-instrument warning (first-stage $F < 10$, computed when the instrument--trait map has exclusions, that is, for \\texttt{MR.RGM}), the error-variance warning, and any warning.", p_, max(summ$reps)),
+            sprintf("Warnings issued by \\texttt{RGM()} by instrument strength (small-world network, $p = %d$): percentage of the %d replicates with the weak-instrument warning, the error-variance warning and any warning. The weak-instrument warning (first-stage $F < 10$) is computed only when the instrument--trait map has exclusions, that is, for \\texttt{MR.RGM}.", p_, max(summ$reps)),
             sprintf("tab:strength_warn_p=%d", p_), "|l|r|c|c|c|c|c|", hdr, rows, "\\scriptsize")
 }
 ## Failed fits per method and setting (every table and figure above summarises the successful fits only)
@@ -415,7 +415,7 @@ if (length(FAIL_COUNT)) {
   body <- sprintf("%s & %s & %d & %s & %s & %d / %d & %d & %s \\\\", case_lab[fr$scenario], ST_LABEL[fr$strength], fr$p,
                   format(fr$n, big.mark = ","), method_tex[fr$method], fr$k, N_REP_ST, N_REP_ST - fr$k, fr$cause)
   tex_table("strength_failures.tex",
-            "Instrument-strength study: fits without a result (number out of the replicates), the number of successful fits over which the method is summarized in every strength table and figure, and the cause (MR2G: no genome-wide significant instrument). For GrIVET, peeling means that its peeling step could not order every trait, numerical means that it stopped with a numerical error, and time means that it did not finish within 48 hours.",
+            "Instrument-strength study: fits without a result (number out of the replicates), number of successful fits and cause. Every strength table and figure summarizes a method over its successful fits only. MR2G stops when a trait has no genome-wide significant instrument. For GrIVET, peeling means that its peeling step could not order the traits. Numerical means that it stopped with a numerical error, and time means that it did not finish within 48 hours.",
             "tab:strength_failures", "|l|l|r|r|l|c|c|l|",
             "\\textbf{Case} & \\textbf{Instruments} & \\textbf{$p$} & \\textbf{$n$} & \\textbf{Method} & \\textbf{Failed} & \\textbf{Successful} & \\textbf{Cause}",
             c(body, "\\hline"), "\\scriptsize")

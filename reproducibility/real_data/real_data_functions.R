@@ -577,7 +577,7 @@ all_edges_tex <- function(fit, labels, thr_dir, file, data_name, model_name, ext
   e <- data.frame(from = labels[idx[, 2]], to = labels[idx[, 1]], PIP = G[idx], effect = A[idx], rev = G[cbind(idx[, 2], idx[, 1])])
   e <- e[order(-e$PIP), ]
   L <- c("\\begin{table}[htb]", "\\centering", "\\small",
-         sprintf("\\caption{%s, \\texttt{%s}: all causal edges with posterior inclusion probability $> %.2f$, with the posterior mean effect (standard-deviation units), the inclusion probability of the reverse edge, and the Bayes factor implied by the PIP under the prior inclusion probability $%.2f$.%s}",
+         sprintf("\\caption{%s, \\texttt{%s}: all causal edges with posterior inclusion probability $> %.2f$. For each edge, the table gives the posterior mean effect (standard-deviation units) and the inclusion probability of the reverse edge. It also gives the Bayes factor implied by the PIP under the prior inclusion probability $%.2f$.%s}",
                  data_name, model_name, thr_dir, PRIOR_CAUSAL, if (is.null(extra_edges)) "" else " The rows below the line are edges listed for reference although their PIP is below the threshold."),
          sprintf("\\label{tab:%s}", sub("\\.tex$", "", basename(file))),
          "\\begin{tabular}{|l|c|c|c|c|}", "\\hline",
@@ -602,7 +602,7 @@ candidates_tex <- function(res, file, data_name) {
   st <- st[order(-st$mu2), ]
   kept <- st$gene %in% res$symbols
   L <- c("\\begin{table}[htb]", "\\centering", "\\scriptsize",
-         sprintf("\\caption{%s: the %d pathway genes (KEGG %s) with at least one cis-SNP with $F > %g$, ordered by the concentration parameter $\\mu^2 = nR^2/(1-R^2)$ of their instruments. Cis-SNPs = SNPs tested in the $\\pm$%s window. Strong = SNPs with $F > %g$. Instruments = SNPs kept after LD clumping ($r^2 \\le %.1f$, at most %d). The partial $R^2$ is that of the instruments given the covariates, $1-\\mathrm{RSS}_1/\\mathrm{RSS}_0$ with $\\mathrm{RSS}_0$ and $\\mathrm{RSS}_1$ the residual sums of squares of the expression on the covariates without and with the instruments. $F$ = joint first-stage $F$ of the $m$ instruments given the $l$ covariates, $(R^2/m)/\\{(1-R^2)/(n-m-l-1)\\}$, which can be below $10$ although every instrument has $F=t^2>10$. $p_{\\mathrm{Bonf}}$ = Bonferroni-adjusted $p$-value of the strongest cis-SNP over the cis-SNPs tested (candidate genes: $p_{\\mathrm{Bonf}}<0.05$). The %d analyzed genes are marked.}",
+         sprintf("\\caption{%s: the %d pathway genes (KEGG %s) with at least one cis-SNP with $F > %g$, ordered by the concentration parameter $\\mu^2 = nR^2/(1-R^2)$ of their instruments. Cis-SNPs = SNPs tested in the $\\pm$%s window. Strong = SNPs with $F > %g$. Instruments = SNPs kept after LD clumping ($r^2 \\le %.1f$, at most %d). The partial $R^2$ is that of the instruments given the covariates, $1-\\mathrm{RSS}_1/\\mathrm{RSS}_0$. Here $\\mathrm{RSS}_0$ and $\\mathrm{RSS}_1$ are the residual sums of squares of the expression on the covariates without and with the instruments. $F$ = joint first-stage $F$ of the $m$ instruments given the $l$ covariates, $(R^2/m)/\\{(1-R^2)/(n-m-l-1)\\}$, which can be below $10$ although every instrument has $F=t^2>10$. $p_{\\mathrm{Bonf}}$ = Bonferroni-adjusted $p$-value of the strongest cis-SNP over the cis-SNPs tested (candidate genes: $p_{\\mathrm{Bonf}}<0.05$). The %d analyzed genes are marked.}",
                  data_name, nrow(st), res$kegg_pathway, res$settings$f_min, cis_window_tex(res$settings$cis_window), res$settings$f_min, res$settings$ld_r2, res$settings$top_per_gene, length(res$symbols)),
          sprintf("\\label{tab:%s}", sub("\\.tex$", "", basename(file))),
          "\\begin{adjustbox}{max width=\\textwidth}", "\\begin{tabular}{|l|l|r|r|r|r|r|r|r|c|}", "\\hline",
@@ -621,7 +621,7 @@ candidates_tex <- function(res, file, data_name) {
 instruments_list_tex <- function(res, file, data_name) {
   ct <- res$cross_gene_t
   L <- c("\\begin{table}[htb]", "\\centering", "\\scriptsize",
-         sprintf("\\caption{%s: instruments of the %d analyzed genes (%d SNPs). For each SNP, $t$ = $t$-statistic on its own gene given the covariates, and $\\max|t|$ other = largest absolute $t$-statistic on any other analyzed gene (a value above $%.1f$, i.e.\\ $F > %g$, indicates an association with another gene).}",
+         sprintf("\\caption{%s: instruments of the %d analyzed genes (%d SNPs). For each SNP, $t$ = $t$-statistic on its own gene given the covariates, and $\\max|t|$ other = largest absolute $t$-statistic on any other analyzed gene. A value above $%.1f$, that is, $F > %g$, indicates an association with another gene.}",
                  data_name, length(res$symbols), length(res$snps), sqrt(res$settings$f_min), res$settings$f_min),
          sprintf("\\label{tab:%s}", sub("\\.tex$", "", basename(file))),
          "\\begin{tabular}{|l|l|r|r|}", "\\hline", "\\textbf{Gene} & \\textbf{SNP} & \\textbf{$t$} & \\textbf{$\\max|t|$ other} \\\\", "\\hline")
@@ -679,7 +679,7 @@ methods_comparison_tables <- function(fit_main, fit_plus, comp, labels, thr, out
   mtex <- function(m) sprintf("\\texttt{%s}", gsub("_", "\\\\_", m))
   fmt  <- function(v, d = 2) ifelse(is.na(v), "--", formatC(v, format = "f", digits = d))
   L <- c("\\begin{table}[htb]", "\\centering", "\\small",
-         sprintf("\\caption{%s: every method on the same genes, SNPs and donors (summary-level and pairwise methods on covariate-adjusted data). Ordered pairs the method could estimate (of %d), edges reported under its rule, edges shared with \\texttt{MR.RGM} (PIP $> %.2f$), Jaccard index of the two edge sets (shared edges divided by the edges in either set), and the share of the shared edges whose estimated effects have the same sign. The pairwise methods estimate total effects of one gene on another. MR2 needs an exposure/outcome split and does not apply.}", data_name, p * (p - 1), thr),
+         sprintf("\\caption{%s: every method on the same genes, SNPs and donors (summary-level and pairwise methods on covariate-adjusted data). For each method, the table gives the ordered pairs it could estimate (of %d), the edges reported under its rule and the edges shared with \\texttt{MR.RGM} (PIP $> %.2f$). It also gives the Jaccard index of the two edge sets (shared edges divided by the edges in either set). The last column is the share of the shared edges whose estimated effects have the same sign. The pairwise methods estimate total effects of one gene on another. MR2 needs an exposure/outcome split and does not apply.}", data_name, p * (p - 1), thr),
          sprintf("\\label{tab:%s_methods_comparison}", prefix), "\\begin{adjustbox}{max width=\\textwidth}",
          "\\begin{tabular}{|l|l|c|c|c|c|c|}", "\\hline",
          "\\textbf{Method} & \\textbf{Edge rule} & \\textbf{Pairs estimated} & \\textbf{Edges} & \\textbf{Shared with \\texttt{MR.RGM}} & \\textbf{Jaccard} & \\textbf{Same sign} \\\\", "\\hline")
@@ -706,7 +706,7 @@ methods_comparison_tables <- function(fit_main, fit_plus, comp, labels, thr, out
   cellm <- function(r, m) { e <- rep_e[r, paste0(m, "_edge")]; v <- rep_e[r, paste0(m, "_est")]
     if (is.na(e) || is.na(rep_e[r, paste0(m, "_score")])) "--" else if (isTRUE(e)) (if (isTRUE(v < 0)) "$-$" else "$+$") else "" }
   L <- c("\\begin{table}[htb]", "\\centering", "\\small",
-         sprintf("\\caption{%s: causal edges reported by \\texttt{MR.RGM} (PIP $> %.2f$), their PIP under \\texttt{MR.RGM+}, and whether each other method reports them under its rule ($+$/$-$ if reported, with the sign of its estimate, blank if not reported, and -- if the method failed or could not estimate the pair). Abbreviations: NoConf = \\texttt{MR.RGM\\_NoConf}, IVW / SMed / WMed = \\texttt{MendelianRandomization} IVW, simple and weighted median, TSRI = two-stage residual inclusion (\\texttt{OneSampleMR}).%s}", data_name, thr, note),
+         sprintf("\\caption{%s: causal edges reported by \\texttt{MR.RGM} (PIP $> %.2f$), their PIP under \\texttt{MR.RGM+}, and whether each other method reports them under its rule. A sign ($+$/$-$) means that the method reports the edge, with the sign of its estimate. A blank means that it does not report the edge, and -- means that the method failed or could not estimate the pair. Abbreviations: NoConf = \\texttt{MR.RGM\\_NoConf}, IVW / SMed / WMed = \\texttt{MendelianRandomization} IVW, simple and weighted median, TSRI = two-stage residual inclusion (\\texttt{OneSampleMR}).%s}", data_name, thr, note),
          sprintf("\\label{tab:%s_edge_support}", prefix), "\\begin{adjustbox}{max width=\\textwidth}",
          sprintf("\\begin{tabular}{|l|%s}", paste(rep("c|", length(hdr) - 1), collapse = "")), "\\hline", paste(paste(hdr, collapse = " & "), "\\\\"), "\\hline")
   for (r in seq_len(nrow(rep_e)))
