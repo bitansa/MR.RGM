@@ -7,7 +7,8 @@
   zero when its inclusion indicator is zero: `b ~ phi N(0, eta) + (1 - phi) delta_0`. In 0.1.3 the spike was the
   narrow normal distribution `N(0, nu2 * eta)`. The identification and posterior consistency results of the
   accompanying paper for MR.RGM+ are stated for the point-mass prior. Fits with a known instrument map
-  (`selectB = FALSE`, MR.RGM), fits without instruments and fits with the threshold prior are unchanged.
+  (`selectB = FALSE`, MR.RGM), fits without instruments and fits with the threshold prior are unchanged: with the same data and seed, MR.RGM and
+  MR.RGM_NoConf fits reproduce those of 0.1.3 exactly.
 
 ## Sampler
 
@@ -18,7 +19,8 @@
 
 ## Arguments
 
-* `nu2` is no longer used. The argument is kept so that earlier code runs unchanged.
+* `nu2` is no longer used. The argument is kept so that earlier code runs, and supplying a value gives a warning.
+  It will be removed in a later version. `settings` no longer records it.
 
 # MR.RGM 0.1.3
 

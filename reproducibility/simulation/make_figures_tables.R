@@ -420,7 +420,7 @@ if ("main" %in% names(exp_data)) {
     } else {
       g <- g + geom_boxplot(width = 0.6, fill = method_col[[d$method[1]]], colour = "grey15", alpha = 0.88,
                             outlier.shape = 16, outlier.size = 1.8) +
-        geom_jitter(width = 0.08, height = 0, size = 1.4, alpha = 0.5, colour = "grey20")
+        geom_jitter(position = position_jitter(width = 0.08, height = 0, seed = 1), size = 1.4, alpha = 0.5, colour = "grey20")   # fixed seed: the same figure on every run
     }
     g <- g + coord_cartesian(ylim = c(lo, 1)) + labs(title = display_text(title), x = "Sample size", y = "Area Under Curve (AUC)") + theme_line
     save_fig(g, file, 14, 8)

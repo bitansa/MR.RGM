@@ -539,7 +539,7 @@ diagnostics_tex <- function(fits, labels_models, data_name, file, mcmc, thr_dir 
     c("$\\max|\\widehat a_{jh}|$", "max_abs_a", "%.2f"), c("Median causal PIP", "median_pip", "%.3f"),
     c(sprintf("Edges with PIP $> %.1f$", thr_dir), "edges", "%d"), c("Edges in opposite-sign 2-cycles", "opposite_sign_edges", "%d"))
   L <- c("\\begin{table}[htb]", "\\centering", "\\small",
-         sprintf("\\caption{%s: diagnostics of the fits (iterations, burn-in and thinning per chain in the first row). The chains use different random seeds from the same starting point and are pooled when every rank-normalized split-$\\widehat{R}$ is at most 1.01 (\\citealp{vehtari2021rank}). For a fit that fails this rule, the pooled values are shown for reference only. Bulk ESS = bulk effective sample size. Halves = correlation (and largest absolute difference) of the causal PIPs computed from the two halves of the chain. Error variances are relative to the (unit) response variances. Spectral radius and $\\max|\\widehat a_{jh}|$ = largest absolute entry of the posterior mean of $\\mathbf{A}$. For the median causal PIP, the prior is $%.2f$. Edges = causal edges with PIP $> %.1f$. Opposite-sign 2-cycles = number of these edges that belong to a pair $j \\rightleftarrows h$ with both PIPs $> %.1f$ and effects of opposite signs. Confounding PIPs = range over gene pairs.}",
+         sprintf("\\caption{%s: diagnostics of the fits (iterations, burn-in and thinning per chain in the first row). The chains use different random seeds from the same starting point and are pooled when every rank-normalized split-$\\widehat{R}$ is at most 1.01 (\\citealp{vehtari2021rank}). For a fit that fails this rule, the pooled values are shown for reference only. Bulk ESS = bulk effective sample size. Halves = correlation (and largest absolute difference) of the causal PIPs computed from the two halves of the chain. Error variances are relative to the (unit) response variances. The spectral radius is the largest absolute eigenvalue of the posterior mean of $\\mathbf A$. The quantity $\\max|\\widehat a_{jh}|$ is its largest absolute entry. For the median causal PIP, the prior is $%.2f$. Edges = causal edges with PIP $> %.1f$. Opposite-sign 2-cycles = number of these edges that belong to a pair $j \\rightleftarrows h$ with both PIPs $> %.1f$ and effects of opposite signs. Confounding PIPs = range over gene pairs.}",
                  data_name, PRIOR_CAUSAL, thr_dir, thr_dir),
          sprintf("\\label{tab:%s}", sub("\\.tex$", "", basename(file))),
          sprintf("\\begin{tabular}{|l|%s|}", paste(rep("c", length(fits)), collapse = "|")), "\\hline",
@@ -560,7 +560,7 @@ diagnostics_tex <- function(fits, labels_models, data_name, file, mcmc, thr_dir 
            paste0("Bulk ESS: smallest over edge indicators & ", cvn("ess_bulk_edges_min"), " \\\\"),
            paste0("Between chains: largest PIP difference & ", cv("pip_pairwise_max_diff", "%.3f"), " \\\\"),
            paste0("Between chains: smallest PIP correlation & ", cv("pip_pairwise_min_cor", "%.2f"), " \\\\"),
-           paste0(sprintf("Converged (split-$\\widehat{R} \\le %.2f$) & ", RHAT_MAX), paste(vapply(conv, function(x) if (is.null(x)) "--" else if (isTRUE(x$converged)) "yes" else "no", ""), collapse = " & "), " \\\\"),
+           paste0(sprintf("Met split-$\\widehat{R}\\le %.2f$ criterion & ", RHAT_MAX), paste(vapply(conv, function(x) if (is.null(x)) "--" else if (isTRUE(x$converged)) "yes" else "no", ""), collapse = " & "), " \\\\"),
            "\\hline")
   }
   for (r in rows) L <- c(L, paste0(r[1], " & ", paste(vapply(seq_along(fits), function(f) sprintf(r[3], d[[f]][[r[2]]]), ""), collapse = " & "), " \\\\"))
@@ -652,14 +652,17 @@ model_comparison_tex <- function(fit_main, fit_plus, labels, thr, file, data_nam
 
 ## ---------------------------------------------------------------------------
 ## Every method on the same data (OneK1K_Competitors.R): agreement with MR.RGM
-##   <prefix>_methods_comparison.tex  per method: edge rule, edges reported, edges shared with MR.RGM, Jaccard index of
-##                                    the two edge sets, share of the shared edges with the same sign of the effect
-##   <prefix>_edge_support.tex        every edge reported by MR.RGM: its PIP (and the PIP under MR.RGM+) and, for every other
-##                                    method, whether it reports the edge (+ / - = sign of its estimate; blank = not reported)
+##   <prefix>_methods_comparison.tex  per method: edge rule, ordered pairs evaluated, edges reported, edges shared with
+##                                    MR.RGM, Jaccard index of the two edge sets restricted to the pairs the method evaluated,
+##                                    share of the shared edges with the same sign of the effect. A model whose chains did
+##                                    not converge (plus_converged = FALSE) is listed without results.
+##   <prefix>_edge_support.tex        every edge reported by MR.RGM: its PIP (and the PIP under MR.RGM+ if its chains
+##                                    converged) and, for every other method, whether it reports the edge
+##                                    (+ / - = sign of its estimate; blank = not reported; -- = pair not evaluated or fit failed)
 ##   <prefix>_methods_edges.csv       the same for every ordered pair, every method
 ## Edges [to, from]; MR.RGM / MR.RGM+: PIP > thr (the reporting rule of the analysis); the other methods: their rule.
 ## ---------------------------------------------------------------------------
-methods_comparison_tables <- function(fit_main, fit_plus, comp, labels, thr, out_dir, prefix, data_name, note = "") {
+methods_comparison_tables <- function(fit_main, fit_plus, comp, labels, thr, out_dir, prefix, data_name, plus_converged = TRUE) {
   p <- length(labels); off <- row(diag(p)) != col(diag(p))
   dn <- list(labels, labels)
   base <- list(`MR.RGM` = list(edge = fit_main$GammaEst > thr, est = fit_main$AEst, score = fit_main$GammaEst, rule = sprintf("PIP $> %.2f$", thr)))
@@ -669,21 +672,41 @@ methods_comparison_tables <- function(fit_main, fit_plus, comp, labels, thr, out
   ref <- all_m$`MR.RGM`$edge & off
   rows <- lapply(names(all_m), function(m) {
     x <- all_m[[m]]
-    if (inherits(x, "failed")) return(data.frame(method = m, rule = "--", estimated = NA, edges = NA, shared = NA, jaccard = NA, sign_agree = NA, note = "failed"))
-    e <- x$edge & off; e[is.na(e)] <- FALSE; sh <- e & ref
+    if (inherits(x, "failed")) return(data.frame(method = m, rule = "--", estimated = NA, edges = NA, shared = NA, ref_eval = NA,
+                                                 jaccard = NA, sign_agree = NA, note = "failed"))
+    if (m == "MR.RGM+" && !plus_converged) return(data.frame(method = m, rule = "--", estimated = NA, edges = NA, shared = NA,
+                                                             ref_eval = NA, jaccard = NA, sign_agree = NA, note = "noconv"))
+    ## both edge sets are restricted to the ordered pairs the method evaluated
+    ev <- off & !is.na(x$score)
+    e <- x$edge & ev; e[is.na(e)] <- FALSE
+    ref_m <- ref & ev; sh <- e & ref_m
     sa <- if (sum(sh)) mean(sign(x$est[sh]) == sign(all_m$`MR.RGM`$est[sh]), na.rm = TRUE) else NA
-    data.frame(method = m, rule = x$rule, estimated = sum(!is.na(x$score[off])), edges = sum(e), shared = sum(sh),
-               jaccard = if (sum(e | ref)) sum(sh) / sum(e | ref) else NA, sign_agree = sa, note = "")
+    data.frame(method = m, rule = x$rule, estimated = sum(ev), edges = sum(e), shared = sum(sh), ref_eval = sum(ref_m),
+               jaccard = if (sum(e | ref_m)) sum(sh) / sum(e | ref_m) else NA, sign_agree = sa, note = "")
   })
   tab <- do.call(rbind, rows)
   mtex <- function(m) sprintf("\\texttt{%s}", gsub("_", "\\\\_", m))
   fmt  <- function(v, d = 2) ifelse(is.na(v), "--", formatC(v, format = "f", digits = d))
+  ## methods evaluated on a subset of the ordered pairs, named in the caption
+  npair <- p * (p - 1)
+  sub_m <- tab$method[tab$note == "" & !is.na(tab$estimated) & tab$estimated < npair]
+  sub_txt <- ""
+  if (length(sub_m)) {
+    who <- if (setequal(sub_m, c("MR-IVW", "MR-SimpleMedian", "MR-WeightedMedian"))) "MR-IVW and the median estimators" else paste(sub_m, collapse = ", ")
+    ne <- unique(tab$estimated[match(sub_m, tab$method)]); nr <- unique(tab$ref_eval[match(sub_m, tab$method)])
+    sub_txt <- if (length(ne) == 1 && length(nr) == 1)
+      sprintf(" %s were evaluated on $%d$ pairs, including $%d$ of the $%d$ edges selected by \\texttt{MR.RGM}. The other completed comparisons cover all $%d$ pairs.", who, ne, nr, sum(ref), npair)
+    else sprintf(" %s were evaluated on fewer than $%d$ pairs. The other completed comparisons cover all $%d$ pairs.", who, npair, npair)
+  }
+  plus_txt <- if (!is.null(fit_plus) && !plus_converged) " Table~\\ref{tab:realdata_diagnostics} gives the diagnostics for \\texttt{MR.RGM+}." else ""
   L <- c("\\begin{table}[htb]", "\\centering", "\\small",
-         sprintf("\\caption{%s: every method on the same genes, SNPs and donors (summary-level and pairwise methods on covariate-adjusted data). For each method, the table gives the ordered pairs it could estimate (of %d), the edges reported under its rule and the edges shared with \\texttt{MR.RGM} (PIP $> %.2f$). It also gives the Jaccard index of the two edge sets (shared edges divided by the edges in either set). The last column is the share of the shared edges whose estimated effects have the same sign. The pairwise methods estimate total effects of one gene on another. MR2 needs an exposure/outcome split and does not apply.}", data_name, p * (p - 1), thr),
+         sprintf("\\caption{Agreement with \\texttt{MR.RGM} in %s. For each method, both edge sets are restricted to the ordered pairs evaluated. The Jaccard index divides the number of shared edges by the number selected by either method on those pairs. The last column gives sign agreement among shared edges.%s The pairwise estimators target total effects. \\texttt{MR2} requires an exposure--outcome split.%s}", data_name, sub_txt, plus_txt),
          sprintf("\\label{tab:%s_methods_comparison}", prefix), "\\begin{adjustbox}{max width=\\textwidth}",
          "\\begin{tabular}{|l|l|c|c|c|c|c|}", "\\hline",
-         "\\textbf{Method} & \\textbf{Edge rule} & \\textbf{Pairs estimated} & \\textbf{Edges} & \\textbf{Shared with \\texttt{MR.RGM}} & \\textbf{Jaccard} & \\textbf{Same sign} \\\\", "\\hline")
-  for (i in seq_len(nrow(tab))) L <- c(L, sprintf("%s & %s & %s & %s & %s & %s & %s \\\\", mtex(tab$method[i]), tab$rule[i],
+         "\\textbf{Method} & \\textbf{Edge rule} & \\textbf{Pairs evaluated} & \\textbf{Edges} & \\textbf{Shared with \\texttt{MR.RGM}} & \\textbf{Jaccard} & \\textbf{Same sign} \\\\", "\\hline")
+  for (i in seq_len(nrow(tab))) L <- c(L, if (tab$note[i] == "noconv")
+    sprintf("%s & \\multicolumn{6}{l|}{Chains failed to converge} \\\\", mtex(tab$method[i])) else
+    sprintf("%s & %s & %s & %s & %s & %s & %s \\\\", mtex(tab$method[i]), tab$rule[i],
     fmt(tab$estimated[i], 0), if (tab$note[i] == "failed") "failed" else tab$edges[i], fmt(tab$shared[i], 0), fmt(tab$jaccard[i]), fmt(tab$sign_agree[i])))
   L <- c(L, "\\hline", "\\end{tabular}", "\\end{adjustbox}", "\\end{table}")
   writeLines(display_text(L), file.path(out_dir, paste0(prefix, "_methods_comparison.tex")))
@@ -701,17 +724,19 @@ methods_comparison_tables <- function(fit_main, fit_plus, comp, labels, thr, out
   others <- setdiff(names(all_m), c("MR.RGM", "MR.RGM+"))
   ab <- c(MR.RGM_NoConf = "NoConf", MVMR = "MVMR", MR2G = "MR2G", MrDAG = "MrDAG", GrIVET = "GrIVET", `MR-IVW` = "IVW", `MR-SimpleMedian` = "SMed",
           `MR-WeightedMedian` = "WMed", OneSampleMR = "TSRI", mrbayes = "mrbayes")
-  hdr <- c("\\textbf{Edge}", "\\textbf{PIP \\texttt{MR.RGM}}", if (!is.null(fit_plus)) "\\textbf{PIP \\texttt{MR.RGM+}}",
+  plus_col <- !is.null(fit_plus) && plus_converged
+  hdr <- c("\\textbf{Edge}", "\\textbf{PIP \\texttt{MR.RGM}}", if (plus_col) "\\textbf{PIP \\texttt{MR.RGM+}}",
            sprintf("\\textbf{%s}", ifelse(others %in% names(ab), ab[others], others)))
   cellm <- function(r, m) { e <- rep_e[r, paste0(m, "_edge")]; v <- rep_e[r, paste0(m, "_est")]
     if (is.na(e) || is.na(rep_e[r, paste0(m, "_score")])) "--" else if (isTRUE(e)) (if (isTRUE(v < 0)) "$-$" else "$+$") else "" }
   L <- c("\\begin{table}[htb]", "\\centering", "\\small",
-         sprintf("\\caption{%s: causal edges reported by \\texttt{MR.RGM} (PIP $> %.2f$), their PIP under \\texttt{MR.RGM+}, and whether each other method reports them under its rule. A sign ($+$/$-$) means that the method reports the edge, with the sign of its estimate. A blank means that it does not report the edge, and -- means that the method failed or could not estimate the pair. Abbreviations: NoConf = \\texttt{MR.RGM\\_NoConf}, IVW / SMed / WMed = \\texttt{MendelianRandomization} IVW, simple and weighted median, TSRI = two-stage residual inclusion (\\texttt{OneSampleMR}).%s}", data_name, thr, note),
+         sprintf("\\caption{Agreement on the edges selected by \\texttt{MR.RGM} in %s (PIP $>%.2f$).%s A sign gives the direction of the estimated effect for an edge the method selected. A blank denotes an evaluated edge the method did not select. A dash denotes an unevaluated pair or an unsuccessful fit. NoConf denotes \\texttt{MR.RGM\\_NoConf}. IVW, SMed and WMed denote the inverse-variance weighted, simple-median and weighted-median estimators, and TSRI denotes two-stage residual inclusion.%s}",
+                 data_name, thr, if (plus_col) " The third column gives the PIP of each edge under \\texttt{MR.RGM+}." else "", plus_txt),
          sprintf("\\label{tab:%s_edge_support}", prefix), "\\begin{adjustbox}{max width=\\textwidth}",
          sprintf("\\begin{tabular}{|l|%s}", paste(rep("c|", length(hdr) - 1), collapse = "")), "\\hline", paste(paste(hdr, collapse = " & "), "\\\\"), "\\hline")
   for (r in seq_len(nrow(rep_e)))
     L <- c(L, paste(paste(c(sprintf("\\textit{%s} $\\rightarrow$ \\textit{%s}", tex_esc(rep_e$from[r]), tex_esc(rep_e$to[r])),
-                            sprintf("%.2f", rep_e$`MR.RGM_score`[r]), if (!is.null(fit_plus)) sprintf("%.2f", rep_e$`MR.RGM+_score`[r]),
+                            sprintf("%.2f", rep_e$`MR.RGM_score`[r]), if (plus_col) sprintf("%.2f", rep_e$`MR.RGM+_score`[r]),
                             vapply(others, function(m) cellm(r, m), "")), collapse = " & "), "\\\\"))
   L <- c(L, "\\hline", "\\end{tabular}", "\\end{adjustbox}", "\\end{table}")
   writeLines(display_text(L), file.path(out_dir, paste0(prefix, "_edge_support.tex")))

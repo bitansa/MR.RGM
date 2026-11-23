@@ -63,7 +63,7 @@ real_data/
    * all causal and confounding PIPs, edge counts with Bayes factors at several thresholds
    * reported causal edges and confounding links, label map, candidate-gene and instrument tables
    * network figure (plus one panel per data-driven module) and the most probable motif of each type
-   * MR.RGM vs MR.RGM+ comparison (`onek_model_comparison.tex`) and every method on the same data
+   * MR.RGM vs MR.RGM+ comparison (`onek_model_comparison.tex`, not used in the paper) and every method on the same data
      (`onek_methods_comparison.tex`: edges, overlap with MR.RGM, sign agreement; `onek_edge_support.tex`: which
      methods report each edge of MR.RGM / MR.RGM+)
 

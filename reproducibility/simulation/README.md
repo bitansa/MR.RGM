@@ -195,5 +195,6 @@ data; one replicate is `run_replicate()` of the main study, `strength_replicate(
 U, E are drawn before X, so only the instrument effects differ between strength levels. It reports the main-study
 metrics (network AUC, MAD, confounding AUC, instrument-selection AUC) plus the diagnostics (population R², μ² and F
 of the simulated responses, largest error-variance ratio and the share of fits that trigger the package warning,
-chain-half correlation of the causal PIPs, spectral radius) in `tables/strength_*.tex` (`strength_network_auc_p=*`,
-`strength_effect_mad_p=*`: every method; `strength_failures.tex`: failed fits).
+chain-half correlation of the causal PIPs, spectral radius) in `tables/strength_*.tex` (`strength_network_auc_{nopleio,pleio}_p=*`,
+`strength_effect_mad[_edges|_nonedges]_{nopleio,pleio}_p=*`: every method; `strength_diag_p=*`, `strength_conf_iv_diag_p=*`,
+`strength_warn_p=*`: diagnostics; `strength_failures.tex`: failed fits).

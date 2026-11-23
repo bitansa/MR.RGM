@@ -29,7 +29,7 @@ RGM(
   nu1 = 0.001,
   aPsi = 0.5,
   bPsi = 0.5,
-  nu2 = 1e-04,
+  nu2 = NULL,
   aSigma = 0.01,
   bSigma = 0.01,
   PropVarA = NULL,
@@ -86,7 +86,7 @@ RGM(
 
 \item{aPsi, bPsi}{Positive shape parameters of the Beta prior on the inclusion probability of an instrument effect (spike-and-slab prior with selection of the instrument effects, e.g. MR.RGM+, only). Defaults 0.5 and 0.5.}
 
-\item{nu2}{Not used since version 0.1.4, in which the spike of the prior on \code{B} is a point mass at zero. The argument is kept so that earlier code runs unchanged.}
+\item{nu2}{Not used since version 0.1.4, in which the spike of the prior on \code{B} is a point mass at zero. Supplying a value gives a warning and has no effect. The argument will be removed in a later version.}
 
 \item{aSigma, bSigma}{Positive shape and rate parameters of the inverse-gamma prior on the error variances when \code{SigmaStarModel = "diagonal"}. Defaults 0.01 and 0.01.}
 

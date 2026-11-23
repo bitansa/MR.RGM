@@ -1,12 +1,16 @@
 ## Submission
 
-This is an update of MR.RGM from 0.1.1, the version on CRAN, to 0.1.3 (0.1.2 was released on GitHub only); the changes
-of both versions are listed in NEWS.md.
+This is an update of MR.RGM from 0.1.3, the version on CRAN, to 0.1.4. The changes are listed in NEWS.md.
+
+Version 0.1.4 sets an excluded instrument effect exactly to zero when the instruments are selected (a point-mass
+spike in place of a narrow normal spike). This is the model of the accompanying methods paper, which has been
+submitted for publication. Fits with a known instrument map are unchanged. We are sorry for the short interval since
+0.1.3. The update is needed so that the version on CRAN is the version described in the paper.
 
 ## Test environments
 
 * local macOS (aarch64-apple-darwin23), R 4.6.1
-* win-builder, R-devel (2026-11-06 r90845 ucrt)
+* win-builder, R-devel
 
 ## R CMD check results
 

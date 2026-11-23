@@ -105,6 +105,7 @@ f_main <- file.path("output", "OneK1K_fit_MRRGM.rds"); f_plus <- file.path("outp
 r_main <- if (file.exists(f_main)) readRDS(f_main); r_plus <- if (file.exists(f_plus)) readRDS(f_plus)
 if (!is.null(r_plus) && !is.null(r_plus$convergence) && !isTRUE(r_plus$convergence$converged))
   plus_note <- " The chains of \\texttt{MR.RGM+} did not converge (Table~\\ref{tab:realdata_diagnostics}). Its pooled PIPs are shown for reference only."
+plus_converged <- is.null(r_plus) || is.null(r_plus$convergence) || isTRUE(r_plus$convergence$converged)
 if (!is.null(r_main) && !is.null(r_plus) && identical(r_main$symbols, r_plus$symbols)) {
   compare_models(r_main$fit, r_plus$fit, labels, ONEK_THR_DIR, ONEK_THR_CONF, "tables", "onek")
   diagnostics_tex(list(r_main$fit, r_plus$fit), c("MR.RGM", "MR.RGM+"), DATA_NAME, file.path("tables", "realdata_diagnostics.tex"), r_main$settings$mcmc, ONEK_THR_DIR,
@@ -120,7 +121,7 @@ if (!is.null(r_main) && file.exists(f_comp)) {
   comp <- readRDS(f_comp)
   if (identical(comp$labels, r_main$labels))
     methods_comparison_tables(r_main$fit, if (!is.null(r_plus) && identical(r_main$symbols, r_plus$symbols)) r_plus$fit,
-                              comp, r_main$labels, ONEK_THR_DIR, "tables", "onek", DATA_NAME, note = plus_note)
+                              comp, r_main$labels, ONEK_THR_DIR, "tables", "onek", DATA_NAME, plus_converged = plus_converged)
   else warning("OneK1K_competitors.rds does not match the genes of the MR.RGM fit; rerun OneK1K_Competitors.R")
 }
 message("OneK1K results written to ", file.path(normalizePath("."), "tables"), " and figures/.")

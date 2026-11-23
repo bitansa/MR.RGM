@@ -92,7 +92,7 @@
 #' @param aRho,bRho Positive shape parameters of the Beta prior on the inclusion probability of a causal edge (spike-and-slab prior on \code{A}). Defaults 3 and 1 (prior inclusion probability 0.75).
 #' @param nu1 A positive scalar, the spike variance of the spike-and-slab prior on \code{A} relative to the slab variance (spike-and-slab prior only). Default 0.001.
 #' @param aPsi,bPsi Positive shape parameters of the Beta prior on the inclusion probability of an instrument effect (spike-and-slab prior with selection of the instrument effects, e.g. MR.RGM+, only). Defaults 0.5 and 0.5.
-#' @param nu2 Not used since version 0.1.4, in which the spike of the prior on \code{B} is a point mass at zero. The argument is kept so that earlier code runs unchanged.
+#' @param nu2 Not used since version 0.1.4, in which the spike of the prior on \code{B} is a point mass at zero. Supplying a value gives a warning and has no effect. The argument will be removed in a later version.
 #' @param aSigma,bSigma Positive shape and rate parameters of the inverse-gamma prior on the error variances when \code{SigmaStarModel = "diagonal"}. Defaults 0.01 and 0.01.
 #' @param PropVarA,PropVarB Starting variances of the adaptive random-walk Metropolis--Hastings proposals for the entries of \code{A} and (when \code{B} is not drawn by Gibbs) \code{B}; the proposals are tuned during the burn-in. \code{NULL} (default): an automatic start, \eqn{2.38^2 / (n \Omega_{ii} S_{jj} + 1)} for entry \code{(i, j)}, where \eqn{\Omega} is the inverse of the starting error covariance and \code{S} is \code{Syy} (for \code{A}) or \code{Sxx} (for \code{B}); it scales with the sample size. A positive number is used as the starting variance of every entry.
 #' @param gibbsB Logical. \code{TRUE} (default): the instrument effects \code{B} are drawn exactly from their normal full conditional (Gibbs), row by row; with the Threshold prior this applies when the instrument effects are not selected (\code{selectB = FALSE}). \code{FALSE}: adaptive random-walk Metropolis--Hastings for every entry of \code{B}, available without instrument selection only. With selection under the spike-and-slab prior the exact draw is always used.
@@ -225,7 +225,7 @@
 RGM = function(X = NULL, Y = NULL, U = NULL, Syy = NULL, Syx = NULL, Sxx = NULL, Syu = NULL, Sxu = NULL, Suu = NULL,
                Beta = NULL, SigmaHat = NULL, D, n, nIter = 50000, nBurnin = 10000, Thin = 10,
                prior = c("Spike and Slab", "Threshold"), SigmaStarModel = c("SSSL", "IW", "diagonal"),
-               aRho = 3, bRho = 1, nu1 = 0.001, aPsi = 0.5, bPsi = 0.5, nu2 = 0.0001, aSigma = 0.01, bSigma = 0.01,
+               aRho = 3, bRho = 1, nu1 = 0.001, aPsi = 0.5, bPsi = 0.5, nu2 = NULL, aSigma = 0.01, bSigma = 0.01,
                PropVarA = NULL, PropVarB = NULL, gibbsB = TRUE,
                selectB = NULL, tauC = 2, omega1 = 5, omega2 = 0.005, varpi = 0.5, lambda = 1) {
 
@@ -357,6 +357,8 @@ RGM = function(X = NULL, Y = NULL, U = NULL, Syy = NULL, Syx = NULL, Sxx = NULL,
 
   if (p < 2) stop("RGM() needs at least two responses.")
   if (!instruments && (!missing(D) || !is.null(selectB))) warning("No instruments were given: D and selectB are not used.", call. = FALSE)
+  if (!is.null(nu2)) warning("nu2 is not used since MR.RGM 0.1.4, in which the spike of the prior on B is a point mass at zero. ",
+                             "It has no effect and will be removed in a later version.", call. = FALSE)
 
   # ---------------------------------------------------------------------------------------------------------------
   # 3. Covariates: either U (individual-level input only) or the complete set of summary matrices
@@ -559,7 +561,7 @@ RGM = function(X = NULL, Y = NULL, U = NULL, Syy = NULL, Syx = NULL, Sxx = NULL,
 
   out$settings = list(input = mode, prior = prior, SigmaStarModel = SigmaStarModel, instruments = instruments, covariates = covariates,
                       selectB = selectB, n = n, p = p, k = k, l = l, nIter = nIter, nBurnin = nBurnin, Thin = Thin,
-                      aRho = aRho, bRho = bRho, nu1 = nu1, aPsi = aPsi, bPsi = bPsi, nu2 = nu2, aSigma = aSigma, bSigma = bSigma,
+                      aRho = aRho, bRho = bRho, nu1 = nu1, aPsi = aPsi, bPsi = bPsi, aSigma = aSigma, bSigma = bSigma,
                       PropVarA = if (is.null(PropVarA)) "auto" else PropVarA,
                       PropVarB = if (!instruments || B_gibbs) NA else if (is.null(PropVarB)) "auto" else PropVarB,
                       gibbsB = if (instruments) B_gibbs else NA, tauC = tauC, omega1 = omega1, omega2 = omega2, varpi = varpi,

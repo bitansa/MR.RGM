@@ -114,14 +114,14 @@ See `real_data/README.md` and `real_data/OneK1K/README.md`.
 
 | Paper | Output file | Script |
 |---|---|---|
-| Figure 2 (main study, p = 10); main-study figures and tables of Sections OA.2–OA.3 | `main_summary_p=10.pdf`, `feedback_*.tex`, `overview_*.tex`, `failures.tex`, `main_diagnostics.tex` | `simulation/make_figures_tables.R` |
+| Figure 1 (main study, p = 10); main-study figures and tables of Sections OA.2–OA.3 | `main_summary_p=*.pdf`, `conf_recovery_p=*.pdf`, `<case>_auc_p=*.pdf`, `<case>_mad_p=*.pdf`, `<case>_iv_p=10.pdf`, `feedback_*.tex`, `overview_*.tex`, `failures.tex`, `main_diagnostics.tex` | `simulation/make_figures_tables.R` |
 | Further experiments (exposure-outcome, error variance, confounding, large samples, prior sensitivity) | `roles*`, `roles_auc.pdf`, `noise*`, `confscale*`, `largen*`, `largen_seconds.tex`, `sensitivity*` | `simulation/make_figures_tables.R` |
 | MR.RGM+ at n = 10⁶ with 50,000 and with 250,000 iterations | `largen_longchain.tex` | `simulation/make_figures_tables.R` (experiment `longchain`) |
 | Mean time per fit in the main study | `timing.tex` | `simulation/make_figures_tables.R` |
-| Figure 3 and the instrument-strength study | `strength_*.pdf`, `strength_*.tex` | `simulation/run_instrument_strength.R` |
+| Figure 2 and the instrument-strength study | `strength_*.pdf`, `strength_*.tex` | `simulation/run_instrument_strength.R` |
 | Computation time against the number of responses | `runtime_vs_p_n30000.pdf` | timed by `simulation/cluster/run_runtime_task.R` and collected by `collect_runtime.R`, drawn by `simulation/Runtime Analysis/RunTimeAnalysis.R` |
 | Choice of the number of genes (design-matched simulation) | `design_matched_OneK1K.tex` (in `package_check/`) | `package_check/check_design_matched.R` |
-| Figure 4 and the OneK1K results of Section OA.6 | `onek1k_network.pdf`, `onek1k_cluster_*.pdf`, `motif_onek_all.pdf`, `onek_loglik_trace.pdf`, `onek_plus_loglik_trace.pdf`, `onek_chains_PIPs.pdf`, `onek_plus_chains_PIPs.pdf`, `onek_all_edges.tex`, `onek_candidates.tex`, `onek_instruments*.tex`, `onek_methods_comparison.tex`, `onek_edge_support.tex`, `realdata_diagnostics.tex` | `real_data/OneK1K/OneK1K_RunAll.R` (fits, competitors, results) |
+| Figure 3 and the OneK1K results of Section OA.6 | `onek1k_network.pdf`, `onek1k_cluster_*.pdf`, `motif_onek_all.pdf`, `onek_loglik_trace.pdf`, `onek_plus_loglik_trace.pdf`, `onek_chains_PIPs.pdf`, `onek_plus_chains_PIPs.pdf`, `onek_all_edges.tex`, `onek_candidates.tex`, `onek_instruments*.tex`, `onek_methods_comparison.tex`, `onek_edge_support.tex`, `realdata_diagnostics.tex` | `real_data/OneK1K/OneK1K_RunAll.R` (fits, competitors, results) |
 | Parametric bootstrap of the OneK1K network | `onek_bootstrap.tex`, `onek_bootstrap_edges.tex` | `real_data/OneK1K/OneK1K_Bootstrap.R` |
 | Prior sensitivity of the OneK1K fit | `onek_prior_sensitivity.tex` | `real_data/OneK1K/OneK1K_PriorSensitivity.R` |
 

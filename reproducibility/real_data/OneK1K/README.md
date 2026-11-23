@@ -96,7 +96,7 @@ pass the Bonferroni check; the design-matched simulation supports 10 genes; 48 i
   error-variance ratio) and diagnostics are recorded with the fit and written to
   `tables/onek*_mcmc_diagnostics.csv` and `onek*_package_warnings.txt`. Requires MR.RGM ≥ 0.1.4.
 * **Tables for the paper** (`tables/onek_candidates.tex`, `onek_instruments_list.tex`, `onek_all_edges.tex`,
-  `realdata_diagnostics.tex`, `onek_model_comparison.tex`, `onek_methods_comparison.tex`, `onek_edge_support.tex`)
+  `realdata_diagnostics.tex`, `onek_model_comparison.tex` (not used in the paper), `onek_methods_comparison.tex`, `onek_edge_support.tex`)
   are written by `OneK1K_Results.R` from the fitted objects.
 * **Competing methods** (`OneK1K_Competitors.R`): every method of the simulation study that applies to a network of
   genes (MR.RGM_NoConf, MVMR, MR2G, MrDAG one gene at a time as outcome, GrIVET on the original scale of the data, IVW,
